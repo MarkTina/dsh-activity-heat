@@ -1,0 +1,16 @@
+# 会话热度（最近活跃）bundle 层：插入热度标识插件行。
+# 行 id 由本包拥有；config 是默认值，用户可在 profile 的 cordis.patch.yml
+# 中以同名 id 覆盖（patch 的 config 是整体替换，不深合并）。
+- insert:
+    - id: activity-heat
+      name: '@local/activity-heat'
+      config:
+        hotMinutes: 10
+        warmMinutes: 60
+        activeMinutes: 360
+        recentMinutes: 1440
+        staleDays: 7
+        topCount: 8
+        tickSeconds: 60
+        showRowDots: true
+        showHoverHeat: true

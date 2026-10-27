@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "title": "最近活跃",
+    "description": "用热度标识最近发生过对话的会话与工作区：侧栏入口、会话行热度点与悬停卡热度段，最近的活动最醒目。"
+  },
+  "nav": "最近活跃",
+  "panel": {
+    "title": "最近活跃",
+    "subtitle": "按最近活动时间排序，热度越高表示越近",
+    "topTitle": "最近会话",
+    "groupsTitle": "工作区分组",
+    "empty": "暂无最近活动",
+    "emptyHint": "在与某个工作区的会话里发一条消息后，这里就会出现它的热度。",
+    "refresh": "刷新",
+    "refreshedAt": "更新于 {time}",
+    "activeCount": "{count} 个活跃",
+    "lastActive": "最后活动 {time}",
+    "openSession": "打开会话",
+    "olderGroup": "{count} 个更早的工作区已折叠",
+    "legend": "热度"
+  },
+  "hover": {
+    "heat": "热度 {level}/5",
+    "lastActive": "最后活动：{time}",
+    "workspaceRank": "所在工作区热度排名第 {rank}",
+    "workspaceHot": "所在工作区正热",
+    "noData": "暂无活动记录"
+  },
+  "dot": {
+    "tooltip": "热度 {level}/5 · {time}"
+  },
+  "level": {
+    "hot": "炽热",
+    "warm": "温热",
+    "active": "活跃",
+    "recent": "近期",
+    "stale": "陈旧",
+    "cold": "冷却"
+  },
+  "relative": {
+    "now": "刚刚",
+    "minutes": "{n} 分钟前",
+    "hours": "{n} 小时前",
+    "yesterday": "昨天",
+    "days": "{n} 天前",
+    "weeks": "{n} 周前",
+    "longAgo": "很久以前",
+    "unknown": "未知"
+  }
+}

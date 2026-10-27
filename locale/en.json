@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "title": "Recent Activity",
+    "description": "Heat marks that make the sessions and workspaces with the most recent conversations obvious: a sidebar entry, a per-row heat dot, and a hover-card heat section."
+  },
+  "nav": "Recent Activity",
+  "panel": {
+    "title": "Recent Activity",
+    "subtitle": "Ordered by last activity; more heat means more recent",
+    "topTitle": "Latest sessions",
+    "groupsTitle": "Workspaces",
+    "empty": "No recent activity",
+    "emptyHint": "Send a message in a workspace session and its heat appears here.",
+    "refresh": "Refresh",
+    "refreshedAt": "Updated {time}",
+    "activeCount": "{count} active",
+    "lastActive": "Last active {time}",
+    "openSession": "Open session",
+    "olderGroup": "{count} older workspaces folded",
+    "legend": "Heat"
+  },
+  "hover": {
+    "heat": "Heat {level}/5",
+    "lastActive": "Last active: {time}",
+    "workspaceRank": "Workspace heat rank #{rank}",
+    "workspaceHot": "This workspace is hot",
+    "noData": "No activity recorded"
+  },
+  "dot": {
+    "tooltip": "Heat {level}/5 · {time}"
+  },
+  "level": {
+    "hot": "Blazing",
+    "warm": "Warm",
+    "active": "Active",
+    "recent": "Recent",
+    "stale": "Stale",
+    "cold": "Cold"
+  },
+  "relative": {
+    "now": "just now",
+    "minutes": "{n} min ago",
+    "hours": "{n} h ago",
+    "yesterday": "yesterday",
+    "days": "{n} d ago",
+    "weeks": "{n} w ago",
+    "longAgo": "a long time ago",
+    "unknown": "unknown"
+  }
+}

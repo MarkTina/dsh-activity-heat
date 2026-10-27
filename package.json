@@ -1,0 +1,48 @@
+{
+  "name": "@local/activity-heat",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Activity heat marks for DSH sessions and workspaces — a sidebar panel entry, a per-row heat dot and a hover-card heat section that make the most recently active conversations obvious. | DSH 会话与工作区热度标识——侧栏入口、行内热度点与悬停卡热度段，让最近发生对话的分区与会话立刻可见。",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "session",
+    "workspace",
+    "recency",
+    "activity",
+    "heat"
+  ],
+  "scripts": {
+    "test": "node harness.cjs && node check-shortcut.cjs && node check-boot-timing.cjs"
+  },
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": []
+    }
+  }
+}
