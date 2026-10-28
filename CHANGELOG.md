@@ -19,6 +19,8 @@ First public layout of the plugin.
 - All five metric icons share one 12 px stroke set drawn from `currentColor`, replacing the colored emoji.
 - Workspace cards are taller (roomier padding, larger title and meter) and their running state no longer leaks the orbit band as colour patches.
 - Long session lists scroll with the native scrollbar hidden and a floating `⌃⌄` hint on the right.
+- Session card meta now leads with the two percentages and pins the relative time to the far right.
+- Cards show the accumulated conversation time; hovering it opens a time-breakdown card (donut, legend and proportional timeline) built from `contextTimeline.timing`.
 - Blue heat palette instead of the host brand token, which reads near-black in light themes.
 - The shortcut toggles: first press opens the panel, second press returns to the conversation you came from.
 - Running sessions carry the whale-tail badge (`assets/active.png`) inlined as a data URI and swaying on a CSS loop.

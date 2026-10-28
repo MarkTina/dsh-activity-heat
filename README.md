@@ -26,7 +26,8 @@ This plugin computes a 0–100% heat score from **time since last activity** and
 - **Top-level switch**: `Sessions 58` / `Workspaces 10` — no more mixed list
 - **Count selector**: sessions `10 / 20 / 30 / 50`, workspaces `5 / 10 / 20`
 - **Heat filter**: All / Blazing / Warm / Active / Recent / Stale, with live counts
-- **Every card**: title and most recent prompt on the left; the workspace name sits above the heat meter on the right; relative time, turns, tokens, cache hit rate and context usage run along the bottom, and both percentages carry a mini progress bar (context turns amber above 60% and red above 85%)
+- **Every card**: the bottom row leads with cache hit rate and context usage (each with a mini progress bar), then turns, tokens and the accumulated conversation time; the relative time sits at the far right
+- **Time breakdown**: hovering the conversation time opens a card with the active duration, a donut of wait / thinking / reply / tool-argument / tool-run / other, its legend and a proportional timeline strip — same source (`contextTimeline.timing`) and same segmentation as the host's timing panel
 - **One icon language**: all five metrics share 12 px stroke icons drawn from `currentColor` — no colored emoji
 - **Long lists scroll**: the list caps its height, hides its native scrollbar, and shows a floating `⌃⌄` handle on the right while more rows remain
 - **Click to open**: a session row opens that session, a workspace row opens that workspace
@@ -127,6 +128,7 @@ Everything is read from **public host snapshots** — no private APIs, nothing w
 | Cache hit rate | `…values.tokenUsage.cacheReadTokens / billed input`, using the host's own rounding (a partial hit never displays as 100%) |
 | Context usage | `…values.contextPressure` — `projectedTokens ?? pressureTokens` over `contextWindow`, the value the composer context meter reads |
 | Session prompt | `…values.contextTimeline` (`initialPrompt` / `lastUser` / `lastReply`) — the status bar does not show prompts |
+| Conversation time & breakdown | `…values.contextTimeline.timing` (`wallMs` / `ttftMs` / `genMs` / `toolsMs` and the generation subdivisions) — the same source and segmentation as the host timing panel |
 | Running state | `sessions.list.byId[id].running` |
 
 **Excluded**: archived sessions, subagent child sessions, blank draft sessions.

@@ -45,6 +45,19 @@
     "current": "当前"
   },
   "group": { "sessions": "{count} 个会话" },
+  "timing": {
+    "title": "耗时统计",
+    "total": "活跃时长",
+    "ttft": "模型等待",
+    "gen": "模型生成",
+    "reasoning": "模型思考",
+    "text": "模型回复",
+    "toolArgs": "工具参数",
+    "tools": "工具执行",
+    "other": "其他开销",
+    "speed": "输出速度 {tps} tok/s",
+    "empty": "暂无耗时数据"
+  },
   "workspace": {
     "untitled": "未命名工作区",
     "ungrouped": "未分组",

@@ -121,6 +121,19 @@ const sessions = {
           contextWindow: 2000000,
           requests: [{ prompt: 40000, cacheRead: 30000, total: 1520000 }],
           initialPrompt: '把面板做得更好看一点',
+          timing: {
+            wallMs: 2780000,
+            ttftMs: 620000,
+            genMs: 1020000,
+            reasoningMs: 400000,
+            textMs: 520000,
+            toolArgMs: 100000,
+            toolsMs: 480000,
+            calls: 245,
+            toolCalls: 362,
+            speedMs: 800000,
+            speedTokens: 161600000,
+          },
         },
         // 与宿主 composer 状态栏同源的三份投影
         sessionStats: { turns: 14, steps: 40, totalTokens: 1520000 },
@@ -270,6 +283,11 @@ function collect(tree) {
   check(all.indexOf('510k tok') !== -1, 'tokens 取 tokenUsage 计费总量（与状态栏一致）');
   check(all.indexOf('缓存命中 60%') !== -1, '缓存命中率与状态栏同算法');
   check(all.indexOf('上下文 80%') !== -1, '上下文占比取 contextPressure（与状态栏一致）');
+  check(all.indexOf('46m20s') !== -1, '显示累计对话时长');
+  const durChips = c.components.filter((x) => x.name === 'DurationChip');
+  check(durChips.length === 1, '累计时长来自 contextTimeline.timing', durChips.length);
+  check(all.indexOf('缓存命中') < all.indexOf('14 轮'), '百分比排在用量之前');
+  check(all.indexOf('510k tok') < all.indexOf('分钟前'), '相对时间收在行尾');
 
   const miniMeters = c.components.filter((x) => x.name === 'MiniMeter');
   check(miniMeters.length >= 2, '缓存/上下文各带一条迷你进度条', miniMeters.length);

@@ -66,6 +66,19 @@ var AH_I18N = /* AH_I18N_START */ {
       context: '上下文 {n}%',
       current: '当前',
     },
+    timing: {
+      title: '耗时统计',
+      total: '活跃时长',
+      ttft: '模型等待',
+      gen: '模型生成',
+      reasoning: '模型思考',
+      text: '模型回复',
+      toolArgs: '工具参数',
+      tools: '工具执行',
+      other: '其他开销',
+      speed: '输出速度 {tps} tok/s',
+      empty: '暂无耗时数据',
+    },
     group: { sessions: '{count} 个会话' },
     workspace: {
       untitled: '未命名工作区',
@@ -130,6 +143,19 @@ var AH_I18N = /* AH_I18N_START */ {
       cache: 'Cache hit {n}%',
       context: 'context {n}%',
       current: 'Current',
+    },
+    timing: {
+      title: 'Time breakdown',
+      total: 'Active time',
+      ttft: 'Model wait',
+      gen: 'Generation',
+      reasoning: 'Thinking',
+      text: 'Reply',
+      toolArgs: 'Tool arguments',
+      tools: 'Tool run',
+      other: 'Other',
+      speed: '{tps} tok/s',
+      empty: 'No timing data',
     },
     group: { sessions: '{count} sessions' },
     workspace: {
@@ -465,6 +491,34 @@ function build(require) {
   }
 
   /**
+   * 读取 `contextTimeline.timing`（与 dsh-context 的「耗时统计」同源），
+   * 按它的口径把活跃时长切成 等待 / 生成（思考·回复·工具参数）/ 工具执行 / 其他。
+   */
+  function timingOf(timeline) {
+    var raw = timeline && timeline.timing;
+    if (!raw || typeof raw !== 'object') return undefined;
+    var wall = numberAt(raw, 'wallMs');
+    if (wall === undefined || wall <= 0) return undefined;
+    var ttft = Math.min(numberAt(raw, 'ttftMs') || 0, wall);
+    var gen = Math.max(0, Math.min(numberAt(raw, 'genMs') || 0, wall - ttft));
+    var tools = Math.max(0, Math.min(numberAt(raw, 'toolsMs') || 0, wall - ttft - gen));
+    return {
+      wallMs: wall,
+      ttftMs: ttft,
+      genMs: gen,
+      toolsMs: tools,
+      otherMs: Math.max(0, wall - ttft - gen - tools),
+      reasoningMs: numberAt(raw, 'reasoningMs') || 0,
+      textMs: numberAt(raw, 'textMs') || 0,
+      toolArgMs: numberAt(raw, 'toolArgMs') || 0,
+      calls: numberAt(raw, 'calls') || 0,
+      toolCalls: numberAt(raw, 'toolCalls') || 0,
+      speedMs: numberAt(raw, 'speedMs') || 0,
+      speedTokens: numberAt(raw, 'speedTokens') || 0,
+    };
+  }
+
+  /**
    * 从会话投影读轮次 / tokens / 缓存命中率 / 上下文占比 / 提示词。
    *
    * 前三项必须与 **宿主 composer 底部状态栏** 同源，否则两边数字对不上：
@@ -487,6 +541,8 @@ function build(require) {
           || snippetOf(timeline.lastUser, 60)
           || (timeline.lastReply ? snippetOf(timeline.lastReply.text, 60) : '');
         if (prompt) out.prompt = prompt;
+        var timing = timingOf(timeline);
+        if (timing) out.timing = timing;
       }
 
       var fromStatusBar = false;
@@ -615,6 +671,7 @@ function build(require) {
         prompt: facts.prompt,
         cacheRate: facts.cacheRate,
         contextPct: facts.contextPct,
+        timing: facts.timing,
       });
     }
     sessions.sort(compareByRecency);
@@ -915,10 +972,208 @@ function build(require) {
         React.createElement('rect', { key: 'box', x: 1.6, y: 1.6, width: 8.8, height: 8.8, rx: 1.4 }),
         React.createElement('path', { key: 'ticks', d: 'M6 3.4v5.2M3.4 6h5.2' }),
       ];
+    } else if (name === 'duration') {
+      inner = [
+        React.createElement('circle', { key: 'dial', cx: 6, cy: 6, r: 4.4 }),
+        React.createElement('path', { key: 'hand', d: 'M6 3.5V6l1.8 1.3' }),
+      ];
     } else {
       inner = React.createElement('circle', { cx: 6, cy: 6, r: 2.6, stroke: 'none', fill: 'currentColor' });
     }
     return React.createElement('svg', common, inner);
+  }
+
+  /** 累计时长文本：12s / 46m20s / 1h12m。 */
+  function pad2(value) {
+    return value < 10 ? '0' + value : String(value);
+  }
+
+  function durationText(ms) {
+    if (typeof ms !== 'number' || !isFinite(ms) || ms <= 0) return '';
+    var total = Math.round(ms / 1000);
+    if (total < 60) return total + 's';
+    var mins = Math.floor(total / 60);
+    var secs = total % 60;
+    if (mins < 60) return mins + 'm' + (secs > 0 ? pad2(secs) + 's' : '');
+    var hours = Math.floor(mins / 60);
+    var rest = mins % 60;
+    return hours + 'h' + (rest > 0 ? pad2(rest) + 'm' : '');
+  }
+
+  /** 耗时分段，口径与 dsh-context 的「耗时统计」一致。 */
+  function timingSegments(timing) {
+    var segs = [];
+    segs.push({
+      key: 'ttft',
+      label: tt('timing.ttft'),
+      ms: timing.ttftMs,
+      color: 'var(--color-blue-500, #3b82f6)',
+    });
+    var detailed = timing.reasoningMs > 0 || timing.textMs > 0 || timing.toolArgMs > 0;
+    if (detailed) {
+      var used = 0;
+      var push = function (key, label, ms, color) {
+        var take = Math.max(0, Math.min(ms, timing.genMs - used));
+        if (take > 0) segs.push({ key: key, label: label, ms: take, color: color });
+        used += take;
+      };
+      push('reasoning', tt('timing.reasoning'), timing.reasoningMs, 'var(--color-violet-500, #8b5cf6)');
+      push('text', tt('timing.text'), timing.textMs, 'var(--color-pink-500, #ec4899)');
+      push('toolarg', tt('timing.toolArgs'), timing.toolArgMs, 'var(--color-amber-500, #f59e0b)');
+    } else if (timing.genMs > 0) {
+      segs.push({ key: 'gen', label: tt('timing.gen'), ms: timing.genMs, color: 'var(--color-violet-500, #8b5cf6)' });
+    }
+    if (timing.toolsMs > 0) {
+      segs.push({ key: 'tools', label: tt('timing.tools'), ms: timing.toolsMs, color: 'var(--color-teal-500, #14b8a6)' });
+    }
+    if (timing.otherMs > 0) {
+      segs.push({ key: 'other', label: tt('timing.other'), ms: timing.otherMs, color: 'var(--color-slate-400, #94a3b8)' });
+    }
+    return segs;
+  }
+
+  /** 悬浮卡：活跃时长 + 环形分布 + 图例 + 时间轴。 */
+  function TimingCard(props) {
+    var timing = props.timing;
+    var anchor = props.anchor || {};
+    var width = 300;
+    var viewportWidth = typeof window !== 'undefined' && window.innerWidth ? window.innerWidth : 1280;
+    var left = typeof anchor.left === 'number' ? anchor.left : 24;
+    if (left + width > viewportWidth - 12) left = viewportWidth - width - 12;
+    if (left < 12) left = 12;
+    var above = typeof anchor.top === 'number' && anchor.top > 300;
+    var top = above ? anchor.top - 8 : (typeof anchor.bottom === 'number' ? anchor.bottom + 8 : 120);
+
+    var segments = timingSegments(timing);
+    var wall = timing.wallMs || 1;
+
+    var stop = 0;
+    var parts = [];
+    for (var i = 0; i < segments.length; i += 1) {
+      var seg = segments[i];
+      var from = stop / wall * 360;
+      stop += seg.ms;
+      var to = stop / wall * 360;
+      parts.push(seg.color + ' ' + from + 'deg ' + to + 'deg');
+    }
+
+    var speed = timing.speedMs > 0 && timing.speedTokens >= 0
+      ? Math.round(timing.speedTokens / (timing.speedMs / 1000))
+      : null;
+
+    var rows = segments.map(function (row) {
+      var pct = Math.round(row.ms / wall * 100);
+      return React.createElement('div', {
+        key: row.key,
+        style: { display: 'flex', alignItems: 'center', gap: 6, lineHeight: '18px', fontSize: 11.5 },
+      },
+        React.createElement('span', { style: { width: 8, height: 8, borderRadius: 2, background: row.color, flex: 'none' } }),
+        React.createElement('span', {
+          style: {
+            color: UI.textSecondary, flex: '1 1 auto', minWidth: 0,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          },
+        }, row.label),
+        React.createElement('span', { style: { color: UI.textPrimary, fontVariantNumeric: 'tabular-nums' } }, durationText(row.ms)),
+        React.createElement('span', {
+          style: { color: UI.textTertiary, fontVariantNumeric: 'tabular-nums', width: 34, textAlign: 'right' },
+        }, pct + '%'),
+      );
+    });
+
+    var strip = React.createElement('div', {
+      'aria-hidden': 'true',
+      style: { display: 'flex', gap: 1, height: 6, borderRadius: 999, overflow: 'hidden', marginTop: 10 },
+    }, segments.map(function (row) {
+      return React.createElement('span', {
+        key: row.key,
+        style: { flexGrow: row.ms, flexBasis: 0, background: row.color },
+      });
+    }));
+
+    return React.createElement('div', {
+      style: {
+        position: 'fixed',
+        left: left,
+        top: top,
+        transform: above ? 'translateY(-100%)' : 'none',
+        width: width,
+        zIndex: 1200,
+        padding: '12px 14px',
+        borderRadius: 10,
+        background: 'var(--dsw-alias-bg-base, #ffffff)',
+        border: '1px solid var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
+        boxShadow: '0 8px 28px rgba(0,0,0,0.16)',
+        color: UI.textPrimary,
+        pointerEvents: 'none',
+      },
+    },
+      React.createElement('div', { style: { display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 } },
+        React.createElement('span', { style: { fontSize: '0.8em', fontWeight: 600 } }, tt('timing.title')),
+        React.createElement('span', { style: { color: UI.textTertiary, fontSize: '0.72em' } }, tt('timing.total')),
+        React.createElement('span', {
+          style: { marginLeft: 'auto', fontVariantNumeric: 'tabular-nums', fontSize: '0.86em', fontWeight: 600 },
+        }, durationText(wall)),
+        speed !== null
+          ? React.createElement('span', { style: { color: UI.textTertiary, fontSize: '0.72em' } }, tt('timing.speed', { tps: speed }))
+          : null,
+      ),
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12 } },
+        React.createElement('span', {
+          'aria-hidden': 'true',
+          style: {
+            position: 'relative',
+            flex: 'none',
+            width: 72,
+            height: 72,
+            borderRadius: '50%',
+            background: 'conic-gradient(' + (parts.length ? parts.join(',') : 'transparent 0deg 360deg') + ')',
+          },
+        },
+          React.createElement('span', {
+            style: {
+              position: 'absolute',
+              inset: 10,
+              borderRadius: '50%',
+              background: 'var(--dsw-alias-bg-base, #ffffff)',
+            },
+          }),
+        ),
+        React.createElement('div', {
+          style: { flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 },
+        }, rows),
+      ),
+      strip,
+    );
+  }
+
+  /** 累计对话时长胶囊：悬浮时展开耗时分布卡。 */
+  function DurationChip(props) {
+    var state = React.useState(null);
+    var anchor = state[0];
+    var setAnchor = state[1];
+    var ref = React.useRef ? React.useRef(null) : { current: null };
+
+    var show = function () {
+      var el = ref.current;
+      if (!el || typeof el.getBoundingClientRect !== 'function') return;
+      var box = el.getBoundingClientRect();
+      setAnchor({ left: box.left, top: box.top, bottom: box.bottom });
+    };
+    var hide = function () { setAnchor(null); };
+
+    return React.createElement('span', {
+      ref: ref,
+      onMouseEnter: show,
+      onMouseLeave: hide,
+      onFocus: show,
+      onBlur: hide,
+      style: { display: 'inline-flex', alignItems: 'center', gap: 3, cursor: 'help' },
+    },
+      React.createElement(MetricIcon, { name: 'duration' }),
+      durationText(props.timing.wallMs),
+      anchor ? React.createElement(TimingCard, { timing: props.timing, anchor: anchor }) : null,
+    );
   }
 
   function MetaChip(props) {
@@ -1084,14 +1339,8 @@ function build(require) {
       ? (session.workspace.title || basenameOf(session.workspace.path) || tt('workspace.untitled'))
       : '';
 
+    // 信息顺序：两个百分比在前，用量居中，相对时间收到最右
     var meta = [];
-    meta.push(React.createElement('span', { key: 'at' }, relativeOf(session.at, now)));
-    if (typeof session.turns === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'turns', icon: React.createElement(MetricIcon, { name: 'turns' }) }, tt('fact.turns', { n: session.turns })));
-    }
-    if (typeof session.tokens === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'tokens', icon: React.createElement(MetricIcon, { name: 'tokens' }) }, tt('fact.tokens', { n: compactNumber(session.tokens) })));
-    }
     if (session.cacheRate !== undefined && session.cacheRate !== '') {
       var cachePct = Number(session.cacheRate);
       meta.push(React.createElement(MetaChip, { key: 'cache', icon: React.createElement(MetricIcon, { name: 'cache' }) },
@@ -1111,6 +1360,15 @@ function build(require) {
         }),
       ));
     }
+    if (typeof session.turns === 'number') {
+      meta.push(React.createElement(MetaChip, { key: 'turns', icon: React.createElement(MetricIcon, { name: 'turns' }) }, tt('fact.turns', { n: session.turns })));
+    }
+    if (typeof session.tokens === 'number') {
+      meta.push(React.createElement(MetaChip, { key: 'tokens', icon: React.createElement(MetricIcon, { name: 'tokens' }) }, tt('fact.tokens', { n: compactNumber(session.tokens) })));
+    }
+    if (session.timing && typeof session.timing.wallMs === 'number' && session.timing.wallMs > 0) {
+      meta.push(React.createElement(DurationChip, { key: 'dur', timing: session.timing }));
+    }
     if (session.open) {
       meta.push(React.createElement(MetaChip, { key: 'open', icon: React.createElement(MetricIcon, { name: 'current' }) }, tt('fact.current')));
     }
@@ -1120,6 +1378,11 @@ function build(require) {
       if (i > 0) metaRow.push(React.createElement('span', { key: 'sep' + i, style: { opacity: 0.35 } }, '·'));
       metaRow.push(meta[i]);
     }
+    // 相对时间单独收尾：不加分隔符，用 auto margin 贴到行尾
+    metaRow.push(React.createElement('span', {
+      key: 'at',
+      style: { marginLeft: 'auto', paddingLeft: 10, whiteSpace: 'nowrap', opacity: 0.9 },
+    }, relativeOf(session.at, now)));
 
     var children = [
       React.createElement('span', {

@@ -45,6 +45,19 @@
     "current": "Current"
   },
   "group": { "sessions": "{count} sessions" },
+  "timing": {
+    "title": "Time breakdown",
+    "total": "Active time",
+    "ttft": "Model wait",
+    "gen": "Generation",
+    "reasoning": "Thinking",
+    "text": "Reply",
+    "toolArgs": "Tool arguments",
+    "tools": "Tool run",
+    "other": "Other",
+    "speed": "{tps} tok/s",
+    "empty": "No timing data"
+  },
   "workspace": {
     "untitled": "Untitled workspace",
     "ungrouped": "Ungrouped",

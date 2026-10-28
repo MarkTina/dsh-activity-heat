@@ -26,7 +26,8 @@ DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话�
 - **顶层切换**：`会话 58` / `工作区 10`，不再是上下混排
 - **数量可选**：会话 `10 / 20 / 30 / 50`，工作区 `5 / 10 / 20`
 - **热度筛选**：全部 / 炽热 / 温热 / 活跃 / 近期 / 陈旧（带实时计数）
-- **每张卡片**：左侧是标题与最近一次提示词，右侧在热度计上方显示所属工作区；底部一行是相对时间、轮次、tokens、缓存命中率、上下文占比，两个百分比各带一条迷你进度条（上下文超过 60% 转琥珀、85% 转红）
+- **每张卡片**：底部依次是缓存命中率、上下文占比（各带迷你进度条），然后是轮次、tokens 与累计对话时长；相对时间贴在最右侧
+- **耗时分布**：悬浮累计对话时长会展开小卡片——活跃时长、等待/思考/回复/工具参数/工具执行/其他的环形图、图例与按比例铺排的时间轴，数据来自 `contextTimeline.timing`，分段口径与宿主的耗时统计一致
 - **统一图标语言**：五个指标共用 12px 描边图标，全部取自 `currentColor`——不再有彩色 emoji
 - **长列表可滚动**：列表限高、隐藏原生滚动条，右侧用浮动的 `⌃⌄` 提示还能上下滑
 - **点击即跳转**：会话行打开该会话，工作区行打开该工作区
@@ -127,6 +128,7 @@ pnpm add link:/绝对路径/dsh-activity-heat
 | 缓存命中率 | `…values.tokenUsage.cacheReadTokens / 计费输入`，沿用宿主的取整规则（非满命中不会显示成 100%） |
 | 上下文占比 | `…values.contextPressure`——`projectedTokens ?? pressureTokens` 除以 `contextWindow`，与 composer 上下文环同源 |
 | 最近提示词 | `…values.contextTimeline`（`initialPrompt` / `lastUser` / `lastReply`）——状态栏不展示提示词 |
+| 累计时长与耗时分布 | `…values.contextTimeline.timing`（`wallMs` / `ttftMs` / `genMs` / `toolsMs` 及生成段细分）——与宿主耗时统计同源同口径 |
 | 运行状态 | `sessions.list.byId[id].running` |
 
 **排除**：已归档会话、subagent 子会话、空白草稿会话。
