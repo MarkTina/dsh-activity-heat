@@ -74,7 +74,7 @@ Then append the package name to `dsh.profile.bundles` in that profile's `package
 "@local/activity-heat"
 ```
 
-Restart DSH (or toggle the plugin once) to load it.
+**Restart DSH** to load it. A page refresh only reloads the UI: the Host keeps its module generation, and toggling the plugin does not re-read changed files either. After editing a `link:` checkout you must quit DSH completely and start it again.
 
 ### Option 2 — Local checkout
 

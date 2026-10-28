@@ -74,7 +74,7 @@ pnpm add github:MarkTina/dsh-activity-heat
 "@local/activity-heat"
 ```
 
-重启 DSH（或开关一次插件）即可加载。
+**重启 DSH** 才会加载。刷新页面只重载界面，Host 的模块代际不会变；开关插件也不会重新读取改动过的文件。改过 `link:` 目录后必须完全退出 DSH 再启动。
 
 ### 方式二：本地目录
 
