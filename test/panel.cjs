@@ -114,6 +114,7 @@ const sessions = {
   projectionsBySession: {
     run: {
       values: {
+        // 提示词来源（状态栏不展示提示词，仍取 contextTimeline）
         contextTimeline: {
           counts: { turns: 12 },
           current: { total: 1520000 },
@@ -121,6 +122,15 @@ const sessions = {
           requests: [{ prompt: 40000, cacheRead: 30000, total: 1520000 }],
           initialPrompt: '把面板做得更好看一点',
         },
+        // 与宿主 composer 状态栏同源的三份投影
+        sessionStats: { turns: 14, steps: 40, totalTokens: 1520000 },
+        tokenUsage: {
+          uncachedInputTokens: 200000,
+          cacheReadTokens: 300000,
+          cacheWriteTokens: 0,
+          outputTokens: 10000,
+        },
+        contextPressure: { projectedTokens: 800000, contextWindow: 1000000 },
       },
     },
   },
@@ -256,10 +266,10 @@ function collect(tree) {
   const segLabels = c.buttons.map((x) => String((x.children && x.children[0]) || ''));
   check(['10', '20', '30', '50'].every((v) => segLabels.indexOf(v) !== -1), '会话数量选项 10/20/30/50');
 
-  check(all.indexOf('12 轮') !== -1, '显示轮次');
-  check(all.indexOf('1.5M tokens') !== -1, 'tokens 超百万用 M（1.5M）');
-  check(all.indexOf('缓存 75%') !== -1, '显示缓存命中率');
-  check(all.indexOf('上下文 76%') !== -1, '显示上下文占比');
+  check(all.indexOf('14 轮') !== -1, '轮次取宿主 sessionStats（与状态栏一致）');
+  check(all.indexOf('510k tok') !== -1, 'tokens 取 tokenUsage 计费总量（与状态栏一致）');
+  check(all.indexOf('缓存命中 60%') !== -1, '缓存命中率与状态栏同算法');
+  check(all.indexOf('上下文 80%') !== -1, '上下文占比取 contextPressure（与状态栏一致）');
   check(all.indexOf('把面板做得更好看一点') !== -1, '显示最近提示词');
   check(all.indexOf('“') === -1, '提示词无引号');
 
@@ -381,6 +391,63 @@ function collect(tree) {
 
   const sc = b.shortcutDefs[0];
   check(sc && sc.label() === 'Recent Activity', 'locale: 快捷键标签走英文');
+}
+
+/* ================= 9. 状态栏同源 / 旧宿主回退 ================= */
+{
+  const b = boot(false);
+  const reg = b.regs.find((r) => r.o.name === 'main');
+  const injected = typeof reg.o.inject === 'function' ? reg.o.inject() : {};
+  const render = (sessionState) => collect(reg.C({
+    ...injected,
+    useSessions: (sel) => sel(sessionState),
+    useWorkspaces: (sel) => sel(workspaces),
+  })).texts.join(' | ');
+
+  /* 旧宿主：只有 contextTimeline，数字仍需显示 */
+  const legacy = {
+    ids: ['run'],
+    byId: { run: byId.run },
+    projectionsBySession: {
+      run: {
+        values: {
+          contextTimeline: {
+            counts: { turns: 12 },
+            current: { total: 1520000 },
+            contextWindow: 2000000,
+            requests: [{ prompt: 40000, cacheRead: 30000, total: 1520000 }],
+            initialPrompt: '把面板做得更好看一点',
+          },
+        },
+      },
+    },
+  };
+  const legacyText = render(legacy);
+  check(legacyText.indexOf('12 轮') !== -1, '回退：轮次取 contextTimeline');
+  check(legacyText.indexOf('1.5M tok') !== -1, '回退：tokens 取 contextTimeline');
+  check(legacyText.indexOf('缓存命中 75%') !== -1, '回退：缓存命中率');
+  check(legacyText.indexOf('上下文 76%') !== -1, '回退：上下文占比');
+
+  /* 接近满命中：宿主口径不会四舍五入成 100% */
+  const nearFull = {
+    ids: ['run'],
+    byId: { run: byId.run },
+    projectionsBySession: {
+      run: {
+        values: {
+          tokenUsage: {
+            uncachedInputTokens: 1,
+            cacheReadTokens: 999999,
+            cacheWriteTokens: 0,
+            outputTokens: 0,
+          },
+        },
+      },
+    },
+  };
+  const nearFullText = render(nearFull);
+  check(nearFullText.indexOf('缓存命中 100%') === -1, '接近满命中不显示 100%');
+  check(nearFullText.indexOf('99.9999') !== -1, '非满命中保留有效小数位');
 }
 
 console.log(failed === 0 ? '\nHARNESS PASSED' : '\nHARNESS FAILED (' + failed + ')');

@@ -39,8 +39,8 @@
   },
   "fact": {
     "turns": "{n} 轮",
-    "tokens": "{n} tokens",
-    "cache": "缓存 {n}%",
+    "tokens": "{n} tok",
+    "cache": "缓存命中 {n}%",
     "context": "上下文 {n}%",
     "current": "当前"
   },

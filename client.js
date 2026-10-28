@@ -61,8 +61,8 @@ var AH_I18N = /* AH_I18N_START */ {
     },
     fact: {
       turns: '{n} 轮',
-      tokens: '{n} tokens',
-      cache: '缓存 {n}%',
+      tokens: '{n} tok',
+      cache: '缓存命中 {n}%',
       context: '上下文 {n}%',
       current: '当前',
     },
@@ -126,8 +126,8 @@ var AH_I18N = /* AH_I18N_START */ {
     },
     fact: {
       turns: '{n} turns',
-      tokens: '{n} tokens',
-      cache: 'cache {n}%',
+      tokens: '{n} tok',
+      cache: 'Cache hit {n}%',
       context: 'context {n}%',
       current: 'Current',
     },
@@ -395,7 +395,78 @@ function build(require) {
     return line.length > n ? line.slice(0, n) + '…' : line;
   }
 
-  /** 从 contextTimeline 投影读轮次 / tokens / 缓存命中率 / 上下文占比 / 提示词。 */
+  /**
+   * 缓存命中率的显示取整，与宿主 composer 用量 pill 完全同算法：
+   * 整百分比四舍五入，但「非满命中」绝不四舍五入成 100。
+   */
+  function roundedPercentUnits(cacheReadTokens, denominator, decimalPlaces) {
+    var scale = (decimalPlaces === 0 ? 1 : 10) * 100;
+    var doubledScale = scale * 2;
+    var denominatorQuotient = Math.floor(denominator / doubledScale);
+    var denominatorRemainder = denominator % doubledScale;
+    var lower = 0;
+    var upper = scale;
+    while (lower < upper) {
+      var candidate = Math.floor((lower + upper + 1) / 2);
+      var factor = candidate * 2 - 1;
+      if (cacheReadTokens >= factor * denominatorQuotient
+        + Math.ceil(factor * denominatorRemainder / doubledScale)) lower = candidate;
+      else upper = candidate - 1;
+    }
+    return lower;
+  }
+
+  function displayPercentUnits(units, decimalPlaces) {
+    if (decimalPlaces === 0) return String(units);
+    var whole = Math.floor(units / 10);
+    var tenths = units % 10;
+    return tenths === 0 ? String(whole) : whole + '.' + tenths;
+  }
+
+  /** 返回宿主状态栏同款缓存命中率文本；无计费输入时返回 undefined。 */
+  function cacheHitTextOf(cacheReadTokens, promptTokens) {
+    if (!(promptTokens > 0)) return undefined;
+    if (cacheReadTokens >= promptTokens) return '100';
+    var roundedUnits = roundedPercentUnits(cacheReadTokens, promptTokens, 0);
+    if (roundedUnits < 100) return displayPercentUnits(roundedUnits, 0);
+
+    var distinguishingPlaces = 1;
+    var scaledDoubleGap = (promptTokens - cacheReadTokens) * 200;
+    var denominatorTens = Math.floor(promptTokens / 10);
+    while (scaledDoubleGap <= denominatorTens) {
+      scaledDoubleGap *= 10;
+      distinguishingPlaces += 1;
+    }
+    var denominatorOnes = promptTokens % 10;
+    var roundedLoss = 5;
+    for (var loss = 1; loss < 5; loss += 1) {
+      var factor = loss * 2 + 1;
+      var threshold = factor * denominatorTens + Math.floor(factor * denominatorOnes / 10);
+      if (scaledDoubleGap <= threshold) {
+        roundedLoss = loss;
+        break;
+      }
+    }
+    return '99.' + new Array(distinguishingPlaces).join('9') + (10 - roundedLoss);
+  }
+
+  function numberAt(source, key) {
+    if (!source || typeof source !== 'object') return undefined;
+    var value = source[key];
+    return typeof value === 'number' && isFinite(value) ? value : undefined;
+  }
+
+  /**
+   * 从会话投影读轮次 / tokens / 缓存命中率 / 上下文占比 / 提示词。
+   *
+   * 前三项必须与 **宿主 composer 底部状态栏** 同源，否则两边数字对不上：
+   * - 轮次：`sessionStats.turns`
+   * - tokens：`tokenUsage` 的三个计费输入桶 + 输出（整段日志累计）
+   * - 缓存命中：`tokenUsage.cacheReadTokens / 计费输入`
+   * - 上下文占比：`contextPressure.projectedTokens ?? pressureTokens / contextWindow`
+   * 提示词仍来自 `contextTimeline`（状态栏不展示提示词）。
+   * 宿主未提供这些投影时，回退到旧版 `contextTimeline` 的字段。
+   */
   function factsFromProjection(projections) {
     var out = {};
     try {
@@ -404,44 +475,77 @@ function build(require) {
 
       var timeline = values.contextTimeline;
       if (timeline && typeof timeline === 'object') {
-        var counts = timeline.counts;
-        var turns = counts && typeof counts.turns === 'number'
-          ? counts.turns
-          : (typeof timeline.turns === 'number' ? timeline.turns : undefined);
-        if (typeof turns === 'number' && turns > 0) out.turns = turns;
-
-        var current = timeline.current;
-        var requests = Array.isArray(timeline.requests) ? timeline.requests : [];
-        var lastRequest = requests.length > 0 ? requests[requests.length - 1] : undefined;
-        var tokens = current && typeof current.total === 'number'
-          ? current.total
-          : (lastRequest && typeof lastRequest.total === 'number' ? lastRequest.total : undefined);
-        if (typeof tokens === 'number' && tokens > 0) out.tokens = tokens;
-
-        var ctxWindow = typeof timeline.contextWindow === 'number' && timeline.contextWindow > 0
-          ? timeline.contextWindow
-          : undefined;
-        if (ctxWindow !== undefined && typeof tokens === 'number' && tokens >= 0) {
-          out.contextPct = Math.max(0, Math.min(999, Math.round((tokens / ctxWindow) * 100)));
-        }
-
-        var cacheSource = lastRequest && typeof lastRequest.prompt === 'number'
-          ? lastRequest
-          : (timeline.last && typeof timeline.last.prompt === 'number' ? timeline.last : undefined);
-        if (cacheSource && cacheSource.prompt > 0 && typeof cacheSource.cacheRead === 'number') {
-          out.cacheRate = Math.max(0, Math.min(100, Math.round((cacheSource.cacheRead / cacheSource.prompt) * 100)));
-        }
-
         var prompt = snippetOf(timeline.initialPrompt, 60)
           || snippetOf(timeline.lastUser, 60)
           || (timeline.lastReply ? snippetOf(timeline.lastReply.text, 60) : '');
         if (prompt) out.prompt = prompt;
       }
 
+      var fromStatusBar = false;
+
       var stats = values.sessionStats;
       if (stats && typeof stats === 'object') {
-        if (out.tokens === undefined && typeof stats.totalTokens === 'number') out.tokens = stats.totalTokens;
-        if (out.turns === undefined && typeof stats.turns === 'number') out.turns = stats.turns;
+        var statsTurns = numberAt(stats, 'turns');
+        if (statsTurns !== undefined && statsTurns > 0) {
+          out.turns = statsTurns;
+          fromStatusBar = true;
+        }
+      }
+
+      var usage = values.tokenUsage;
+      if (usage && typeof usage === 'object') {
+        var uncached = numberAt(usage, 'uncachedInputTokens') || 0;
+        var cacheRead = numberAt(usage, 'cacheReadTokens') || 0;
+        var cacheWrite = numberAt(usage, 'cacheWriteTokens') || 0;
+        var output = numberAt(usage, 'outputTokens') || 0;
+        var billed = uncached + cacheRead + cacheWrite;
+        if (billed > 0 || output > 0) {
+          out.tokens = billed + output;
+          fromStatusBar = true;
+        }
+        var cacheText = cacheHitTextOf(cacheRead, billed);
+        if (cacheText !== undefined) out.cacheRate = cacheText;
+      }
+
+      var pressure = values.contextPressure;
+      if (pressure && typeof pressure === 'object') {
+        var used = numberAt(pressure, 'projectedTokens');
+        if (used === undefined) used = numberAt(pressure, 'pressureTokens');
+        var pressureWindow = numberAt(pressure, 'contextWindow');
+        if (used !== undefined && used >= 0 && pressureWindow !== undefined && pressureWindow > 0) {
+          out.contextPct = Math.max(0, Math.min(100, Math.round((used / pressureWindow) * 100)));
+          fromStatusBar = true;
+        }
+      }
+
+      // 旧宿主兜底：只提供 contextTimeline 时保持原有字段语义。
+      if (!fromStatusBar && timeline && typeof timeline === 'object') {
+        var counts = timeline.counts;
+        var legacyTurns = counts && typeof counts.turns === 'number'
+          ? counts.turns
+          : (typeof timeline.turns === 'number' ? timeline.turns : undefined);
+        if (typeof legacyTurns === 'number' && legacyTurns > 0) out.turns = legacyTurns;
+
+        var current = timeline.current;
+        var requests = Array.isArray(timeline.requests) ? timeline.requests : [];
+        var lastRequest = requests.length > 0 ? requests[requests.length - 1] : undefined;
+        var legacyTokens = current && typeof current.total === 'number'
+          ? current.total
+          : (lastRequest && typeof lastRequest.total === 'number' ? lastRequest.total : undefined);
+        if (typeof legacyTokens === 'number' && legacyTokens > 0) out.tokens = legacyTokens;
+
+        var legacyWindow = numberAt(timeline, 'contextWindow');
+        if (legacyWindow !== undefined && legacyWindow > 0 && typeof legacyTokens === 'number' && legacyTokens >= 0) {
+          out.contextPct = Math.max(0, Math.min(100, Math.round((legacyTokens / legacyWindow) * 100)));
+        }
+
+        var cacheSource = lastRequest && typeof lastRequest.prompt === 'number'
+          ? lastRequest
+          : (timeline.last && typeof timeline.last.prompt === 'number' ? timeline.last : undefined);
+        if (cacheSource && cacheSource.prompt > 0 && typeof cacheSource.cacheRead === 'number') {
+          var legacyCache = cacheHitTextOf(cacheSource.cacheRead, cacheSource.prompt);
+          if (legacyCache !== undefined) out.cacheRate = legacyCache;
+        }
       }
     } catch (error) {
       /* 投影结构未知时静默降级 */
@@ -841,7 +945,7 @@ function build(require) {
     if (typeof session.tokens === 'number') {
       meta.push(React.createElement(MetaChip, { key: 'tokens', icon: '◈' }, tt('fact.tokens', { n: compactNumber(session.tokens) })));
     }
-    if (typeof session.cacheRate === 'number') {
+    if (session.cacheRate !== undefined && session.cacheRate !== '') {
       meta.push(React.createElement(MetaChip, { key: 'cache', icon: '⚡' }, tt('fact.cache', { n: session.cacheRate })));
     }
     if (typeof session.contextPct === 'number') {
@@ -1399,7 +1503,7 @@ function build(require) {
     var statBits = [];
     if (typeof facts.turns === 'number') statBits.push(tt('fact.turns', { n: facts.turns }));
     if (typeof facts.tokens === 'number') statBits.push(tt('fact.tokens', { n: compactNumber(facts.tokens) }));
-    if (typeof facts.cacheRate === 'number') statBits.push(tt('fact.cache', { n: facts.cacheRate }));
+    if (facts.cacheRate !== undefined && facts.cacheRate !== '') statBits.push(tt('fact.cache', { n: facts.cacheRate }));
     if (typeof facts.contextPct === 'number') statBits.push(tt('fact.context', { n: facts.contextPct }));
     if (statBits.length > 0) {
       rows.push(React.createElement('div', { key: 'stats' }, statBits.join(' · ')));

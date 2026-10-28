@@ -118,7 +118,11 @@ pnpm add link:/绝对路径/dsh-activity-heat
 | 最近活动时间 | `sessions.list.byId[id].updatedAt`（与侧栏行尾时间同源） |
 | 标题 / 草稿 / 子代理 / 归档 | 同上的 `title` `blank` `origin` 与 `workspaces.list.archivedSessionIds` |
 | 工作区归属 | `workspaces.list.items[].sessionIds`（与宿主 `groupByWorkspace` 同一映射） |
-| 轮次 / tokens / 缓存 / 上下文 | `sessions.list.projectionsBySession[id].values.contextTimeline`（由 `dsh-context` 等插件注册；缺失则自动隐藏这几项） |
+| 轮次 | `sessions.list.projectionsBySession[id].values.sessionStats.turns`——与 composer 活动胶囊同源 |
+| tokens | `…values.tokenUsage`——计费输入（`uncachedInputTokens + cacheReadTokens + cacheWriteTokens`）加 `outputTokens`，与 composer 用量胶囊同源的整段日志总量 |
+| 缓存命中率 | `…values.tokenUsage.cacheReadTokens / 计费输入`，沿用宿主的取整规则（非满命中不会显示成 100%） |
+| 上下文占比 | `…values.contextPressure`——`projectedTokens ?? pressureTokens` 除以 `contextWindow`，与 composer 上下文环同源 |
+| 最近提示词 | `…values.contextTimeline`（`initialPrompt` / `lastUser` / `lastReply`）——状态栏不展示提示词 |
 | 运行状态 | `sessions.list.byId[id].running` |
 
 **排除**：已归档会话、subagent 子会话、空白草稿会话。
@@ -169,7 +173,7 @@ node test/locale.cjs       # locale 字典与元数据是否同步
 
 ## 已知限制
 
-- 轮次 / tokens / 缓存命中率 / 上下文占比依赖 `contextTimeline` 投影。若 profile 未安装 `dsh-context` 之类提供该投影的插件，这几项会自动隐藏（其余功能正常）。
+- 轮次、tokens、缓存命中率与上下文占比读 `sessionStats`、`tokenUsage`、`contextPressure`——与 composer 底部状态栏同源，数字完全对得上。只提供 `contextTimeline` 的旧 profile 会回退到它的字段，此时数字可能与状态栏不同。
 - 快捷键不声明 Linux 默认值，Linux 用户需在设置页自行绑定。
 
 ## 许可

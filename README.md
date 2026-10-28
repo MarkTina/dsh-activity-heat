@@ -118,7 +118,11 @@ Everything is read from **public host snapshots** — no private APIs, nothing w
 | Last activity time | `sessions.list.byId[id].updatedAt` (same as the sidebar row trailing time) |
 | Title / draft / subagent / archive | the same `title` `blank` `origin`, plus `workspaces.list.archivedSessionIds` |
 | Workspace membership | `workspaces.list.items[].sessionIds` (same mapping as the host `groupByWorkspace`) |
-| Turns / tokens / cache / context | `sessions.list.projectionsBySession[id].values.contextTimeline` (registered by `dsh-context` and friends; the fields hide themselves when absent) |
+| Turns | `sessions.list.projectionsBySession[id].values.sessionStats.turns` — the value the composer activity pill reads |
+| Tokens | `…values.tokenUsage` — billed input (`uncachedInputTokens + cacheReadTokens + cacheWriteTokens`) plus `outputTokens`, the same whole-log total as the composer usage pill |
+| Cache hit rate | `…values.tokenUsage.cacheReadTokens / billed input`, using the host's own rounding (a partial hit never displays as 100%) |
+| Context usage | `…values.contextPressure` — `projectedTokens ?? pressureTokens` over `contextWindow`, the value the composer context meter reads |
+| Session prompt | `…values.contextTimeline` (`initialPrompt` / `lastUser` / `lastReply`) — the status bar does not show prompts |
 | Running state | `sessions.list.byId[id].running` |
 
 **Excluded**: archived sessions, subagent child sessions, blank draft sessions.
@@ -169,7 +173,7 @@ node test/locale.cjs       # locale dictionaries and metadata stay in sync
 
 ## Known limitations
 
-- Turns / tokens / cache hit rate / context usage depend on the `contextTimeline` projection. Profiles without `dsh-context` (or another provider) hide those fields; everything else keeps working.
+- Turns, tokens, cache hit rate and context usage read `sessionStats`, `tokenUsage` and `contextPressure` — the same projections as the composer status bar, so the numbers match it exactly. Profiles that only expose `contextTimeline` fall back to its values; in that case the figures can differ from the status bar.
 - No Linux default shortcut is declared; Linux users bind one in Settings.
 
 ## License
