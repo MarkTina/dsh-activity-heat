@@ -71,6 +71,14 @@
   },
   "sidebar": { "rowLabel": "Heat", "hoverLabel": "Heat" },
   "shortcut": { "label": "Recent Activity" },
+  "tokens": {
+    "title": "Token usage",
+    "cacheHit": "Cache hit",
+    "uncached": "Uncached input",
+    "cacheRead": "Cached input",
+    "cacheWrite": "Cache write",
+    "output": "Output"
+  },
   "relative": {
     "now": "just now",
     "minutes": "{n} min ago",

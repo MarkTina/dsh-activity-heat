@@ -71,6 +71,14 @@
   },
   "sidebar": { "rowLabel": "热点", "hoverLabel": "热度" },
   "shortcut": { "label": "最近活跃会话" },
+  "tokens": {
+    "title": "Token 用量",
+    "cacheHit": "缓存命中",
+    "uncached": "未缓存输入",
+    "cacheRead": "缓存读取",
+    "cacheWrite": "缓存写入",
+    "output": "输出"
+  },
   "relative": {
     "now": "刚刚",
     "minutes": "{n} 分钟前",

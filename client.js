@@ -92,6 +92,14 @@ var AH_I18N = /* AH_I18N_START */ {
       openWorkspaceTitle: '打开工作区「{name}」',
     },
     sidebar: { rowLabel: '热点', hoverLabel: '热度' },
+    tokens: {
+      title: 'Token 用量',
+      cacheHit: '缓存命中',
+      uncached: '未缓存输入',
+      cacheRead: '缓存读取',
+      cacheWrite: '缓存写入',
+      output: '输出',
+    },
     shortcut: { label: '最近活跃会话' },
     relative: {
       now: '刚刚',
@@ -172,6 +180,14 @@ var AH_I18N = /* AH_I18N_START */ {
       openWorkspaceTitle: 'Open workspace “{name}”',
     },
     sidebar: { rowLabel: 'Heat', hoverLabel: 'Heat' },
+    tokens: {
+      title: 'Token usage',
+      cacheHit: 'Cache hit',
+      uncached: 'Uncached input',
+      cacheRead: 'Cached input',
+      cacheWrite: 'Cache write',
+      output: 'Output',
+    },
     shortcut: { label: 'Recent Activity' },
     relative: {
       now: 'just now',
@@ -581,11 +597,20 @@ function build(require) {
         var cacheWrite = numberAt(usage, 'cacheWriteTokens') || 0;
         var output = numberAt(usage, 'outputTokens') || 0;
         var billed = uncached + cacheRead + cacheWrite;
+        var cacheText = cacheHitTextOf(cacheRead, billed);
         if (billed > 0 || output > 0) {
           out.tokens = billed + output;
+          // 悬浮卡要逐项展示，四个桶原样保留
+          out.tokenParts = {
+            uncached: uncached,
+            cacheRead: cacheRead,
+            cacheWrite: cacheWrite,
+            output: output,
+            total: billed + output,
+            cacheHit: cacheText !== undefined ? cacheText : '',
+          };
           fromStatusBar = true;
         }
-        var cacheText = cacheHitTextOf(cacheRead, billed);
         if (cacheText !== undefined) out.cacheRate = cacheText;
       }
 
@@ -687,6 +712,7 @@ function build(require) {
         turns: facts.turns,
         steps: facts.steps,
         tokens: facts.tokens,
+        tokenParts: facts.tokenParts,
         prompt: facts.prompt,
         cacheRate: facts.cacheRate,
         contextPct: facts.contextPct,
@@ -1057,23 +1083,34 @@ function build(require) {
     return segs;
   }
 
-  /** 悬浮卡：活跃时长 + 环形分布 + 图例 + 时间轴。 */
-  function TimingCard(props) {
-    var timing = props.timing;
-    var anchor = props.anchor || {};
-    var width = 300;
+  /**
+   * 浮层定位：默认贴锚点下方，空间不够就翻到上方，左右夹在视口内。
+   * @param anchor - {left, top, bottom} 锚点的视口坐标
+   * @param width - 浮层宽度
+   * @param height - 浮层估算高度
+   */
+  function cardPosition(anchor, width, height) {
     var viewportWidth = typeof window !== 'undefined' && window.innerWidth ? window.innerWidth : 1280;
+    var viewportHeight = typeof window !== 'undefined' && window.innerHeight ? window.innerHeight : 800;
     var left = typeof anchor.left === 'number' ? anchor.left : 24;
     if (left + width > viewportWidth - 12) left = viewportWidth - width - 12;
     if (left < 12) left = 12;
-    var viewportHeight = typeof window !== 'undefined' && window.innerHeight ? window.innerHeight : 800;
-    var above = typeof anchor.top === 'number' && anchor.top > 300;
+    var above = typeof anchor.top === 'number' && anchor.top > height + 16;
     var top = above ? anchor.top - 8 : (typeof anchor.bottom === 'number' ? anchor.bottom + 8 : 120);
-    // 下方放不下时翻到上方，避免浮层被视口底部切掉
-    if (!above && top + 230 > viewportHeight && typeof anchor.top === 'number') {
+    if (!above && top + height > viewportHeight && typeof anchor.top === 'number') {
       above = true;
       top = anchor.top - 8;
     }
+    return { left: left, top: top, transform: above ? 'translateY(-100%)' : 'none' };
+  }
+
+  /** 悬浮卡：活跃时长 + 环形分布 + 图例 + 时间轴。 */
+  function TimingCard(props) {
+    var timing = props.timing;
+    var pos = cardPosition(props.anchor || {}, 300, 230);
+    var left = pos.left;
+    var top = pos.top;
+    var above = pos.transform !== 'none';
 
     var segments = timingSegments(timing);
     var wall = timing.wallMs || 1;
@@ -1128,7 +1165,7 @@ function build(require) {
         left: left,
         top: top,
         transform: above ? 'translateY(-100%)' : 'none',
-        width: width,
+        width: 300,
         zIndex: 2000,
         padding: '12px 14px',
         borderRadius: 10,
@@ -1178,8 +1215,17 @@ function build(require) {
     );
   }
 
-  /** 累计对话时长胶囊：悬浮时展开耗时分布卡。 */
-  function DurationChip(props) {
+  /** 精确整数：120,613,984 这样的千分位，用于明细卡。 */
+  function exactNumber(value) {
+    var n = typeof value === 'number' && isFinite(value) ? Math.round(value) : 0;
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  /**
+   * 通用悬浮容器：读锚点坐标 → portal 到 body → 由 render(anchor) 产出浮层。
+   * 浮层统一脱离滚动容器，避免被列表裁掉。
+   */
+  function HoverCard(props) {
     var state = React.useState(null);
     var anchor = state[0];
     var setAnchor = state[1];
@@ -1193,7 +1239,7 @@ function build(require) {
     };
     var hide = function () { setAnchor(null); };
 
-    var card = anchor ? React.createElement(TimingCard, { timing: props.timing, anchor: anchor }) : null;
+    var card = anchor && props.render ? props.render(anchor) : null;
     if (card && ReactDOM && typeof ReactDOM.createPortal === 'function'
       && typeof document !== 'undefined' && document.body) {
       card = ReactDOM.createPortal(card, document.body);
@@ -1205,11 +1251,97 @@ function build(require) {
       onMouseLeave: hide,
       onFocus: show,
       onBlur: hide,
-      style: { display: 'inline-flex', alignItems: 'center', gap: 3, cursor: 'help' },
+      style: { display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'help' },
+    }, props.children, card);
+  }
+
+  /** 悬浮卡：Token 用量明细（缓存命中 + 三个计费输入桶 + 输出）。 */
+  function TokensCard(props) {
+    var parts = props.parts;
+    var pos = cardPosition(props.anchor || {}, 260, 210);
+    var rows = [
+      { key: 'hit', label: tt('tokens.cacheHit'), value: parts.cacheHit !== '' ? parts.cacheHit + '%' : '—' },
+      { key: 'uncached', label: tt('tokens.uncached'), value: exactNumber(parts.uncached) + ' tok' },
+      { key: 'read', label: tt('tokens.cacheRead'), value: exactNumber(parts.cacheRead) + ' tok' },
+      { key: 'write', label: tt('tokens.cacheWrite'), value: exactNumber(parts.cacheWrite) + ' tok' },
+      { key: 'out', label: tt('tokens.output'), value: exactNumber(parts.output) + ' tok' },
+    ].filter(function (row) {
+      return row.key !== 'write' || parts.cacheWrite > 0;
+    });
+
+    return React.createElement('div', {
+      style: {
+        position: 'fixed',
+        left: pos.left,
+        top: pos.top,
+        transform: pos.transform,
+        width: 260,
+        zIndex: 2000,
+        padding: '12px 14px',
+        borderRadius: 10,
+        background: 'var(--dsw-alias-bg-base, #ffffff)',
+        border: '1px solid var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
+        boxShadow: '0 8px 28px rgba(0,0,0,0.16)',
+        color: UI.textPrimary,
+        pointerEvents: 'none',
+      },
+    },
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
+        React.createElement(MetricIcon, { name: 'tokens' }),
+        React.createElement('span', { style: { fontSize: '0.8em', fontWeight: 600 } }, tt('tokens.title')),
+        React.createElement('span', {
+          style: { marginLeft: 'auto', fontVariantNumeric: 'tabular-nums', fontSize: '0.86em', fontWeight: 600 },
+        }, exactNumber(parts.total) + ' tok'),
+      ),
+      React.createElement('div', {
+        'aria-hidden': 'true',
+        style: {
+          height: 1,
+          background: 'var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
+          margin: '8px 0 6px',
+        },
+      }),
+      rows.map(function (row) {
+        return React.createElement('div', {
+          key: row.key,
+          style: {
+            display: 'flex',
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
+            gap: 12,
+            lineHeight: '22px',
+            fontSize: 11.5,
+          },
+        },
+          React.createElement('span', { style: { color: UI.textSecondary } }, row.label),
+          React.createElement('span', { style: { fontVariantNumeric: 'tabular-nums' } }, row.value),
+        );
+      }),
+    );
+  }
+
+  /** 累计对话时长胶囊：悬浮时展开耗时分布卡。 */
+  function DurationChip(props) {
+    return React.createElement(HoverCard, {
+      render: function (anchor) {
+        return React.createElement(TimingCard, { timing: props.timing, anchor: anchor });
+      },
     },
       React.createElement(MetricIcon, { name: 'duration' }),
       durationText(props.timing.wallMs),
-      card,
+    );
+  }
+
+  /** Token 用量胶囊：悬浮时展开明细卡。 */
+  function TokensChip(props) {
+    var parts = props.parts;
+    return React.createElement(HoverCard, {
+      render: function (anchor) {
+        return React.createElement(TokensCard, { parts: parts, anchor: anchor });
+      },
+    },
+      React.createElement(MetricIcon, { name: 'tokens' }),
+      tt('fact.tokens', { n: compactNumber(parts.total) }),
     );
   }
 
@@ -1405,7 +1537,9 @@ function build(require) {
     if (typeof session.steps === 'number') {
       groupB.push(React.createElement(MetaChip, { key: 'steps', icon: React.createElement(MetricIcon, { name: 'steps' }) }, tt('fact.steps', { n: session.steps })));
     }
-    if (typeof session.tokens === 'number') {
+    if (session.tokenParts && typeof session.tokenParts.total === 'number') {
+      groupB.push(React.createElement(TokensChip, { key: 'tokens', parts: session.tokenParts }));
+    } else if (typeof session.tokens === 'number') {
       groupB.push(React.createElement(MetaChip, { key: 'tokens', icon: React.createElement(MetricIcon, { name: 'tokens' }) }, tt('fact.tokens', { n: compactNumber(session.tokens) })));
     }
     if (groupB.length) groups.push(groupB);

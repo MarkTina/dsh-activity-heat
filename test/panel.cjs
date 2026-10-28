@@ -282,6 +282,16 @@ function collect(tree) {
   check(all.indexOf('14 轮') !== -1, '轮次取宿主 sessionStats（与状态栏一致）');
   check(all.indexOf('40 步') !== -1, '步数取宿主 sessionStats.steps');
   check(all.indexOf('510k tok') !== -1, 'tokens 取 tokenUsage 计费总量（与状态栏一致）');
+  const tokenChips = c.components.filter((x) => x.name === 'TokensChip');
+  check(tokenChips.length === 1, 'tokens 胶囊携带明细数据', tokenChips.length);
+  check(
+    tokenChips[0] && tokenChips[0].props.parts
+      && tokenChips[0].props.parts.total === 510000
+      && tokenChips[0].props.parts.uncached === 200000
+      && tokenChips[0].props.parts.cacheRead === 300000
+      && tokenChips[0].props.parts.output === 10000,
+    '四个计费桶与总量传给明细卡',
+  );
   check(all.indexOf('缓存命中 60%') !== -1, '缓存命中率与状态栏同算法');
   check(all.indexOf('上下文 80%') !== -1, '上下文占比取 contextPressure（与状态栏一致）');
   check(all.indexOf('46m20s') !== -1, '显示累计对话时长');
