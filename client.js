@@ -398,8 +398,8 @@ function build(require) {
     var level = Math.max(0, Math.min(5, (props && props.level) || 0));
     var ratio = typeof props.ratio === 'number' ? Math.max(0, Math.min(1, props.ratio)) : heatAlphaOf(level);
     var showLabel = props && props.showLabel === true;
-    var width = props && typeof props.width === 'number' ? props.width : 64;
-    var height = props && typeof props.height === 'number' ? props.height : 8;
+    var width = props && typeof props.width === 'number' ? props.width : 76;
+    var height = props && typeof props.height === 'number' ? props.height : 10;
     // 色深：同一主题蓝，用 opacity 表达冷热（0.28 → 1）
     var fillOpacity = 0.3 + ratio * 0.7;
     var ticks = [];
@@ -673,9 +673,10 @@ function build(require) {
         key: 'bar',
         style: {
           flex: 'none',
-          width: 3,
+          // 加粗的竖向热度条：宽度从 3px 提到 6px，圆角同步
+          width: 6,
           alignSelf: 'stretch',
-          borderRadius: 2,
+          borderRadius: 3,
           marginLeft: 8,
           background: HEAT_INK,
           opacity: 0.3 + (typeof session.ratio === 'number' ? session.ratio : heatAlphaOf(session.level)) * 0.7,
@@ -728,7 +729,7 @@ function build(require) {
       React.createElement(
         'span',
         { key: 'meter', style: { flex: 'none', display: 'flex', alignItems: 'center', alignSelf: 'center' } },
-        React.createElement(HeatMeter, { level: session.level, ratio: session.ratio, showLabel: true, width: 72, height: 8 }),
+        React.createElement(HeatMeter, { level: session.level, ratio: session.ratio, showLabel: true, width: 84, height: 10 }),
       ),
     ];
 
@@ -860,6 +861,17 @@ function build(require) {
           transition: 'background 120ms ease',
         },
       },
+      React.createElement('span', {
+        key: 'bar',
+        style: {
+          flex: 'none',
+          width: 6,
+          alignSelf: 'stretch',
+          borderRadius: 3,
+          background: HEAT_INK,
+          opacity: 0.3 + (typeof group.ratio === 'number' ? group.ratio : heatAlphaOf(group.level)) * 0.7,
+        },
+      }),
       React.createElement(
         'span',
         { key: 'body', style: { display: 'flex', flexDirection: 'column', gap: 2, flex: '1 1 auto', minWidth: 0 } },
@@ -879,7 +891,7 @@ function build(require) {
       React.createElement(
         'span',
         { key: 'right', style: { flex: 'none', display: 'flex', alignItems: 'center', gap: 8 } },
-        React.createElement(HeatMeter, { level: group.level, ratio: group.ratio, showLabel: true, width: 72, height: 8 }),
+        React.createElement(HeatMeter, { level: group.level, ratio: group.ratio, showLabel: true, width: 84, height: 10 }),
         React.createElement('span', {
           style: {
             flex: 'none',
@@ -1206,7 +1218,7 @@ function build(require) {
 
     if (group) {
       rows.push(React.createElement('div', { key: 'ws', style: { display: 'flex', alignItems: 'center', gap: 6 } },
-        React.createElement(HeatMeter, { level: group.level, ratio: group.ratio, showLabel: false, width: 56, height: 7 }),
+        React.createElement(HeatMeter, { level: group.level, ratio: group.ratio, showLabel: false, width: 64, height: 8 }),
         React.createElement('span', null, '工作区「' + group.label + '」' + (rank === 1 ? '正热' : '排第 ' + rank)),
       ));
     }
