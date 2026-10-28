@@ -37,12 +37,12 @@ This plugin computes a 0–100% heat score from **time since last activity** and
 
 Cards for sessions with `session.running === true` get:
 
-- a `● Running` outlined pill before the title, led by the whale-tail mark (`assets/active.png`, inlined as a data URI and swaying on a CSS loop)
+- a whale-tail mark with a **Working** label in the card's right-hand whitespace (the mark sways, bobs and breathes on a CSS loop — no more outlined pill)
 - an **orbiting light band** around the card border (`conic-gradient`, one turn per 2.2 s)
 - a **breathing outer glow** (one cycle per 2.4 s)
 - a solid blue dot in the sidebar row
 
-Workspace cards get the same treatment when **any** session inside that workspace is running — same pill, same orbiting band, same breathing glow — so live work is visible from the Workspaces view too.
+Workspace cards get the same treatment when **any** session inside that workspace is running — same whale-tail label, same orbiting band, same breathing glow — so live work is visible from the Workspaces view too.
 
 > `prefers-reduced-motion` is respected: with reduced motion enabled, all animation stops.
 

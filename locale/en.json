@@ -35,7 +35,8 @@
   "running": {
     "label": "Running",
     "title": "This session is running",
-    "short": "Running"
+    "short": "Running",
+    "working": "Working"
   },
   "fact": {
     "turns": "{n} turns",

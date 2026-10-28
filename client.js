@@ -58,6 +58,7 @@ var AH_I18N = /* AH_I18N_START */ {
       label: '运行中',
       title: '该会话正在运行',
       short: '正在运行',
+      working: '工作中',
     },
     fact: {
       turns: '{n} 轮',
@@ -136,6 +137,7 @@ var AH_I18N = /* AH_I18N_START */ {
       label: 'Running',
       title: 'This session is running',
       short: 'Running',
+      working: 'Working',
     },
     fact: {
       turns: '{n} turns',
@@ -1202,27 +1204,28 @@ function build(require) {
   }
 
   /**
-   * 「运行中」标识：品牌色脉冲圆点 + 文字。
-   * 表示"此刻还在跑"，与"最近活动过"的热度是两回事，所以用描边胶囊独立表达。
+   * 「工作中」标识：官方鲸尾动图 + 文字，替代原来的描边小徽章。
+   * 动效由 CSS 完成（摆动 + 上浮 + 缩放），不依赖 GIF 的多帧。
    */
-  function RunningBadge(props) {
+  function WorkingTag(props) {
+    var stacked = props && props.stacked === true;
     var compact = props && props.compact === true;
+    var size = compact ? 16 : 20;
     return React.createElement(
       'span',
       {
         title: tt('running.title'),
         style: {
           display: 'inline-flex',
+          flexDirection: stacked ? 'column' : 'row',
           alignItems: 'center',
-          gap: 4,
-          padding: compact ? '0 4px' : '0 6px',
-          borderRadius: 4,
-          fontSize: compact ? '0.7em' : '0.74em',
-          lineHeight: '18px',
+          justifyContent: 'center',
+          gap: stacked ? 2 : 5,
           color: HEAT_INK,
-          border: '1px solid ' + HEAT_INK,
-          background: 'transparent',
+          fontSize: stacked ? '0.7em' : '0.78em',
           fontWeight: 600,
+          lineHeight: '16px',
+          whiteSpace: 'nowrap',
           flex: 'none',
         },
       },
@@ -1230,18 +1233,18 @@ function build(require) {
         src: ACTIVE_TAIL,
         alt: '',
         'aria-hidden': 'true',
-        width: 18,
-        height: 18,
+        width: size,
+        height: size,
         style: {
           display: 'block',
-          width: 18,
-          height: 18,
+          width: size,
+          height: size,
           transformOrigin: '55% 65%',
-          animation: 'ah-tail 1.8s ease-in-out infinite',
+          animation: 'ah-tail 1.6s ease-in-out infinite',
           filter: 'drop-shadow(0 0 3px color-mix(in srgb, var(--color-blue-500, #3b82f6) 70%, transparent))',
         },
       }),
-      tt('running.label'),
+      tt('running.working'),
     );
   }
 
@@ -1407,7 +1410,6 @@ function build(require) {
         React.createElement(
           'span',
           { style: { display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 } },
-          session.running ? React.createElement(RunningBadge, null) : null,
           React.createElement('span', {
             style: {
               color: UI.textPrimary,
@@ -1445,6 +1447,20 @@ function build(require) {
           },
         }, metaRow),
       ),
+      // 运行中：鲸鱼 + 工作中，落在卡片右侧的留白里（不用标题前的小徽章）
+      session.running === true
+        ? React.createElement('span', {
+            key: 'working',
+            style: {
+              flex: 'none',
+              width: 66,
+              alignSelf: 'stretch',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            },
+          }, React.createElement(WorkingTag, { stacked: true }))
+        : null,
       React.createElement(
         'span',
         {
@@ -1596,7 +1612,7 @@ function build(require) {
         React.createElement('span', {
           style: { display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 },
         },
-          running ? React.createElement(RunningBadge, { compact: true }) : null,
+          running ? React.createElement(WorkingTag, { compact: true }) : null,
           React.createElement('span', {
             style: {
               color: UI.textPrimary,
@@ -2006,7 +2022,7 @@ function build(require) {
     var rows = [
       React.createElement('div', { key: 'heat', style: { display: 'flex', alignItems: 'center', gap: 6 } },
         summary && summary.running === true
-          ? React.createElement(RunningBadge, { compact: true })
+          ? React.createElement(WorkingTag, { compact: true })
           : React.createElement(RowHeatDot, { level: level, title: '' }),
         React.createElement('span', null, tt('hover.heat', { level: level, name: heatNameOf(level) })),
       ),
@@ -2177,7 +2193,7 @@ function build(require) {
         '50%{box-shadow:0 0 14px 2px color-mix(in srgb, var(--color-blue-500, #3b82f6) 45%, transparent)}',
         '}',
         // 鲸尾徽标：轻微摆动 + 呼吸缩放，让「正在跑」看起来是活的
-        '@keyframes ah-tail{0%,100%{transform:rotate(-8deg) scale(.96)}50%{transform:rotate(8deg) scale(1.1)}}',
+        '@keyframes ah-tail{0%,100%{transform:translateY(0) rotate(-8deg) scale(.96)}50%{transform:translateY(-2px) rotate(8deg) scale(1.08)}}',
         '@media (prefers-reduced-motion: reduce){',
         '@keyframes ah-orbit{from{transform:rotate(0deg)}to{transform:rotate(0deg)}}',
         '@keyframes ah-breathe{0%,100%{box-shadow:none}50%{box-shadow:none}}',

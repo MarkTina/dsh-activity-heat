@@ -35,7 +35,8 @@
   "running": {
     "label": "运行中",
     "title": "该会话正在运行",
-    "short": "正在运行"
+    "short": "正在运行",
+    "working": "工作中"
   },
   "fact": {
     "turns": "{n} 轮",

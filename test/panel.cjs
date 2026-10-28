@@ -310,7 +310,11 @@ function collect(tree) {
   );
   check(wrappers.length === 1, '运行中卡片有呼吸外层', wrappers.length);
   check(orbits.length === 1, '运行中卡片有跑马灯光带', orbits.length);
-  check(all.indexOf('运行中') !== -1, '显示「运行中」徽标');
+  check(all.indexOf('工作中') !== -1, '显示「工作中」鲸鱼标识');
+  const workingCol = c.nodes.find(
+    (n) => n.props && n.props.key === 'working' && n.props.style && n.props.style.width === 66,
+  );
+  check(Boolean(workingCol), '「工作中」落在卡片右侧留白列');
 
   const meters = c.components.filter((x) => x.name === 'HeatMeter');
   check(meters.length > 0, '存在热度计', meters.length);
@@ -500,7 +504,7 @@ function collect(tree) {
   const all = c.texts.join(' | ');
 
   check(all.indexOf('工作区 3') !== -1, '工作区视图可渲染');
-  check(all.indexOf('运行中') !== -1, '含运行会话的工作区显示运行中徽标');
+  check(all.indexOf('工作中') !== -1, '含运行会话的工作区显示工作中标识');
 
   const wrappers = c.nodes.filter(
     (x) => x.props && typeof x.props.style === 'object'
