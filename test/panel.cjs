@@ -322,6 +322,8 @@ function collect(tree) {
   check(wrappers.length === 1, '运行中卡片有呼吸外层', wrappers.length);
   check(orbits.length === 1, '运行中卡片有跑马灯光带', orbits.length);
   check(all.indexOf('工作中') !== -1, '显示「工作中」鲸鱼标识');
+  const currentBadges = c.components.filter((x) => x.name === 'CurrentBadge');
+  check(currentBadges.length === 1, '「当前」做成标题前徽章');
   const workingCol = c.nodes.find(
     (n) => n.props && n.props.key === 'working' && n.props.style && n.props.style.width === 66,
   );

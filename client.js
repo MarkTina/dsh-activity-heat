@@ -1370,6 +1370,30 @@ function build(require) {
     );
   }
 
+  /** 「当前」徽章：挂在会话标题前，不占底部信息行。 */
+  function CurrentBadge() {
+    return React.createElement('span', {
+      style: {
+        flex: 'none',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 3,
+        padding: '0 6px',
+        borderRadius: 4,
+        border: '1px solid rgba(59,130,246,0.45)',
+        background: 'rgba(59,130,246,0.10)',
+        color: HEAT_INK,
+        fontSize: '0.68em',
+        lineHeight: '16px',
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
+      },
+    },
+      React.createElement(MetricIcon, { name: 'current' }),
+      tt('fact.current'),
+    );
+  }
+
   function MetaChip(props) {
     return React.createElement(
       'span',
@@ -1605,9 +1629,6 @@ function build(require) {
         style: { whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' },
       }, relativeOf(session.at, now)));
     }
-    if (session.open) {
-      groupC.push(React.createElement(MetaChip, { key: 'open', icon: React.createElement(MetricIcon, { name: 'current' }) }, tt('fact.current')));
-    }
     if (groupC.length) groups.push(groupC);
 
     // 组内用圆点分隔，组间用竖线 + 更大留白，让同类信息聚在一起
@@ -1633,6 +1654,7 @@ function build(require) {
         React.createElement(
           'span',
           { style: { display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 } },
+          session.open ? React.createElement(CurrentBadge) : null,
           React.createElement('span', {
             style: {
               color: UI.textPrimary,
@@ -1642,6 +1664,8 @@ function build(require) {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              flex: '1 1 auto',
+              minWidth: 0,
             },
           }, session.title || session.id),
         ),
