@@ -270,6 +270,17 @@ function collect(tree) {
   check(all.indexOf('510k tok') !== -1, 'tokens 取 tokenUsage 计费总量（与状态栏一致）');
   check(all.indexOf('缓存命中 60%') !== -1, '缓存命中率与状态栏同算法');
   check(all.indexOf('上下文 80%') !== -1, '上下文占比取 contextPressure（与状态栏一致）');
+
+  const miniMeters = c.components.filter((x) => x.name === 'MiniMeter');
+  check(miniMeters.length >= 2, '缓存/上下文各带一条迷你进度条', miniMeters.length);
+  check(
+    miniMeters.some((m) => Math.abs(m.props.ratio - 0.6) < 0.001),
+    '缓存命中率进度条按 60% 填充',
+  );
+  check(
+    miniMeters.some((m) => Math.abs(m.props.ratio - 0.8) < 0.001),
+    '上下文进度条按 80% 填充',
+  );
   check(all.indexOf('把面板做得更好看一点') !== -1, '显示最近提示词');
   check(all.indexOf('“') === -1, '提示词无引号');
 

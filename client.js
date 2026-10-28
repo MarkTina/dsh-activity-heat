@@ -833,6 +833,55 @@ function build(require) {
     );
   }
 
+  /**
+   * 迷你进度条：4px 高的小轨道，按比例填充。
+   * 缓存命中率与上下文占比除了数字之外，再给一段长度可读。
+   */
+  function MiniMeter(props) {
+    var ratio = typeof props.ratio === 'number' && isFinite(props.ratio)
+      ? Math.max(0, Math.min(1, props.ratio))
+      : 0;
+    var width = typeof props.width === 'number' ? props.width : 44;
+    return React.createElement(
+      'span',
+      {
+        'aria-hidden': 'true',
+        style: {
+          position: 'relative',
+          display: 'inline-block',
+          width: width,
+          height: 4,
+          marginLeft: 2,
+          borderRadius: 999,
+          background: 'var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
+          overflow: 'hidden',
+          flex: 'none',
+          verticalAlign: 'middle',
+        },
+      },
+      React.createElement('span', {
+        style: {
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: Math.round(ratio * 100) + '%',
+          background: props.color || HEAT_INK,
+          opacity: 0.9,
+          borderRadius: 999,
+        },
+      }),
+    );
+  }
+
+  /** 上下文占比分档色：宽裕=蓝，偏高=琥珀，接近上限=红。 */
+  function contextMeterColor(pct) {
+    if (typeof pct !== 'number') return HEAT_INK;
+    if (pct >= 85) return 'var(--dsw-alias-state-error-primary, #ef4444)';
+    if (pct >= 60) return 'var(--dsw-alias-state-warn-primary, #f59e0b)';
+    return HEAT_INK;
+  }
+
   function MetaChip(props) {
     return React.createElement(
       'span',
@@ -1005,10 +1054,23 @@ function build(require) {
       meta.push(React.createElement(MetaChip, { key: 'tokens', icon: '◈' }, tt('fact.tokens', { n: compactNumber(session.tokens) })));
     }
     if (session.cacheRate !== undefined && session.cacheRate !== '') {
-      meta.push(React.createElement(MetaChip, { key: 'cache', icon: '⚡' }, tt('fact.cache', { n: session.cacheRate })));
+      var cachePct = Number(session.cacheRate);
+      meta.push(React.createElement(MetaChip, { key: 'cache', icon: '⚡' },
+        tt('fact.cache', { n: session.cacheRate }),
+        React.createElement(MiniMeter, {
+          ratio: isFinite(cachePct) ? cachePct / 100 : 0,
+          color: HEAT_INK,
+        }),
+      ));
     }
     if (typeof session.contextPct === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'ctx', icon: '◧' }, tt('fact.context', { n: session.contextPct })));
+      meta.push(React.createElement(MetaChip, { key: 'ctx', icon: '◧' },
+        tt('fact.context', { n: session.contextPct }),
+        React.createElement(MiniMeter, {
+          ratio: session.contextPct / 100,
+          color: contextMeterColor(session.contextPct),
+        }),
+      ));
     }
     if (session.open) {
       meta.push(React.createElement(MetaChip, { key: 'open', icon: '●' }, tt('fact.current')));

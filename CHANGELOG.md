@@ -15,6 +15,7 @@ First public layout of the plugin.
 - Locale-aware UI text with bundled `zh`/`en` dictionaries and a Chinese fallback.
 - Panel and hover-card figures (turns, tokens, cache hit rate, context usage) come from the same projections as the composer status bar — `sessionStats`, `tokenUsage` and `contextPressure` — with a `contextTimeline` fallback for older profiles.
 - Session cards put the workspace name in the right-hand column, above the heat meter.
+- Cache hit rate and context usage each carry a mini progress bar; context turns amber above 60% and red above 85%.
 - Blue heat palette instead of the host brand token, which reads near-black in light themes.
 - The shortcut toggles: first press opens the panel, second press returns to the conversation you came from.
 - Running sessions carry the whale-tail badge (`assets/active.png`) inlined as a data URI and swaying on a CSS loop.
