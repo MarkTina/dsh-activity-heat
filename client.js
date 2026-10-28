@@ -826,7 +826,7 @@ function build(require) {
       showLabel
         ? React.createElement('span', {
             style: {
-              fontSize: '0.74em',
+              fontSize: '0.8em',
               lineHeight: '18px',
               color: UI.textSecondary,
               opacity: 0.55 + ratio * 0.45,
@@ -912,7 +912,7 @@ function build(require) {
     var ratio = typeof props.ratio === 'number' && isFinite(props.ratio)
       ? Math.max(0, Math.min(1, props.ratio))
       : 0;
-    var width = typeof props.width === 'number' ? props.width : 44;
+    var width = typeof props.width === 'number' ? props.width : 48;
     return React.createElement(
       'span',
       {
@@ -921,7 +921,7 @@ function build(require) {
           position: 'relative',
           display: 'inline-block',
           width: width,
-          height: 4,
+          height: 5,
           marginLeft: 2,
           borderRadius: 999,
           background: 'var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
@@ -954,14 +954,14 @@ function build(require) {
   }
 
   /**
-   * 指标图标：统一 12px、1.3 描边、currentColor 的线条画风。
+   * 指标图标：统一 13px、1.3 描边、currentColor 的线条画风。
    * 用 SVG 而不是 emoji——emoji 会带彩色和不同的字重，和周围文字不在一个体系里。
    */
   function MetricIcon(props) {
     var name = props && props.name;
     var common = {
-      width: 12,
-      height: 12,
+      width: 13,
+      height: 13,
       viewBox: '0 0 12 12',
       fill: 'none',
       stroke: 'currentColor',
@@ -1209,10 +1209,8 @@ function build(require) {
         style: {
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 3,
+          gap: 4,
           padding: 0,
-          lineHeight: '20px',
-          fontSize: '0.86em',
           color: UI.textSecondary,
           background: 'transparent',
           border: 'none',
@@ -1481,8 +1479,9 @@ function build(require) {
             alignItems: 'center',
             gap: 6,
             color: UI.textSecondary,
-            fontSize: '0.86em',
-            lineHeight: '22px',
+            // 整行统一一个字号，chip 全部继承，不再各自覆盖
+            fontSize: '0.92em',
+            lineHeight: '24px',
             flexWrap: 'wrap',
           },
         }, metaRow),
@@ -1526,19 +1525,19 @@ function build(require) {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                fontSize: '0.76em',
-                lineHeight: '18px',
+                fontSize: '0.8em',
+                lineHeight: '20px',
                 color: UI.textTertiary,
               },
             }, workspaceName)
-          : React.createElement('span', { style: { lineHeight: '18px' } }),
+          : React.createElement('span', { style: { lineHeight: '20px' } }),
         React.createElement(HeatMeter, { level: session.level, ratio: session.ratio, showLabel: true, width: 96, height: 10 }),
         React.createElement('span', {
           style: {
             width: '100%',
             textAlign: 'right',
-            fontSize: '0.74em',
-            lineHeight: '16px',
+            fontSize: '0.8em',
+            lineHeight: '18px',
             color: UI.textTertiary,
             fontVariantNumeric: 'tabular-nums',
             whiteSpace: 'nowrap',
