@@ -38,6 +38,8 @@ Cards for sessions with `session.running === true` get:
 - a **breathing outer glow** (one cycle per 2.4 s)
 - a solid brand-color dot in the sidebar row
 
+Workspace cards get the same treatment when **any** session inside that workspace is running — same pill, same orbiting band, same breathing glow — so live work is visible from the Workspaces view too.
+
 > `prefers-reduced-motion` is respected: with reduced motion enabled, all animation stops.
 
 ## Colors

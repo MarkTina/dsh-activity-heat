@@ -631,11 +631,13 @@ function build(require) {
           at: undefined,
           count: 0,
           tokens: 0,
+          running: false,
         };
         groups[key] = group;
         groupList.push(group);
       }
       group.count += 1;
+      if (session.running === true) group.running = true;
       if (typeof session.tokens === 'number') group.tokens += session.tokens;
       if (group.at === undefined || (session.at !== undefined && session.at > group.at)) {
         group.at = session.at;
@@ -924,6 +926,51 @@ function build(require) {
     );
   }
 
+  /**
+   * 运行中卡片的通用外框：2px 缝里露出环绕跑马灯，外层同时呼吸发光。
+   * 会话卡片与工作区卡片共用这一份，保证两处的动效完全一致。
+   */
+  function RunningFrame(props) {
+    return React.createElement(
+      'div',
+      {
+        style: {
+          position: 'relative',
+          margin: '0 0 8px',
+          padding: 2,
+          borderRadius: UI.radius,
+          overflow: 'hidden',
+          background: 'var(--dsw-alias-bg-base, #ffffff)',
+          animation: 'ah-breathe 2.4s ease-in-out infinite',
+          isolation: 'isolate',
+        },
+      },
+      // 跑马灯光带：尺寸取 200%，绕中心旋转，只有边缘 2px 会露出来
+      React.createElement('span', {
+        'aria-hidden': 'true',
+        style: {
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          width: '220%',
+          height: '220%',
+          marginLeft: '-110%',
+          marginTop: '-110%',
+          background:
+            'conic-gradient(from 0deg,' +
+            ' transparent 0deg, transparent 250deg,' +
+            ' color-mix(in srgb, var(--dsw-alias-brand-primary) 95%, transparent) 310deg,' +
+            ' color-mix(in srgb, var(--dsw-alias-brand-primary) 35%, transparent) 335deg,' +
+            ' transparent 360deg)',
+          animation: 'ah-orbit 2.2s linear infinite',
+          pointerEvents: 'none',
+          zIndex: 0,
+        },
+      }),
+      props.children,
+    );
+  }
+
   function SessionCard(props) {
     var hoverState = React.useState(false);
     var hover = hoverState[0];
@@ -1070,48 +1117,8 @@ function build(require) {
     // 非运行中：保持原样，不引入任何额外 DOM
     if (!running) return cardButton;
 
-    // 运行中：外层 2px 缝里露出旋转的 conic-gradient，形成环绕跑马灯；
-    // 同时外层呼吸发光，让"正在跑"在整屏里一眼可见。
-    return React.createElement(
-      'div',
-      {
-        key: 'wrap',
-        style: {
-          position: 'relative',
-          margin: '0 0 8px',
-          padding: 2,
-          borderRadius: UI.radius,
-          overflow: 'hidden',
-          background: 'var(--dsw-alias-bg-base, #ffffff)',
-          animation: 'ah-breathe 2.4s ease-in-out infinite',
-          isolation: 'isolate',
-        },
-      },
-      // 跑马灯光带：尺寸取 200%，绕中心旋转，只有边缘 2px 会露出来
-      React.createElement('span', {
-        key: 'orbit',
-        'aria-hidden': 'true',
-        style: {
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          width: '220%',
-          height: '220%',
-          marginLeft: '-110%',
-          marginTop: '-110%',
-          background:
-            'conic-gradient(from 0deg,' +
-            ' transparent 0deg, transparent 250deg,' +
-            ' color-mix(in srgb, var(--dsw-alias-brand-primary) 95%, transparent) 310deg,' +
-            ' color-mix(in srgb, var(--dsw-alias-brand-primary) 35%, transparent) 335deg,' +
-            ' transparent 360deg)',
-          animation: 'ah-orbit 2.2s linear infinite',
-          pointerEvents: 'none',
-          zIndex: 0,
-        },
-      }),
-      cardButton,
-    );
+    // 运行中：与会话卡片共用同一套外框（跑马灯 + 呼吸发光）
+    return React.createElement(RunningFrame, null, cardButton);
   }
 
   function GroupCard(props) {
@@ -1122,11 +1129,12 @@ function build(require) {
     var now = props.now;
     var rank = props.rank;
     var openable = group.workspaceId !== undefined;
+    var running = group.running === true;
 
     var metaBits = [tt('group.sessions', { count: group.count }), relativeOf(group.at, now)];
-    if (group.tokens > 0) metaBits.push(compactNumber(group.tokens) + ' tokens');
+    if (group.tokens > 0) metaBits.push(tt('fact.tokens', { n: compactNumber(group.tokens) }));
 
-    return React.createElement(
+    var cardButton = React.createElement(
       'button',
       {
         type: 'button',
@@ -1143,10 +1151,14 @@ function build(require) {
           gap: 12,
           width: '100%',
           padding: '9px 14px',
-          margin: '0 0 8px',
-          border: UI.border,
-          borderRadius: UI.radius,
-          background: hover && openable ? UI.cardBgHover : UI.cardBg,
+          // 运行中时由外层容器控制间距和边框，按钮自身不再留 margin
+          margin: running ? 0 : '0 0 8px',
+          border: running ? 'none' : UI.border,
+          borderRadius: running ? Math.max(2, UI.radius - 2) : UI.radius,
+          // 运行中的卡片用不透明底色，遮住背后的跑马灯光带
+          background: running
+            ? (hover ? 'var(--dsw-alias-bg-layer-2, rgba(127,127,127,0.12))' : 'var(--dsw-alias-bg-base, #ffffff)')
+            : (hover && openable ? UI.cardBgHover : UI.cardBg),
           cursor: openable ? 'pointer' : 'default',
           textAlign: 'left',
           font: 'inherit',
@@ -1169,16 +1181,21 @@ function build(require) {
         'span',
         { key: 'body', style: { display: 'flex', flexDirection: 'column', gap: 2, flex: '1 1 auto', minWidth: 0 } },
         React.createElement('span', {
-          style: {
-            color: UI.textPrimary,
-            fontWeight: 500,
-            fontSize: '0.92em',
-            lineHeight: '20px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          },
-        }, group.label),
+          style: { display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 },
+        },
+          running ? React.createElement(RunningBadge, { compact: true }) : null,
+          React.createElement('span', {
+            style: {
+              color: UI.textPrimary,
+              fontWeight: 500,
+              fontSize: '0.92em',
+              lineHeight: '20px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            },
+          }, group.label),
+        ),
         React.createElement('span', { style: { color: UI.textTertiary, fontSize: '0.76em', lineHeight: '16px' } }, metaBits.join(' · ')),
       ),
       React.createElement(
@@ -1202,6 +1219,10 @@ function build(require) {
         }, '#' + rank),
       ),
     );
+
+    // 工作区里有正在跑的会话时，与会话卡片使用同一套运行中动效
+    if (!running) return cardButton;
+    return React.createElement(RunningFrame, null, cardButton);
   }
 
   function useMinuteTick() {
@@ -1252,10 +1273,12 @@ function build(require) {
   function ActivityPanel(props) {
     var useSessions = props && props.useSessions;
     var useWorkspaces = props && props.useWorkspaces;
+    // 首次渲染的视图；宿主不传时默认会话视图（测试可直接从工作区视图进入）
+    var initialView = props && props.initialView === 'workspaces' ? 'workspaces' : 'sessions';
     useMinuteTick();
 
     // 顶层：会话 / 工作区 两种对象切换
-    var viewState = React.useState('sessions');
+    var viewState = React.useState(initialView);
     var view = viewState[0];
     var setView = viewState[1];
     // 数量：会话 10/20/30/50，工作区 5/10/20

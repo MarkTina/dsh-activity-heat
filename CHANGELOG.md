@@ -9,6 +9,7 @@ First public layout of the plugin.
 - Hover-card heat section on `sidebar.session.row.hover`.
 - Recent Activity panel with Sessions / Workspaces views, count selectors and heat filters.
 - Running-session badge, orbiting light band and breathing glow (reduced-motion aware).
+- Workspace cards show the same running treatment when any session in that workspace is running.
 - Zero-config defaults in `cordis.patch.yml`, overridable per profile.
 - Default shortcut `Ctrl+Alt+H` (`Cmd+Alt+H` on macOS), no Linux default.
 - Locale-aware UI text with bundled `zh`/`en` dictionaries and a Chinese fallback.

@@ -450,5 +450,33 @@ function collect(tree) {
   check(nearFullText.indexOf('99.9999') !== -1, '非满命中保留有效小数位');
 }
 
+/* ================= 10. 工作区视图的运行中动效 ================= */
+{
+  const b = boot(false);
+  const reg = b.regs.find((r) => r.o.name === 'main');
+  const injected = typeof reg.o.inject === 'function' ? reg.o.inject() : {};
+  const c = collect(reg.C({
+    ...injected,
+    initialView: 'workspaces',
+    ...panelProps,
+  }));
+  const all = c.texts.join(' | ');
+
+  check(all.indexOf('工作区 3') !== -1, '工作区视图可渲染');
+  check(all.indexOf('运行中') !== -1, '含运行会话的工作区显示运行中徽标');
+
+  const wrappers = c.nodes.filter(
+    (x) => x.props && typeof x.props.style === 'object'
+      && String(x.props.style.animation || '').indexOf('ah-breathe') !== -1,
+  );
+  const orbits = c.nodes.filter(
+    (x) => x.props && typeof x.props.style === 'object'
+      && String(x.props.style.animation || '').indexOf('ah-orbit') !== -1,
+  );
+  check(wrappers.length === 1, '只有含运行会话的工作区有呼吸外层', wrappers.length);
+  check(orbits.length === 1, '只有含运行会话的工作区有跑马灯', orbits.length);
+  check(all.indexOf('tok') !== -1 && all.indexOf('tokens') === -1, '工作区用量文案与状态栏一致');
+}
+
 console.log(failed === 0 ? '\nHARNESS PASSED' : '\nHARNESS FAILED (' + failed + ')');
 process.exitCode = failed === 0 ? 0 : 1;
