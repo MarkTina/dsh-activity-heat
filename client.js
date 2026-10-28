@@ -946,7 +946,7 @@ function build(require) {
     var ratio = typeof props.ratio === 'number' && isFinite(props.ratio)
       ? Math.max(0, Math.min(1, props.ratio))
       : 0;
-    var width = typeof props.width === 'number' ? props.width : 48;
+    var width = typeof props.width === 'number' ? props.width : 46;
     return React.createElement(
       'span',
       {
@@ -955,7 +955,7 @@ function build(require) {
           position: 'relative',
           display: 'inline-block',
           width: width,
-          height: 5,
+          height: 4,
           marginLeft: 2,
           borderRadius: 999,
           background: 'var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
@@ -988,14 +988,14 @@ function build(require) {
   }
 
   /**
-   * 指标图标：统一 13px、1.3 描边、currentColor 的线条画风。
+   * 指标图标：统一 12px、1.3 描边、currentColor 的线条画风。
    * 用 SVG 而不是 emoji——emoji 会带彩色和不同的字重，和周围文字不在一个体系里。
    */
   function MetricIcon(props) {
     var name = props && props.name;
     var common = {
-      width: 13,
-      height: 13,
+      width: 12,
+      height: 12,
       viewBox: '0 0 12 12',
       fill: 'none',
       stroke: 'currentColor',
@@ -1634,8 +1634,8 @@ function build(require) {
             gap: 6,
             color: UI.textSecondary,
             // 整行统一一个字号，chip 全部继承，不再各自覆盖
-            fontSize: '0.92em',
-            lineHeight: '24px',
+            fontSize: '0.88em',
+            lineHeight: '23px',
             flexWrap: 'wrap',
           },
         }, metaRow),
