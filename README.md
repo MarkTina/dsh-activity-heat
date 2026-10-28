@@ -72,8 +72,12 @@ This plugin is installed as a local directory or a GitHub repository; it is **no
 ```bash
 # inside your DSH profile directory
 cd ~/.dsh/profiles/<your-profile>
-pnpm add github:MarkTina/dsh-activity-heat
+pnpm add github:MarkTina/dsh-activity-heat#v0.1.0
 ```
+
+Pin a tag (`#v0.1.0`) rather than following `main`, so an unrelated commit cannot change what you run. To upgrade later, bump the tag and restart DSH.
+
+The repository must be **public**; a private repo needs a token (`https://<token>@github.com/...` or an SSH remote) before `pnpm add` can fetch it.
 
 Then append the package name to `dsh.profile.bundles` in that profile's `package.json`:
 
@@ -82,6 +86,8 @@ Then append the package name to `dsh.profile.bundles` in that profile's `package
 ```
 
 **Restart DSH** to load it. A page refresh only reloads the UI: the Host keeps its module generation, and toggling the plugin does not re-read changed files either. After editing a `link:` checkout you must quit DSH completely and start it again.
+
+> Desktop profiles are managed by the Electron app. Install through its plugin manager (GitHub / local directory) rather than running `pnpm` inside `~/.dsh/profiles/desktop` — the app owns that directory and will reject or overwrite manual changes.
 
 ### Option 2 — Local checkout
 

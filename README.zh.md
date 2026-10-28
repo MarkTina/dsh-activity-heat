@@ -72,8 +72,12 @@ DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话�
 ```bash
 # 在 DSH profile 目录下
 cd ~/.dsh/profiles/<你的 profile>
-pnpm add github:MarkTina/dsh-activity-heat
+pnpm add github:MarkTina/dsh-activity-heat#v0.1.0
 ```
+
+建议**锁定 tag**（`#v0.1.0`）而不是跟随 `main`，这样仓库上后续的无关提交不会改变你实际运行的代码。升级时换 tag 再重启即可。
+
+仓库必须是**公开**的；私有仓库需要先配好 token（`https://<token>@github.com/...`）或 SSH remote，`pnpm add` 才能拉取。
 
 然后在 profile 的 `package.json` 的 `dsh.profile.bundles` 里追加：
 
@@ -82,6 +86,8 @@ pnpm add github:MarkTina/dsh-activity-heat
 ```
 
 **重启 DSH** 才会加载。刷新页面只重载界面，Host 的模块代际不会变；开关插件也不会重新读取改动过的文件。改过 `link:` 目录后必须完全退出 DSH 再启动。
+
+> Desktop profile 由 Electron 应用独占管理。请通过应用内的插件管理（GitHub / 本地目录）安装，不要在 `~/.dsh/profiles/desktop` 里直接跑 `pnpm`——那个目录归应用所有，手改会被拒绝或覆盖。
 
 ### 方式二：本地目录
 
