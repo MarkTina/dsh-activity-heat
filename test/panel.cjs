@@ -533,10 +533,16 @@ function collect(tree) {
   const listEl = c.nodes.find((n) => n.props && n.props.className === 'ah-list');
   check(Boolean(listEl), '列表容器带 ah-list 类');
   check(listEl && listEl.props.style.overflowY === 'auto', '列表可纵向滚动');
+  check(listEl && listEl.props.style.display === 'block', '列表用块级流，数量多也不压扁卡片');
   check(
     listEl && String(listEl.props.style.maxHeight).indexOf('100vh') !== -1,
     '列表高度受视口限制',
   );
+
+  const rightCol = c.nodes.find(
+    (n) => n.props && n.props.style && n.props.style.width === 168 && n.props.style.justifyContent === 'space-between',
+  );
+  check(Boolean(rightCol), '右侧信息列固定宽度并两行对齐');
 }
 
 console.log(failed === 0 ? '\nHARNESS PASSED' : '\nHARNESS FAILED (' + failed + ')');

@@ -819,7 +819,10 @@ function build(require) {
               lineHeight: '18px',
               color: UI.textSecondary,
               opacity: 0.55 + ratio * 0.45,
-              minWidth: 26,
+              // 固定宽度 + 右对齐：档位字长短不同也不会推着轨道左右晃
+              width: 30,
+              textAlign: 'right',
+              flex: 'none',
             },
           }, heatNameOf(level))
         : null,
@@ -1381,7 +1384,7 @@ function build(require) {
     // 相对时间单独收尾：不加分隔符，用 auto margin 贴到行尾
     metaRow.push(React.createElement('span', {
       key: 'at',
-      style: { marginLeft: 'auto', paddingLeft: 10, whiteSpace: 'nowrap', opacity: 0.9 },
+      style: { marginLeft: 'auto', paddingLeft: 10, minWidth: 58, textAlign: 'right', whiteSpace: 'nowrap', opacity: 0.9 },
     }, relativeOf(session.at, now)));
 
     var children = [
@@ -1448,27 +1451,32 @@ function build(require) {
           key: 'right',
           style: {
             flex: 'none',
+            width: 168,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-end',
-            gap: 4,
-            alignSelf: 'center',
-            maxWidth: 190,
+            justifyContent: 'space-between',
+            alignSelf: 'stretch',
+            paddingTop: 1,
+            paddingBottom: 1,
           },
         },
+        // 第一行固定给工作区名，第二行固定给热度计：两行分别对齐标题行与 meta 行
         workspaceName
           ? React.createElement('span', {
               style: {
-                maxWidth: 180,
+                width: '100%',
+                textAlign: 'right',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
                 fontSize: '0.76em',
+                lineHeight: '18px',
                 color: UI.textTertiary,
               },
             }, workspaceName)
-          : null,
-        React.createElement(HeatMeter, { level: session.level, ratio: session.ratio, showLabel: true, width: 84, height: 10 }),
+          : React.createElement('span', { style: { lineHeight: '18px' } }),
+        React.createElement(HeatMeter, { level: session.level, ratio: session.ratio, showLabel: true, width: 96, height: 10 }),
       ),
     ];
 
@@ -1893,8 +1901,8 @@ function build(require) {
         ref: listRef,
         className: 'ah-list',
         style: {
-          display: 'flex',
-          flexDirection: 'column',
+          // 块级流：卡片保持自身高度，数量多时滚动而不是被 flex 压扁
+          display: 'block',
           padding: '0 ' + UI.padX + 'px',
           maxHeight: 'calc(100vh - 236px)',
           overflowY: 'auto',
