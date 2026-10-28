@@ -231,6 +231,15 @@ function build(require) {
     return { apply: function noop() {} };
   }
 
+  // 浮层用 portal 挂到 body：列表是 overflow 容器，靠 fixed 定位仍可能
+  // 被祖先的裁剪/层叠上下文截断，portal 出去最稳；宿主没提供 react-dom 时退回原样。
+  var ReactDOM = null;
+  try {
+    ReactDOM = require('react-dom');
+  } catch (error) {
+    ReactDOM = null;
+  }
+
   var MINUTE = 60000;
   var HOUR = 60 * MINUTE;
   var DAY = 24 * HOUR;
@@ -1046,8 +1055,14 @@ function build(require) {
     var left = typeof anchor.left === 'number' ? anchor.left : 24;
     if (left + width > viewportWidth - 12) left = viewportWidth - width - 12;
     if (left < 12) left = 12;
+    var viewportHeight = typeof window !== 'undefined' && window.innerHeight ? window.innerHeight : 800;
     var above = typeof anchor.top === 'number' && anchor.top > 300;
     var top = above ? anchor.top - 8 : (typeof anchor.bottom === 'number' ? anchor.bottom + 8 : 120);
+    // 下方放不下时翻到上方，避免浮层被视口底部切掉
+    if (!above && top + 230 > viewportHeight && typeof anchor.top === 'number') {
+      above = true;
+      top = anchor.top - 8;
+    }
 
     var segments = timingSegments(timing);
     var wall = timing.wallMs || 1;
@@ -1103,7 +1118,7 @@ function build(require) {
         top: top,
         transform: above ? 'translateY(-100%)' : 'none',
         width: width,
-        zIndex: 1200,
+        zIndex: 2000,
         padding: '12px 14px',
         borderRadius: 10,
         background: 'var(--dsw-alias-bg-base, #ffffff)',
@@ -1167,6 +1182,12 @@ function build(require) {
     };
     var hide = function () { setAnchor(null); };
 
+    var card = anchor ? React.createElement(TimingCard, { timing: props.timing, anchor: anchor }) : null;
+    if (card && ReactDOM && typeof ReactDOM.createPortal === 'function'
+      && typeof document !== 'undefined' && document.body) {
+      card = ReactDOM.createPortal(card, document.body);
+    }
+
     return React.createElement('span', {
       ref: ref,
       onMouseEnter: show,
@@ -1177,7 +1198,7 @@ function build(require) {
     },
       React.createElement(MetricIcon, { name: 'duration' }),
       durationText(props.timing.wallMs),
-      anchor ? React.createElement(TimingCard, { timing: props.timing, anchor: anchor }) : null,
+      card,
     );
   }
 
@@ -1539,7 +1560,8 @@ function build(require) {
         onMouseLeave: function () { setHover(false); },
         onFocus: function () { setHover(true); },
         onBlur: function () { setHover(false); },
-        title: tt('card.openSessionTitle', { title: session.title || session.id }),
+        // 用 aria-label 而不是 title：原生 tooltip 会在悬停时长胶囊时浮出来挡住耗时卡
+        'aria-label': tt('card.openSessionTitle', { title: session.title || session.id }),
         style: buttonStyle,
       },
       children,
@@ -1575,7 +1597,7 @@ function build(require) {
         onMouseLeave: function () { setHover(false); },
         onFocus: function () { setHover(true); },
         onBlur: function () { setHover(false); },
-        title: openable ? tt('card.openWorkspaceTitle', { name: group.label }) : tt('workspace.ungroupedTitle'),
+        'aria-label': openable ? tt('card.openWorkspaceTitle', { name: group.label }) : tt('workspace.ungroupedTitle'),
         style: {
           display: 'flex',
           alignItems: 'center',

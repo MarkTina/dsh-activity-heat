@@ -258,7 +258,7 @@ function collect(tree) {
   const injected = typeof panelReg.o.inject === 'function' ? panelReg.o.inject() : {};
   const c = collect(panelReg.C({ ...injected, ...withCtx }));
   const all = c.texts.join(' | ');
-  const titled = c.buttons.filter((x) => x.props.title);
+  const titled = c.buttons.filter((x) => x.props['aria-label']);
 
   check(all.indexOf('最近活跃会话') !== -1, '面板标题正确');
   check(all.indexOf('会话 6') !== -1, '显示会话总数 6（排除归档/子代理/空白）');
@@ -266,11 +266,11 @@ function collect(tree) {
   check(all.indexOf('子代理') === -1, '排除子代理会话');
   check(all.indexOf('已归档') === -1, '排除归档会话');
 
-  const sessionCards = titled.filter((x) => String(x.props.title).indexOf('打开「') === 0);
+  const sessionCards = titled.filter((x) => String(x.props['aria-label']).indexOf('打开「') === 0);
   check(sessionCards.length === 6, '默认会话视图展示全部 6 个（默认上限 10）', sessionCards.length);
 
   const chips = c.buttons.filter((x) => {
-    if (x.props.title) return false;
+    if (x.props['aria-label']) return false;
     const label = (x.children && x.children[0]) || '';
     return ['全部', '炽热', '温热', '活跃', '近期', '陈旧'].indexOf(String(label)) !== -1;
   });
@@ -556,6 +556,11 @@ function collect(tree) {
     (n) => n.props && n.props.style && n.props.style.width === 168 && n.props.style.justifyContent === 'space-between',
   );
   check(Boolean(rightCol), '右侧信息列固定宽度并两行对齐');
+  const cardButtons = c.buttons.filter((b) => b.props && b.props['aria-label']);
+  check(
+    cardButtons.length > 0 && cardButtons.every((b) => !b.props.title),
+    '卡片用 aria-label，不弹原生 tooltip 遮挡浮层',
+  );
   check(
     rightCol && rightCol.children && rightCol.children.length === 3,
     '右侧列三行：工作区名 / 热度 / 时间',

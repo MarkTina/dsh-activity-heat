@@ -27,7 +27,7 @@ This plugin computes a 0–100% heat score from **time since last activity** and
 - **Count selector**: sessions `10 / 20 / 30 / 50`, workspaces `5 / 10 / 20`
 - **Heat filter**: All / Blazing / Warm / Active / Recent / Stale, with live counts
 - **Every card**: the bottom row leads with cache hit rate and context usage (each with a mini progress bar), then turns, tokens and the accumulated conversation time; the relative time sits at the far right
-- **Time breakdown**: hovering the conversation time opens a card with the active duration, a donut of wait / thinking / reply / tool-argument / tool-run / other, its legend and a proportional timeline strip — same source (`contextTimeline.timing`) and same segmentation as the host's timing panel
+- **Time breakdown**: hovering the conversation time opens a card with the active duration, a donut of wait / thinking / reply / tool-argument / tool-run / other, its legend and a proportional timeline strip — same source (`contextTimeline.timing`) and same segmentation as the host's timing panel; the card is portaled to `document.body` so the scrolling list can never clip it
 - **Right column**: a fixed 168 px column stacks the workspace name (top), the heat meter with its level label (middle) and the relative time (bottom), so every row lines up
 - **One icon language**: all five metrics share 12 px stroke icons drawn from `currentColor` — no colored emoji
 - **Long lists scroll**: the list caps its height, keeps 12 px of vertical padding so the first/last card's glow is not clipped, uses block flow (30–50 rows keep full height instead of being squashed), hides its native scrollbar, and shows a floating `⌃⌄` handle on the right while more rows remain

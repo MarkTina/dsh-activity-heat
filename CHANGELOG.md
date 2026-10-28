@@ -24,6 +24,7 @@ First public layout of the plugin.
 - The scrolling list keeps 12 px of vertical padding, so the running card's breathing glow is no longer clipped at the top or bottom edge.
 - The card's right column stacks three rows — workspace name, heat meter, relative time — inside a fixed 168 px, and heat level labels have a fixed width so meters stop shifting between rows.
 - Cards show the accumulated conversation time; hovering it opens a time-breakdown card (donut, legend and proportional timeline) built from `contextTimeline.timing`.
+- The breakdown card is portaled to `document.body` and flips above the anchor when space runs out, so top-of-list rows and the viewport bottom no longer clip it. Card buttons use `aria-label` instead of `title`, so no native tooltip pops over the card.
 - Blue heat palette instead of the host brand token, which reads near-black in light themes.
 - The shortcut toggles: first press opens the panel, second press returns to the conversation you came from.
 - Running sessions carry the whale-tail badge (`assets/active.png`) inlined as a data URI and swaying on a CSS loop.
