@@ -1623,12 +1623,6 @@ function build(require) {
     if (session.timing && typeof session.timing.wallMs === 'number' && session.timing.wallMs > 0) {
       groupC.push(React.createElement(DurationChip, { key: 'dur', timing: session.timing }));
     }
-    if (session.at !== undefined) {
-      groupC.push(React.createElement('span', {
-        key: 'at',
-        style: { whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' },
-      }, relativeOf(session.at, now)));
-    }
     if (groupC.length) groups.push(groupC);
 
     // 组内用圆点分隔，组间用竖线 + 更大留白，让同类信息聚在一起
@@ -1741,6 +1735,17 @@ function build(require) {
             }, workspaceName)
           : React.createElement('span', { style: { lineHeight: '20px' } }),
         React.createElement(HeatMeter, { level: session.level, ratio: session.ratio, showLabel: true, width: 96, height: 10 }),
+        React.createElement('span', {
+          style: {
+            width: '100%',
+            textAlign: 'right',
+            fontSize: '0.8em',
+            lineHeight: '18px',
+            color: UI.textTertiary,
+            fontVariantNumeric: 'tabular-nums',
+            whiteSpace: 'nowrap',
+          },
+        }, relativeOf(session.at, now)),
       ),
     ];
 

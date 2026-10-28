@@ -585,8 +585,8 @@ function collect(tree) {
   );
   check(dividers.length >= 2, 'meta 行按组插入竖线分隔', dividers.length);
   check(
-    rightCol && rightCol.children && rightCol.children.length === 2,
-    '右侧列两行：工作区名 / 热度',
+    rightCol && rightCol.children && rightCol.children.length === 3,
+    '右侧列三行：工作区名 / 热度 / 时间',
     rightCol && rightCol.children ? rightCol.children.length : 'none',
   );
 }
