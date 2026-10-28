@@ -26,17 +26,17 @@ This plugin computes a 0–100% heat score from **time since last activity** and
 - **Top-level switch**: `Sessions 58` / `Workspaces 10` — no more mixed list
 - **Count selector**: sessions `10 / 20 / 30 / 50`, workspaces `5 / 10 / 20`
 - **Heat filter**: All / Blazing / Warm / Active / Recent / Stale, with live counts
-- **Every card**: title, most recent prompt, workspace, relative time, turns, tokens, cache hit rate, context usage
+- **Every card**: title and most recent prompt on the left; the workspace name sits above the heat meter on the right; relative time, turns, tokens, cache hit rate and context usage run along the bottom
 - **Click to open**: a session row opens that session, a workspace row opens that workspace
 
 ### Running sessions are marked
 
 Cards for sessions with `session.running === true` get:
 
-- a `● Running` outlined pill before the title (pulsing dot)
+- a `● Running` outlined pill before the title, led by a looping animated GIF badge (`assets/active.gif`, inlined as a data URI)
 - an **orbiting light band** around the card border (`conic-gradient`, one turn per 2.2 s)
 - a **breathing outer glow** (one cycle per 2.4 s)
-- a solid brand-color dot in the sidebar row
+- a solid blue dot in the sidebar row
 
 Workspace cards get the same treatment when **any** session inside that workspace is running — same pill, same orbiting band, same breathing glow — so live work is visible from the Workspaces view too.
 
@@ -47,14 +47,14 @@ Workspace cards get the same treatment when **any** session inside that workspac
 Only host theme tokens are used — **no hard-coded colors** — so light and dark themes work automatically:
 
 ```css
---dsw-alias-brand-primary    /* heat color */
+--color-blue-500             /* heat color (blue, falls back to #3b82f6) */
 --dsw-alias-bg-base          /* opaque card background (hides the orbit band) */
 --dsw-alias-label-primary    /* primary text */
 --dsw-alias-label-secondary  /* secondary text */
 --dsw-alias-border-l1        /* separators and tracks */
 ```
 
-Heat is expressed as **one hue at different opacities** (0.3 → 1.0) plus a partially filled meter. No rainbow, a tighter look.
+Heat is expressed as **one blue hue at different opacities** (0.3 → 1.0) plus a partially filled meter. The host brand token reads near-black in light themes, so the plugin prefers the blue scale instead.
 
 ## Install
 
@@ -87,7 +87,7 @@ Add `@local/activity-heat` to `dsh.profile.bundles` the same way.
 
 ## Shortcut
 
-Default **`Ctrl + Alt + H`** (`Cmd + Alt + H` on macOS) switches to the Recent Activity panel.
+Default **`Ctrl + Alt + H`** (`Cmd + Alt + H` on macOS) switches to the Recent Activity panel. Pressing it again while the panel is open returns you to the conversation you came from — the panel never replaces the session, so the toggle is a round trip.
 
 Change it under **Settings → Shortcuts**, searching for “Recent Activity”.
 
@@ -142,6 +142,8 @@ dsh-activity-heat/
 │   ├── zh.json         Plugin metadata + UI dictionary (Chinese)
 │   └── en.json         Plugin metadata + UI dictionary (English)
 ├── icon.svg            Plugin icon (exported as ./icon)
+├── assets/
+│   └── active.gif      Looping badge for running sessions (inlined into client.js)
 ├── test/               Dependency-free self-checks, run with node
 ├── package.json        Manifest — dsh.bundle.patch, dsh.client, exports, files
 ├── README.md           This file
@@ -169,6 +171,7 @@ node test/panel.cjs        # registration / sorting / filtering / rendering / cl
 node test/shortcut.cjs     # shortcut defaults against host reserved-key rules
 node test/boot-timing.cjs  # restart timing: recovery when slots become ready late
 node test/locale.cjs       # locale dictionaries and metadata stay in sync
+node test/assets.cjs       # inlined running badge matches assets/active.gif
 ```
 
 `pnpm test` runs all four.

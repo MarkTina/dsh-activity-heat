@@ -11,7 +11,7 @@
  *   counts.turns、current.total、contextWindow、requests[].prompt/cacheRead
  * - workspaces.list.items[].sessionIds：会话归属
  *
- * 配色：统一用宿主主题的 --dsw-alias-brand-primary，靠不透明度表达热度。
+ * 配色：统一用蓝色专用色阶（blue 500 档），靠不透明度表达热度。
  */
 /**
  * ===== 界面字典 =====
@@ -238,6 +238,12 @@ function build(require) {
   /** 宿主 locale 的绑定翻译函数；服务不可用时为 null，tt() 退回内置中文。 */
   var activeT = null;
 
+  /** main slot 里当前是否显示着本插件的面板（用于快捷键二次切换）。 */
+  var panelVisible = false;
+
+  /** 运行中徽标的循环动画：assets/active.gif 的内联副本，test/assets.cjs 保证两者一致。 */
+  var ACTIVE_GIF = 'data:image/gif;base64,R0lGODlhIAAgAIIAAAAAADuC9mCl+pPF/f///wAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQJBwAAACwAAAAAIAAgAAAIeQABCBxIsKDBgwgTKlzIsKHDhxAjSpzocMAAigktWsR4UMBGjgUFiBQAkuDIkiZFoky5cuDJgQFiBsCoEmYAizEp1gQQcwABAgNyguz5M+hMgUIl9jRKMKlSmQWdooTakupKq1OxghR5dOVIki0B7AxLtqzZs2glBgQAIfkECQcAAAAsCgAGAAwAFACCAAAAO4L2YKX6k8X9////AAAAAAAAAAAACFAAAQgcOHDAAIICEiY0eBCAwocMHSpE2DAhwYsYM14MEEAjx48dNwYwyFHkAAIEBpQcyPFkypUsR6oMSRAkTJEac+q8KbKjQpsrf9ocaFFjQAAh+QQJBwAAACwGAAcAFAASAIIAAAA7gvZgpfqTxf3///8AAAAAAAAAAAAIYgABCBxIUIBBgggTCjTIUKHDhQ0fOowoMSHDAQ8DaAxQcIBHhRs3EvSIEeFGjyIHljQZYAABAgM0VgSg0SVMmRYJnoyJs+DBgSF7+hTAEWhKhUSFzhR4dClTpUuDOn0KlWBAACH5BAkHAAAALAYACgAUAAwAggAAADuC9mCl+pPF/f///wAAAAAAAAAAAAhZAAEIHEiwIAABAwUoNGhQIcKDDgsGCFBwoUCFFAVO3Jjx4sOJBCcOGAAy4ceOIgkQINnRYkkAKVe+dNkRZoCRLyFqfMkx58iBOW0WHPnTZk2GAIgCPYpUYEAAIfkECQcAAAAsBwAGABIAFACCAAAAO4L2YKX6k8X9////AAAAAAAAAAAACF4AAQgUKEDAwIMIBxYsmLAhgAAMHSIMQDGAxIMVL2KkqHFjx4EZQYacaFHkgAEcSZokQABlSYcUB7B0qdAgyZMpCdokmVPnR507NS78OfTjwqASTyJNenLATwAnEQYEACH5BAkHAAAALAoABgAMABQAggAAADuC9mCl+pPF/f///wAAAAAAAAAAAAhOAAEIHDhQgACCARImNHgQgMKHDB0qRNgwIcGLGDNq1PgwY8IBAyxeDDCAAIGQGEmaRDmSZMgAHidunEkzo8GNEUEOYMhToE6eN30O2BgQACH5BAkHAAAALAYABwAUABIAggAAADuC9mCl+pPF/f///wAAAAAAAAAAAAhcAAEIHEgwgEGCCBMKNMhQocOFDR86jCgxIUMBFS0K2PiQosCNGBUGGDDgIMGQFgcQIFAy40KVLAM4HIDQIEmTCEnSLOiRoE6ULgEMABn0JMeiH48iBanUJVOJAQEAIfkECQcAAAAsBgAKABQADACCAAAAO4L2YKX6k8X9////AAAAAAAAAAAACFYAAQgcSLAggAADByg0aDCAQ4EKFzIk+BDiAAEUHSLMKFAAxoEOFVYUWNEjxQEECAzYSHKjSZAoVbI86PJjS5EzS75sObKjzZ0TAXh8OTTowKI+jRYMCAA7';
+
   /**
    * 界面文案统一入口。宿主 locale 服务可用时走它的字典（随语言切换实时更新），
    * 否则退回随包的中文字典——测试与降级场景都保持可读的文案。
@@ -256,9 +262,11 @@ function build(require) {
   /** 单色热度：同一主题色，用不透明度表达冷热。索引即等级。 */
   var HEAT_ALPHA = [0, 0.28, 0.4, 0.56, 0.76, 1];
   var LEVEL_KEYS = ['cold', 'stale', 'recent', 'active', 'warm', 'hot'];
-  // 统一使用宿主主题的主品牌色（--dsw-alias-brand-primary 在 light/dark 下都可用）。
+  // 蓝色色阶令牌在 light/dark 下都可用；不再用偏黑的 brand 令牌（读起来发闷）。
   // 注意：不要用 --dsw-alias-state-business-primary，宿主主题里没有这个令牌。
-  var HEAT_INK = 'var(--dsw-alias-brand-primary, #3b82f6)';
+  // 热量主色：宿主的 brand 令牌在浅色主题下偏黑，读起来发闷；优先取蓝色色阶令牌，
+  // 最后才退回 brand。
+  var HEAT_INK = 'var(--color-blue-500, #3b82f6)';
 
   var LEVELS = [
     { max: 10 * MINUTE, level: 5 },
@@ -872,14 +880,17 @@ function build(require) {
           flex: 'none',
         },
       },
-      React.createElement('span', {
+      React.createElement('img', {
+        src: ACTIVE_GIF,
+        alt: '',
+        'aria-hidden': 'true',
+        width: 16,
+        height: 16,
         style: {
           display: 'block',
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
-          background: HEAT_INK,
-          animation: 'ah-pulse 1.2s ease-in-out infinite',
+          width: 16,
+          height: 16,
+          filter: 'drop-shadow(0 0 3px color-mix(in srgb, var(--color-blue-500, #3b82f6) 70%, transparent))',
         },
       }),
       tt('running.label'),
@@ -908,9 +919,9 @@ function build(require) {
               gap: 5,
               padding: '3px 10px',
               borderRadius: 999,
-              border: picked ? '1px solid ' + UI.textPrimary : '1px solid var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
-              background: picked ? UI.cardBgHover : 'transparent',
-              color: picked ? UI.textPrimary : UI.textSecondary,
+              border: picked ? '1px solid ' + HEAT_INK : '1px solid var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
+              background: picked ? 'color-mix(in srgb, var(--color-blue-500, #3b82f6) 12%, transparent)' : 'transparent',
+              color: picked ? HEAT_INK : UI.textSecondary,
               fontSize: '0.8em',
               lineHeight: '18px',
               cursor: 'pointer',
@@ -959,8 +970,8 @@ function build(require) {
           background:
             'conic-gradient(from 0deg,' +
             ' transparent 0deg, transparent 250deg,' +
-            ' color-mix(in srgb, var(--dsw-alias-brand-primary) 95%, transparent) 310deg,' +
-            ' color-mix(in srgb, var(--dsw-alias-brand-primary) 35%, transparent) 335deg,' +
+            ' color-mix(in srgb, var(--color-blue-500, #3b82f6) 95%, transparent) 310deg,' +
+            ' color-mix(in srgb, var(--color-blue-500, #3b82f6) 35%, transparent) 335deg,' +
             ' transparent 360deg)',
           animation: 'ah-orbit 2.2s linear infinite',
           pointerEvents: 'none',
@@ -978,13 +989,12 @@ function build(require) {
     var session = props.session;
     var now = props.now;
 
+    // 所属工作区移到卡片右侧；左侧 meta 只保留时间与用量
+    var workspaceName = session.workspace
+      ? (session.workspace.title || basenameOf(session.workspace.path) || tt('workspace.untitled'))
+      : '';
+
     var meta = [];
-    if (session.workspace) {
-      meta.push(React.createElement('span', {
-        key: 'ws',
-        style: { maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-      }, session.workspace.title || basenameOf(session.workspace.path) || tt('workspace.untitled')));
-    }
     meta.push(React.createElement('span', { key: 'at' }, relativeOf(session.at, now)));
     if (typeof session.turns === 'number') {
       meta.push(React.createElement(MetaChip, { key: 'turns', icon: '⟳' }, tt('fact.turns', { n: session.turns })));
@@ -1068,7 +1078,30 @@ function build(require) {
       ),
       React.createElement(
         'span',
-        { key: 'meter', style: { flex: 'none', display: 'flex', alignItems: 'center', alignSelf: 'center' } },
+        {
+          key: 'right',
+          style: {
+            flex: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            gap: 4,
+            alignSelf: 'center',
+            maxWidth: 190,
+          },
+        },
+        workspaceName
+          ? React.createElement('span', {
+              style: {
+                maxWidth: 180,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                fontSize: '0.76em',
+                color: UI.textTertiary,
+              },
+            }, workspaceName)
+          : null,
         React.createElement(HeatMeter, { level: session.level, ratio: session.ratio, showLabel: true, width: 84, height: 10 }),
       ),
     ];
@@ -1255,7 +1288,7 @@ function build(require) {
               padding: compact ? '1px 7px' : '3px 9px',
               borderRadius: 6,
               border: '1px solid ' + (picked ? 'transparent' : 'var(--dsw-alias-border-l1, rgba(127,127,127,0.22))'),
-              background: picked ? UI.textPrimary : 'transparent',
+              background: picked ? HEAT_INK : 'transparent',
               color: picked ? 'var(--dsw-alias-bg-base, #ffffff)' : UI.textSecondary,
               fontSize: compact ? '0.74em' : '0.78em',
               lineHeight: compact ? '16px' : '18px',
@@ -1275,6 +1308,11 @@ function build(require) {
     var useWorkspaces = props && props.useWorkspaces;
     // 首次渲染的视图；宿主不传时默认会话视图（测试可直接从工作区视图进入）
     var initialView = props && props.initialView === 'workspaces' ? 'workspaces' : 'sessions';
+    // 面板挂载期间才显示在 main slot；快捷键靠这个标记做「进入 / 返回」二次切换。
+    React.useEffect(function () {
+      panelVisible = true;
+      return function () { panelVisible = false; };
+    }, []);
     useMinuteTick();
 
     // 顶层：会话 / 工作区 两种对象切换
@@ -1599,11 +1637,13 @@ function build(require) {
             run: function () {
               try {
                 var layout = typeof ctx.get === 'function' ? ctx.get('layout') : undefined;
-                if (layout && typeof layout.selectPanel === 'function') {
-                  layout.selectPanel('activity-heat');
-                } else {
+                if (!layout || typeof layout.selectPanel !== 'function') {
                   ahWarn('[activity-heat] layout.selectPanel unavailable');
+                  return;
                 }
+                // 二次切换：已在面板里就回到进入前的会话（Conversation），否则进入面板。
+                // 面板本身不会替换当前会话，所以 selectPanel(null) 自然回到原来那一个。
+                layout.selectPanel(panelVisible ? null : 'activity-heat');
               } catch (error) {
                 ahWarn('[activity-heat] shortcut run failed:', error && error.message);
               }
@@ -1681,8 +1721,8 @@ function build(require) {
         '@keyframes ah-orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}',
         // 呼吸外发光：让"正在运行"的卡片持续向外涌动
         '@keyframes ah-breathe{',
-        '0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--dsw-alias-brand-primary) 0%, transparent)}',
-        '50%{box-shadow:0 0 14px 2px color-mix(in srgb, var(--dsw-alias-brand-primary) 45%, transparent)}',
+        '0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--color-blue-500, #3b82f6) 0%, transparent)}',
+        '50%{box-shadow:0 0 14px 2px color-mix(in srgb, var(--color-blue-500, #3b82f6) 45%, transparent)}',
         '}',
         '@media (prefers-reduced-motion: reduce){',
         '@keyframes ah-orbit{from{transform:rotate(0deg)}to{transform:rotate(0deg)}}',

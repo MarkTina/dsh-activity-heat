@@ -26,17 +26,17 @@ DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话�
 - **顶层切换**：`会话 58` / `工作区 10`，不再是上下混排
 - **数量可选**：会话 `10 / 20 / 30 / 50`，工作区 `5 / 10 / 20`
 - **热度筛选**：全部 / 炽热 / 温热 / 活跃 / 近期 / 陈旧（带实时计数）
-- **每张卡片**：标题、最近一次提示词、工作区、相对时间、轮次、tokens、缓存命中率、上下文占比
+- **每张卡片**：左侧是标题与最近一次提示词，右侧在热度计上方显示所属工作区；底部一行是相对时间、轮次、tokens、缓存命中率、上下文占比
 - **点击即跳转**：会话行打开该会话，工作区行打开该工作区
 
 ### 正在运行的会话有专属标识
 
 `session.running === true` 的卡片会获得：
 
-- 标题前 `● 运行中` 描边胶囊（圆点脉冲呼吸）
+- 标题前 `● 运行中` 描边胶囊，圆点换成循环播放的动图徽标（`assets/active.gif`，内联为 data URI）
 - 卡片外边框**环绕跑马灯光带**（`conic-gradient` 旋转，2.2s 一圈）
 - 外层**呼吸外发光**（2.4s 一次）
-- 侧栏行首画品牌色实心点
+- 侧栏行首画蓝色实心点
 
 **工作区卡片**同理：只要该工作区里有任意一个会话正在运行，就显示同一套标识——同样的「运行中」胶囊、同样的环绕跑马灯、同样的呼吸外发光，所以工作区视图里也能一眼看到活着的任务。
 
@@ -47,7 +47,7 @@ DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话�
 只用宿主主题令牌，**不写死色值**，因此自动适配明/暗主题：
 
 ```css
---dsw-alias-brand-primary    /* 热度主色 */
+--color-blue-500             /* 热度主色（蓝色，回退 #3b82f6） */
 --dsw-alias-bg-base          /* 卡片不透明底（遮住跑马灯光带） */
 --dsw-alias-label-primary    /* 主文字 */
 --dsw-alias-label-secondary  /* 次要文字 */
@@ -87,7 +87,7 @@ pnpm add link:/绝对路径/dsh-activity-heat
 
 ## 快捷键
 
-默认 **`Ctrl + Alt + H`**（macOS 为 `Cmd + Alt + H`），切换到「最近活跃会话」面板。
+默认 **`Ctrl + Alt + H`**（macOS 为 `Cmd + Alt + H`），切换到「最近活跃会话」面板；面板已打开时再按一次，回到进入前所在的会话——面板不替换当前会话，所以是一次往返切换。
 
 可在 **设置 → 快捷键** 搜「最近活跃」修改。
 
@@ -142,6 +142,8 @@ dsh-activity-heat/
 │   ├── zh.json         插件元数据 + UI 字典（中文）
 │   └── en.json         插件元数据 + UI 字典（英文）
 ├── icon.svg            插件图标（以 ./icon 导出）
+├── assets/
+│   └── active.gif      运行中徽标的循环动图（内联进 client.js）
 ├── test/               免依赖自检，用 node 直接运行
 ├── package.json        清单——dsh.bundle.patch、dsh.client、exports、files
 ├── README.md           英文 README
@@ -169,6 +171,7 @@ node test/panel.cjs        # 注册 / 排序 / 过滤 / 渲染 / 点击跳转
 node test/shortcut.cjs     # 快捷键绑定是否符合宿主保留键规则
 node test/boot-timing.cjs  # 重启时序：slots 晚就绪时能否恢复
 node test/locale.cjs       # locale 字典与元数据是否同步
+node test/assets.cjs       # 内联动图与 assets/active.gif 是否一致
 ```
 
 `pnpm test` 会依次跑完这四项。

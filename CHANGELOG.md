@@ -14,4 +14,8 @@ First public layout of the plugin.
 - Default shortcut `Ctrl+Alt+H` (`Cmd+Alt+H` on macOS), no Linux default.
 - Locale-aware UI text with bundled `zh`/`en` dictionaries and a Chinese fallback.
 - Panel and hover-card figures (turns, tokens, cache hit rate, context usage) come from the same projections as the composer status bar — `sessionStats`, `tokenUsage` and `contextPressure` — with a `contextTimeline` fallback for older profiles.
+- Session cards put the workspace name in the right-hand column, above the heat meter.
+- Blue heat palette instead of the host brand token, which reads near-black in light themes.
+- The shortcut toggles: first press opens the panel, second press returns to the conversation you came from.
+- Running sessions carry a looping animated GIF badge (`assets/active.gif`), inlined as a data URI.
 - Dependency-free self-checks under `test/`.

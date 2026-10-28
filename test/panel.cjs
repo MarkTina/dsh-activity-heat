@@ -41,7 +41,7 @@ function load(debug) {
       return { type: t, props, children: c };
     },
     useState: (v) => [typeof v === 'function' ? v() : v, () => {}],
-    useEffect: () => {},
+    useEffect: (fn) => { try { fn(); } catch (e) { /* 测试替身忽略 */ } },
     Fragment: 'Fragment',
   };
 
@@ -305,7 +305,7 @@ function collect(tree) {
   check(dotOf('run') && dotOf('run').props.title === '正在运行', '运行中的行首画实心点');
   const hotDot = dotOf('hot');
   check(hotDot && hotDot.props.style.opacity === 1, '炽热会话不透明度 1');
-  check(String(hotDot.props.style.background).indexOf('--dsw-alias-brand-primary') !== -1, '热度色用主题品牌色');
+  check(String(hotDot.props.style.background).indexOf('--color-blue-500') !== -1, '热度色用蓝色令牌');
   check(dotOf('archived') === null, '归档会话不画行首点');
 
   /* 悬停卡 */
@@ -324,8 +324,16 @@ function collect(tree) {
   check(sc && sc.defaults['web:windows'].code === 'KeyH', '默认键 KeyH');
   check(sc && sc.defaults['web:windows'].modifiers.join('+') === 'primary+alt', '修饰键 primary+alt');
   check(sc && !sc.defaults['web:linux'] && !sc.defaults['desktop:linux'], '不声明 linux profile');
+
+  // 本块前面已渲染过面板 → panelVisible 为 true，此时快捷键应回到会话
   if (sc) sc.resolve({ target: null }).run();
-  check(b.layoutCalls[0] === 'activity-heat', '快捷键切到面板');
+  check(b.layoutCalls[0] === null, '面板已打开时快捷键返回会话');
+
+  // 另起一个从未渲染面板的实例：首次激活应进入面板
+  const fresh = boot(false);
+  const freshSc = fresh.shortcutDefs[0];
+  if (freshSc) freshSc.resolve({ target: null }).run();
+  check(fresh.layoutCalls[0] === 'activity-heat', '首次快捷键进入面板');
 }
 
 /* ================= 6. 日志开关 ================= */
