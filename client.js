@@ -1921,7 +1921,9 @@ function build(require) {
         style: {
           // 块级流：卡片保持自身高度，数量多时滚动而不是被 flex 压扁
           display: 'block',
-          padding: '0 ' + UI.padX + 'px',
+          // 上下留出光晕的呼吸空间：overflow 容器会裁掉卡片外发光，
+          // 首尾卡片贴着边缘时动效就看不全了
+          padding: '12px ' + UI.padX + 'px',
           maxHeight: 'calc(100vh - 236px)',
           overflowY: 'auto',
           overscrollBehavior: 'contain',

@@ -21,7 +21,7 @@ First public layout of the plugin.
 - Long session lists scroll with the native scrollbar hidden and a floating `⌃⌄` hint on the right.
 - Session card meta now leads with the two percentages and pins the relative time to the far right.
 - Running sessions drop the outlined pill: the whale-tail mark plus a "Working" label now sits in the card's right-hand whitespace, swaying and bobbing on a CSS loop. Hover cards and workspace rows reuse the same label.
-- Session lists use block flow, so 30–50 rows scroll at full height instead of being squashed by flex.
+- The scrolling list keeps 12 px of vertical padding, so the running card's breathing glow is no longer clipped at the top or bottom edge.
 - The card's right column is a fixed 168 px with top/bottom alignment, and heat level labels have a fixed width so meters stop shifting between rows.
 - Cards show the accumulated conversation time; hovering it opens a time-breakdown card (donut, legend and proportional timeline) built from `contextTimeline.timing`.
 - Blue heat palette instead of the host brand token, which reads near-black in light themes.

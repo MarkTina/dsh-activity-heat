@@ -544,6 +544,10 @@ function collect(tree) {
   check(listEl && listEl.props.style.overflowY === 'auto', '列表可纵向滚动');
   check(listEl && listEl.props.style.display === 'block', '列表用块级流，数量多也不压扁卡片');
   check(
+    listEl && String(listEl.props.style.padding).indexOf('12px') === 0,
+    '列表上下留白，首尾卡片的呼吸光晕不被裁掉',
+  );
+  check(
     listEl && String(listEl.props.style.maxHeight).indexOf('100vh') !== -1,
     '列表高度受视口限制',
   );
