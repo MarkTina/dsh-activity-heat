@@ -532,6 +532,12 @@ function collect(tree) {
       && x.props.style.position === 'relative',
   );
   check(aboveOrbit.length >= 1, '运行中工作区按钮压在光带之上（定位 + z-index）', aboveOrbit.length);
+  check(all.indexOf('3 个会话') !== -1, '工作区汇总会话数');
+  check(all.indexOf('14 轮') !== -1 && all.indexOf('40 步') !== -1, '工作区汇总轮次与步数');
+  check(all.indexOf('510k tok') !== -1, '工作区汇总 tokens');
+  check(all.indexOf('缓存命中 60%') !== -1, '工作区按计费桶加权缓存命中');
+  check(all.indexOf('上下文 80%') !== -1, '工作区取最紧张的上下文占比');
+  check(all.indexOf('46m20s') !== -1, '工作区汇总累计耗时');
   check(all.indexOf('tok') !== -1 && all.indexOf('tokens') === -1, '工作区用量文案与状态栏一致');
 }
 

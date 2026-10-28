@@ -45,6 +45,8 @@ Cards for sessions with `session.running === true` get:
 
 Workspace cards get the same treatment when **any** session inside that workspace is running — same whale-tail label, same orbiting band, same breathing glow — so live work is visible from the Workspaces view too.
 
+A workspace card also aggregates everything that can be summed: session count, turns, steps, tokens and total conversation time. Cache hit rate is weighted across the workspace's billing buckets (not an average of percentages), and context usage shows the most loaded session. Nothing that cannot be summarised — prompts, the current-session flag — is carried over.
+
 > `prefers-reduced-motion` is respected: with reduced motion enabled, all animation stops.
 
 ## Colors

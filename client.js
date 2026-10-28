@@ -741,6 +741,12 @@ function build(require) {
           at: undefined,
           count: 0,
           tokens: 0,
+          turns: 0,
+          steps: 0,
+          wallMs: 0,
+          cacheRead: 0,
+          billed: 0,
+          maxContextPct: undefined,
           running: false,
         };
         groups[key] = group;
@@ -749,6 +755,19 @@ function build(require) {
       group.count += 1;
       if (session.running === true) group.running = true;
       if (typeof session.tokens === 'number') group.tokens += session.tokens;
+      if (typeof session.turns === 'number') group.turns += session.turns;
+      if (typeof session.steps === 'number') group.steps += session.steps;
+      if (session.timing && typeof session.timing.wallMs === 'number') group.wallMs += session.timing.wallMs;
+      if (session.tokenParts) {
+        // 缓存命中必须按桶加权，直接平均各会话的百分比会失真
+        group.cacheRead += session.tokenParts.cacheRead;
+        group.billed += session.tokenParts.uncached + session.tokenParts.cacheRead + session.tokenParts.cacheWrite;
+      }
+      if (typeof session.contextPct === 'number') {
+        group.maxContextPct = group.maxContextPct === undefined
+          ? session.contextPct
+          : Math.max(group.maxContextPct, session.contextPct);
+      }
       if (group.at === undefined || (session.at !== undefined && session.at > group.at)) {
         group.at = session.at;
         group.level = session.level;
@@ -1010,6 +1029,12 @@ function build(require) {
       inner = [
         React.createElement('path', { key: 'arc', d: 'M9.8 6.2A4 4 0 1 1 6 2' }),
         React.createElement('path', { key: 'head', d: 'M6 0.6 8.6 2 6 3.6' }),
+      ];
+    } else if (name === 'sessions') {
+      // 两叠卡片：表示"会话数"
+      inner = [
+        React.createElement('rect', { key: 'back', x: 1.4, y: 1.8, width: 6.4, height: 7.6, rx: 1.2 }),
+        React.createElement('path', { key: 'front', d: 'M4.4 4.2h5c.7 0 1.2.5 1.2 1.2v5' }),
       ];
     } else if (name === 'steps') {
       // 三级台阶：表示"步"
@@ -1493,6 +1518,32 @@ function build(require) {
     );
   }
 
+  /** 把分组后的 chip 铺成一行：组内圆点、组间竖线。会话卡与工作区卡共用。 */
+  function renderMetaGroups(groups) {
+    var row = [];
+    for (var g = 0; g < groups.length; g += 1) {
+      if (g > 0) {
+        row.push(React.createElement('span', {
+          key: 'divider' + g,
+          'aria-hidden': 'true',
+          style: {
+            flex: 'none',
+            width: 1,
+            height: 12,
+            alignSelf: 'center',
+            margin: '0 5px',
+            background: 'var(--dsw-alias-border-l1, rgba(127,127,127,0.3))',
+          },
+        }));
+      }
+      for (var j = 0; j < groups[g].length; j += 1) {
+        if (j > 0) row.push(React.createElement('span', { key: 'sep' + g + '_' + j, style: { opacity: 0.3 } }, '·'));
+        row.push(groups[g][j]);
+      }
+    }
+    return row;
+  }
+
   function SessionCard(props) {
     var hoverState = React.useState(false);
     var hover = hoverState[0];
@@ -1560,27 +1611,7 @@ function build(require) {
     if (groupC.length) groups.push(groupC);
 
     // 组内用圆点分隔，组间用竖线 + 更大留白，让同类信息聚在一起
-    var metaRow = [];
-    for (var g = 0; g < groups.length; g += 1) {
-      if (g > 0) {
-        metaRow.push(React.createElement('span', {
-          key: 'divider' + g,
-          'aria-hidden': 'true',
-          style: {
-            flex: 'none',
-            width: 1,
-            height: 12,
-            alignSelf: 'center',
-            margin: '0 5px',
-            background: 'var(--dsw-alias-border-l1, rgba(127,127,127,0.3))',
-          },
-        }));
-      }
-      for (var j = 0; j < groups[g].length; j += 1) {
-        if (j > 0) metaRow.push(React.createElement('span', { key: 'sep' + g + '_' + j, style: { opacity: 0.3 } }, '·'));
-        metaRow.push(groups[g][j]);
-      }
-    }
+    var metaRow = renderMetaGroups(groups);
 
     var children = [
       React.createElement('span', {
@@ -1749,8 +1780,66 @@ function build(require) {
     var openable = group.workspaceId !== undefined;
     var running = group.running === true;
 
-    var metaBits = [tt('group.sessions', { count: group.count }), relativeOf(group.at, now)];
-    if (group.tokens > 0) metaBits.push(tt('fact.tokens', { n: compactNumber(group.tokens) }));
+    // 工作区是汇总视图：能加总的（缓存/上下文/轮次/步数/tokens/耗时）才展示
+    var groups = [];
+
+    var groupA = [];
+    if (group.billed > 0) {
+      var cacheText = cacheHitTextOf(group.cacheRead, group.billed);
+      if (cacheText !== undefined) {
+        var cachePct = Number(cacheText);
+        groupA.push(React.createElement(MetaChip, { key: 'cache', icon: React.createElement(MetricIcon, { name: 'cache' }) },
+          tt('fact.cache', { n: cacheText }),
+          React.createElement(MiniMeter, {
+            ratio: isFinite(cachePct) ? cachePct / 100 : 0,
+            color: HEAT_INK,
+          }),
+        ));
+      }
+    }
+    if (typeof group.maxContextPct === 'number') {
+      groupA.push(React.createElement(MetaChip, { key: 'ctx', icon: React.createElement(MetricIcon, { name: 'context' }) },
+        tt('fact.context', { n: group.maxContextPct }),
+        React.createElement(MiniMeter, {
+          ratio: group.maxContextPct / 100,
+          color: contextMeterColor(group.maxContextPct),
+        }),
+      ));
+    }
+    if (groupA.length) groups.push(groupA);
+
+    var groupB = [
+      React.createElement(MetaChip, { key: 'sessions', icon: React.createElement(MetricIcon, { name: 'sessions' }) },
+        tt('group.sessions', { count: group.count })),
+    ];
+    if (group.turns > 0) {
+      groupB.push(React.createElement(MetaChip, { key: 'turns', icon: React.createElement(MetricIcon, { name: 'turns' }) }, tt('fact.turns', { n: group.turns })));
+    }
+    if (group.steps > 0) {
+      groupB.push(React.createElement(MetaChip, { key: 'steps', icon: React.createElement(MetricIcon, { name: 'steps' }) }, tt('fact.steps', { n: group.steps })));
+    }
+    if (group.tokens > 0) {
+      groupB.push(React.createElement(MetaChip, { key: 'tokens', icon: React.createElement(MetricIcon, { name: 'tokens' }) }, tt('fact.tokens', { n: compactNumber(group.tokens) })));
+    }
+    groups.push(groupB);
+
+    var groupC = [];
+    if (group.wallMs > 0) {
+      groupC.push(React.createElement('span', {
+        key: 'dur',
+        style: { display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' },
+      },
+        React.createElement(MetricIcon, { name: 'duration' }),
+        durationText(group.wallMs),
+      ));
+    }
+    groupC.push(React.createElement('span', {
+      key: 'at',
+      style: { whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' },
+    }, relativeOf(group.at, now)));
+    groups.push(groupC);
+
+    var metaRow = renderMetaGroups(groups);
 
     var cardButton = React.createElement(
       'button',
@@ -1819,7 +1908,17 @@ function build(require) {
             },
           }, group.label),
         ),
-        React.createElement('span', { style: { color: UI.textTertiary, fontSize: '0.8em', lineHeight: '18px' } }, metaBits.join(' · ')),
+        React.createElement('span', {
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            color: UI.textSecondary,
+            fontSize: '0.88em',
+            lineHeight: '23px',
+            flexWrap: 'wrap',
+          },
+        }, metaRow),
       ),
       React.createElement(
         'span',
