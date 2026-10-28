@@ -33,7 +33,7 @@ This plugin computes a 0–100% heat score from **time since last activity** and
 
 Cards for sessions with `session.running === true` get:
 
-- a `● Running` outlined pill before the title, led by a looping animated GIF badge (`assets/active.gif`, inlined as a data URI)
+- a `● Running` outlined pill before the title, led by the whale-tail mark (`assets/active.png`, inlined as a data URI and swaying on a CSS loop)
 - an **orbiting light band** around the card border (`conic-gradient`, one turn per 2.2 s)
 - a **breathing outer glow** (one cycle per 2.4 s)
 - a solid blue dot in the sidebar row
@@ -143,7 +143,7 @@ dsh-activity-heat/
 │   └── en.json         Plugin metadata + UI dictionary (English)
 ├── icon.svg            Plugin icon (exported as ./icon)
 ├── assets/
-│   └── active.gif      Looping badge for running sessions (inlined into client.js)
+│   └── active.png      Whale-tail badge for running sessions (inlined into client.js)
 ├── test/               Dependency-free self-checks, run with node
 ├── package.json        Manifest — dsh.bundle.patch, dsh.client, exports, files
 ├── README.md           This file
@@ -171,7 +171,7 @@ node test/panel.cjs        # registration / sorting / filtering / rendering / cl
 node test/shortcut.cjs     # shortcut defaults against host reserved-key rules
 node test/boot-timing.cjs  # restart timing: recovery when slots become ready late
 node test/locale.cjs       # locale dictionaries and metadata stay in sync
-node test/assets.cjs       # inlined running badge matches assets/active.gif
+node test/assets.cjs       # inlined running badge matches assets/active.png
 ```
 
 `pnpm test` runs all four.

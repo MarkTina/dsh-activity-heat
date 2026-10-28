@@ -33,7 +33,7 @@
     "client.js",
     "cordis.patch.yml",
     "locale/*.json",
-    "assets/active.gif",
+    "assets/active.png",
     "icon.svg",
     "README.md",
     "README.zh.md",

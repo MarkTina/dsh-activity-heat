@@ -17,5 +17,5 @@ First public layout of the plugin.
 - Session cards put the workspace name in the right-hand column, above the heat meter.
 - Blue heat palette instead of the host brand token, which reads near-black in light themes.
 - The shortcut toggles: first press opens the panel, second press returns to the conversation you came from.
-- Running sessions carry a looping animated GIF badge (`assets/active.gif`), inlined as a data URI.
+- Running sessions carry the whale-tail badge (`assets/active.png`) inlined as a data URI and swaying on a CSS loop.
 - Dependency-free self-checks under `test/`.

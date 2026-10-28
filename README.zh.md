@@ -33,7 +33,7 @@ DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话�
 
 `session.running === true` 的卡片会获得：
 
-- 标题前 `● 运行中` 描边胶囊，圆点换成循环播放的动图徽标（`assets/active.gif`，内联为 data URI）
+- 标题前 `● 运行中` 描边胶囊，圆点换成官方鲸尾标识（`assets/active.png`，内联为 data URI，循环摆动）
 - 卡片外边框**环绕跑马灯光带**（`conic-gradient` 旋转，2.2s 一圈）
 - 外层**呼吸外发光**（2.4s 一次）
 - 侧栏行首画蓝色实心点
@@ -143,7 +143,7 @@ dsh-activity-heat/
 │   └── en.json         插件元数据 + UI 字典（英文）
 ├── icon.svg            插件图标（以 ./icon 导出）
 ├── assets/
-│   └── active.gif      运行中徽标的循环动图（内联进 client.js）
+│   └── active.png      运行中徽标的鲸尾标识（内联进 client.js）
 ├── test/               免依赖自检，用 node 直接运行
 ├── package.json        清单——dsh.bundle.patch、dsh.client、exports、files
 ├── README.md           英文 README
@@ -171,7 +171,7 @@ node test/panel.cjs        # 注册 / 排序 / 过滤 / 渲染 / 点击跳转
 node test/shortcut.cjs     # 快捷键绑定是否符合宿主保留键规则
 node test/boot-timing.cjs  # 重启时序：slots 晚就绪时能否恢复
 node test/locale.cjs       # locale 字典与元数据是否同步
-node test/assets.cjs       # 内联动图与 assets/active.gif 是否一致
+node test/assets.cjs       # 内联鲸尾图与 assets/active.png 是否一致
 ```
 
 `pnpm test` 会依次跑完这四项。
