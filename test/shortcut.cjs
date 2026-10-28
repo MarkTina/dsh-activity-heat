@@ -5,7 +5,7 @@ const path = require('path');
  */
 const fs = require('fs');
 
-const src = fs.readFileSync(path.join(__dirname, 'client.js'), 'utf8');
+const src = fs.readFileSync(path.join(__dirname, '..', 'client.js'), 'utf8');
 
 /* --- 从源码里取出我们声明的 binding 与 defaults --- */
 const bindingMatch = src.match(/var binding = \{ code: '(\w+)', modifiers: \[([^\]]*)\] \};/);

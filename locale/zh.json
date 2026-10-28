@@ -3,32 +3,19 @@
     "title": "最近活跃",
     "description": "用热度标识最近发生过对话的会话与工作区：侧栏入口、会话行热度点与悬停卡热度段，最近的活动最醒目。"
   },
-  "nav": "最近活跃",
+  "nav": "最近活跃会话",
   "panel": {
-    "title": "最近活跃",
-    "subtitle": "按最近活动时间排序，热度越高表示越近",
-    "topTitle": "最近会话",
-    "groupsTitle": "工作区分组",
-    "empty": "暂无最近活动",
-    "emptyHint": "在与某个工作区的会话里发一条消息后，这里就会出现它的热度。",
-    "refresh": "刷新",
-    "refreshedAt": "更新于 {time}",
-    "activeCount": "{count} 个活跃",
-    "lastActive": "最后活动 {time}",
-    "openSession": "打开会话",
-    "olderGroup": "{count} 个更早的工作区已折叠",
-    "legend": "热度"
+    "title": "最近活跃会话",
+    "sessionsCount": "会话 {count}",
+    "workspacesCount": "工作区 {count}",
+    "empty": "暂无最近活动。",
+    "emptyFilteredSessions": "该热度档位下暂无会话。",
+    "emptyFilteredWorkspaces": "该热度档位下暂无工作区。",
+    "emptyWorkspaces": "暂无活跃工作区。",
+    "moreGroups": "还有 {count} 个工作区未显示，可切换数量。",
+    "noHostData": "宿主未提供会话数据。"
   },
-  "hover": {
-    "heat": "热度 {level}/5",
-    "lastActive": "最后活动：{time}",
-    "workspaceRank": "所在工作区热度排名第 {rank}",
-    "workspaceHot": "所在工作区正热",
-    "noData": "暂无活动记录"
-  },
-  "dot": {
-    "tooltip": "热度 {level}/5 · {time}"
-  },
+  "filter": { "all": "全部" },
   "level": {
     "hot": "炽热",
     "warm": "温热",
@@ -37,6 +24,38 @@
     "stale": "陈旧",
     "cold": "冷却"
   },
+  "hover": {
+    "heat": "热度 {level}/5 · {name}",
+    "lastActive": "最后活动：{time}",
+    "workspaceRank": "工作区「{name}」排第 {rank}",
+    "workspaceHot": "工作区「{name}」正热",
+    "noData": "暂无活动记录"
+  },
+  "dot": { "tooltip": "热度 {level}/5 · {time}" },
+  "running": {
+    "label": "运行中",
+    "title": "该会话正在运行",
+    "short": "正在运行"
+  },
+  "fact": {
+    "turns": "{n} 轮",
+    "tokens": "{n} tokens",
+    "cache": "缓存 {n}%",
+    "context": "上下文 {n}%",
+    "current": "当前"
+  },
+  "group": { "sessions": "{count} 个会话" },
+  "workspace": {
+    "untitled": "未命名工作区",
+    "ungrouped": "未分组",
+    "ungroupedTitle": "未分组会话"
+  },
+  "card": {
+    "openSessionTitle": "打开「{title}」",
+    "openWorkspaceTitle": "打开工作区「{name}」"
+  },
+  "sidebar": { "rowLabel": "热点", "hoverLabel": "热度" },
+  "shortcut": { "label": "最近活跃会话" },
   "relative": {
     "now": "刚刚",
     "minutes": "{n} 分钟前",

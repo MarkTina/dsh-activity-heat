@@ -8,13 +8,13 @@
  * - 运行中：徽标、跑马灯层、行首实心点
  * - 日志：正式模式静默、测试模式输出
  *
- * 运行：node harness.cjs
+ * 运行：node test/panel.cjs
  */
 const fs = require('fs');
 const vm = require('vm');
 const path = require('path');
 
-const CLIENT = path.join(__dirname, 'client.js');
+const CLIENT = path.join(__dirname, '..', 'client.js');
 const raw = fs.readFileSync(CLIENT, 'utf8');
 
 let failed = 0;
@@ -140,7 +140,7 @@ const panelProps = {
 };
 
 /** 装配一次 apply，返回注册结果与可复用上下文。 */
-function boot(debug) {
+function boot(debug, opts) {
   const env = load(debug);
   const regs = [];
   const opened = [];
@@ -168,6 +168,7 @@ function boot(debug) {
     },
     layout: { selectPanel: (id) => layoutCalls.push(id) },
   };
+  if (opts && opts.locale) services.locale = opts.locale;
   const runEffect = (fn) => {
     const d = fn();
     return typeof d === 'function' ? d : () => {};
@@ -226,7 +227,9 @@ function collect(tree) {
     b.regs.map((r) => r.o.name).join(','),
   );
   check(b.regs.find((r) => r.o.name === 'main').o.key === 'activity-heat', 'main 面板 key 与入口 id 一致');
-  check(b.regs.find((r) => r.o.name === 'sidebar.panellist').o.label === '最近活跃会话', '侧栏入口名为「最近活跃会话」');
+  const panellist = b.regs.find((r) => r.o.name === 'sidebar.panellist');
+  check(typeof panellist.o.label === 'function' && panellist.o.label() === '最近活跃会话', '侧栏入口名为「最近活跃会话」');
+  check(panellist.o.locale === '@local/activity-heat', '侧栏入口声明 locale 命名空间');
 
   const panelReg = b.regs.find((r) => r.o.name === 'main');
   const injected = typeof panelReg.o.inject === 'function' ? panelReg.o.inject() : {};
@@ -338,6 +341,46 @@ function collect(tree) {
   check(css.indexOf('ah-breathe') !== -1, '含呼吸 keyframes');
   check(css.indexOf('ah-pulse') !== -1, '含脉冲 keyframes');
   check(css.indexOf('prefers-reduced-motion') !== -1, '尊重减少动态偏好');
+}
+
+/* ================= 8. locale 服务 ================= */
+{
+  const registered = {};
+  const localeService = {
+    register(ns, dict) {
+      registered[ns] = dict;
+      return () => {};
+    },
+    bind(ns) {
+      return (key, params) => {
+        const table = (registered[ns] && registered[ns].en) || {};
+        const text = table[key] !== undefined ? table[key] : key;
+        return params
+          ? text.replace(/\{(\w+)\}/g, (m, n) => (n in params ? String(params[n]) : m))
+          : text;
+      };
+    },
+  };
+
+  const b = boot(false, { locale: localeService });
+  const panelReg = b.regs.find((r) => r.o.name === 'main');
+  const injected = typeof panelReg.o.inject === 'function' ? panelReg.o.inject() : {};
+  const c = collect(panelReg.C({ ...injected, ...panelProps }));
+  const all = c.texts.join(' | ');
+
+  check(registered['@local/activity-heat'] !== undefined, 'locale: 注册了插件命名空间');
+  check(all.indexOf('Recent Activity') !== -1, 'locale: 面板标题走英文');
+  check(all.indexOf('Sessions 6') !== -1, 'locale: 会话计数走英文');
+  check(all.indexOf('Workspaces 3') !== -1, 'locale: 工作区计数走英文');
+  check(all.indexOf('Blazing') !== -1, 'locale: 热度档位走英文');
+
+  const hoverReg = b.regs.find((r) => r.o.name === 'sidebar.session.row.hover');
+  const hoverInj = typeof hoverReg.o.inject === 'function' ? hoverReg.o.inject() : {};
+  const hoverText = collect(hoverReg.C({ ...hoverInj, sessionId: 'warm', ...panelProps })).texts.join(' ');
+  check(hoverText.indexOf('Heat 4/5') !== -1, 'locale: 悬停卡走英文');
+
+  const sc = b.shortcutDefs[0];
+  check(sc && sc.label() === 'Recent Activity', 'locale: 快捷键标签走英文');
 }
 
 console.log(failed === 0 ? '\nHARNESS PASSED' : '\nHARNESS FAILED (' + failed + ')');

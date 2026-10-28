@@ -14,6 +14,149 @@
  * 配色：统一用宿主主题的 --dsw-alias-brand-primary，靠不透明度表达热度。
  */
 /**
+ * ===== 界面字典 =====
+ *
+ * 界面文案的唯一来源是 `locale/zh.json` 与 `locale/en.json`（plugin manager 也从
+ * 这里读 meta.title / meta.description）。浏览器侧不能直接 require JSON，所以在
+ * 这里内联同一份字典，并由 `node test/locale.cjs` 强制两份内容保持一致。
+ *
+ * 键在运行时被扁平化：`panel.title`、`relative.minutes` 等，与
+ * `ctx.locale.bind(ns)` 的插值语法 `{name}` 一致。
+ */
+var AH_I18N = /* AH_I18N_START */ {
+  zh: {
+    nav: '最近活跃会话',
+    panel: {
+      title: '最近活跃会话',
+      sessionsCount: '会话 {count}',
+      workspacesCount: '工作区 {count}',
+      empty: '暂无最近活动。',
+      emptyFilteredSessions: '该热度档位下暂无会话。',
+      emptyFilteredWorkspaces: '该热度档位下暂无工作区。',
+      emptyWorkspaces: '暂无活跃工作区。',
+      moreGroups: '还有 {count} 个工作区未显示，可切换数量。',
+      noHostData: '宿主未提供会话数据。',
+    },
+    filter: { all: '全部' },
+    level: {
+      hot: '炽热',
+      warm: '温热',
+      active: '活跃',
+      recent: '近期',
+      stale: '陈旧',
+      cold: '冷却',
+    },
+    hover: {
+      heat: '热度 {level}/5 · {name}',
+      lastActive: '最后活动：{time}',
+      workspaceRank: '工作区「{name}」排第 {rank}',
+      workspaceHot: '工作区「{name}」正热',
+      noData: '暂无活动记录',
+    },
+    dot: { tooltip: '热度 {level}/5 · {time}' },
+    running: {
+      label: '运行中',
+      title: '该会话正在运行',
+      short: '正在运行',
+    },
+    fact: {
+      turns: '{n} 轮',
+      tokens: '{n} tokens',
+      cache: '缓存 {n}%',
+      context: '上下文 {n}%',
+      current: '当前',
+    },
+    group: { sessions: '{count} 个会话' },
+    workspace: {
+      untitled: '未命名工作区',
+      ungrouped: '未分组',
+      ungroupedTitle: '未分组会话',
+    },
+    card: {
+      openSessionTitle: '打开「{title}」',
+      openWorkspaceTitle: '打开工作区「{name}」',
+    },
+    sidebar: { rowLabel: '热点', hoverLabel: '热度' },
+    shortcut: { label: '最近活跃会话' },
+    relative: {
+      now: '刚刚',
+      minutes: '{n} 分钟前',
+      hours: '{n} 小时前',
+      yesterday: '昨天',
+      days: '{n} 天前',
+      weeks: '{n} 周前',
+      longAgo: '很久以前',
+      unknown: '未知',
+    },
+  },
+  en: {
+    nav: 'Recent Activity',
+    panel: {
+      title: 'Recent Activity',
+      sessionsCount: 'Sessions {count}',
+      workspacesCount: 'Workspaces {count}',
+      empty: 'No recent activity.',
+      emptyFilteredSessions: 'No sessions in this heat band.',
+      emptyFilteredWorkspaces: 'No workspaces in this heat band.',
+      emptyWorkspaces: 'No active workspaces.',
+      moreGroups: '{count} more workspaces are hidden — raise the count to show them.',
+      noHostData: 'Session data is not available.',
+    },
+    filter: { all: 'All' },
+    level: {
+      hot: 'Blazing',
+      warm: 'Warm',
+      active: 'Active',
+      recent: 'Recent',
+      stale: 'Stale',
+      cold: 'Cold',
+    },
+    hover: {
+      heat: 'Heat {level}/5 · {name}',
+      lastActive: 'Last active: {time}',
+      workspaceRank: 'Workspace “{name}” ranks #{rank}',
+      workspaceHot: 'Workspace “{name}” is hot',
+      noData: 'No activity recorded',
+    },
+    dot: { tooltip: 'Heat {level}/5 · {time}' },
+    running: {
+      label: 'Running',
+      title: 'This session is running',
+      short: 'Running',
+    },
+    fact: {
+      turns: '{n} turns',
+      tokens: '{n} tokens',
+      cache: 'cache {n}%',
+      context: 'context {n}%',
+      current: 'Current',
+    },
+    group: { sessions: '{count} sessions' },
+    workspace: {
+      untitled: 'Untitled workspace',
+      ungrouped: 'Ungrouped',
+      ungroupedTitle: 'Ungrouped sessions',
+    },
+    card: {
+      openSessionTitle: 'Open “{title}”',
+      openWorkspaceTitle: 'Open workspace “{name}”',
+    },
+    sidebar: { rowLabel: 'Heat', hoverLabel: 'Heat' },
+    shortcut: { label: 'Recent Activity' },
+    relative: {
+      now: 'just now',
+      minutes: '{n} min ago',
+      hours: '{n} h ago',
+      yesterday: 'yesterday',
+      days: '{n} d ago',
+      weeks: '{n} w ago',
+      longAgo: 'a long time ago',
+      unknown: 'unknown',
+    },
+  },
+} /* AH_I18N_END */;
+
+/**
  * ===== 调试开关 =====
  * 硬编码的测试模式。默认 false：所有诊断日志都不输出（正式版行为）。
  * 排查问题时把它改成 true，然后刷新页面，控制台会打印完整链路日志。
@@ -64,9 +207,55 @@ function build(require) {
   var HOUR = 60 * MINUTE;
   var DAY = 24 * HOUR;
 
+  /** 字典命名空间，与 package name 一致（宿主按此注册与绑定）。 */
+  var NS = '@local/activity-heat';
+
+  /** 把嵌套字典压成 `a.b.c` 形式的平表，供 t() 与 ctx.locale 使用。 */
+  function flattenDict(source, prefix, out) {
+    var result = out || {};
+    var head = prefix ? prefix + '.' : '';
+    for (var key in source) {
+      if (!Object.prototype.hasOwnProperty.call(source, key)) continue;
+      var value = source[key];
+      var path = head + key;
+      if (value && typeof value === 'object') flattenDict(value, path, result);
+      else result[path] = value;
+    }
+    return result;
+  }
+
+  var ZH = flattenDict(AH_I18N.zh, '', {});
+  var EN = flattenDict(AH_I18N.en, '', {});
+
+  /** 替换 `{name}` 占位符。 */
+  function formatText(text, params) {
+    if (!params) return text;
+    return String(text).replace(/\{(\w+)\}/g, function (match, name) {
+      return Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match;
+    });
+  }
+
+  /** 宿主 locale 的绑定翻译函数；服务不可用时为 null，tt() 退回内置中文。 */
+  var activeT = null;
+
+  /**
+   * 界面文案统一入口。宿主 locale 服务可用时走它的字典（随语言切换实时更新），
+   * 否则退回随包的中文字典——测试与降级场景都保持可读的文案。
+   */
+  function tt(key, params) {
+    if (activeT) {
+      try {
+        var translated = activeT(key, params);
+        if (translated !== undefined && translated !== null && translated !== key) return translated;
+      } catch (ignored) { /* 字典异常时退回内置中文 */ }
+    }
+    var fallback = Object.prototype.hasOwnProperty.call(ZH, key) ? ZH[key] : key;
+    return formatText(fallback, params);
+  }
+
   /** 单色热度：同一主题色，用不透明度表达冷热。索引即等级。 */
   var HEAT_ALPHA = [0, 0.28, 0.4, 0.56, 0.76, 1];
-  var HEAT_NAMES = ['冷却', '陈旧', '近期', '活跃', '温热', '炽热'];
+  var LEVEL_KEYS = ['cold', 'stale', 'recent', 'active', 'warm', 'hot'];
   // 统一使用宿主主题的主品牌色（--dsw-alias-brand-primary 在 light/dark 下都可用）。
   // 注意：不要用 --dsw-alias-state-business-primary，宿主主题里没有这个令牌。
   var HEAT_INK = 'var(--dsw-alias-brand-primary, #3b82f6)';
@@ -91,12 +280,12 @@ function build(require) {
   };
 
   var FILTERS = [
-    { id: 'all', label: '全部', level: null },
-    { id: 'hot', label: '炽热', level: 5 },
-    { id: 'warm', label: '温热', level: 4 },
-    { id: 'active', label: '活跃', level: 3 },
-    { id: 'recent', label: '近期', level: 2 },
-    { id: 'stale', label: '陈旧', level: 1 },
+    { id: 'all', labelKey: 'filter.all', level: null },
+    { id: 'hot', labelKey: 'level.hot', level: 5 },
+    { id: 'warm', labelKey: 'level.warm', level: 4 },
+    { id: 'active', labelKey: 'level.active', level: 3 },
+    { id: 'recent', labelKey: 'level.recent', level: 2 },
+    { id: 'stale', labelKey: 'level.stale', level: 1 },
   ];
 
   /* ---------------- 纯函数 ---------------- */
@@ -129,7 +318,7 @@ function build(require) {
   }
 
   function heatNameOf(level) {
-    return HEAT_NAMES[Math.max(0, Math.min(5, level || 0))];
+    return tt('level.' + LEVEL_KEYS[Math.max(0, Math.min(5, level || 0))]);
   }
 
   function lastActiveOf(summary) {
@@ -146,12 +335,12 @@ function build(require) {
   function relativeOf(ms, now) {
     if (typeof ms !== 'number') return '';
     var delta = Math.max(0, now - ms);
-    if (delta < MINUTE) return '刚刚';
-    if (delta < HOUR) return Math.floor(delta / MINUTE) + ' 分钟前';
-    if (delta < DAY) return Math.floor(delta / HOUR) + ' 小时前';
-    if (delta < 2 * DAY) return '昨天';
-    if (delta < 7 * DAY) return Math.floor(delta / DAY) + ' 天前';
-    return Math.floor(delta / (7 * DAY)) + ' 周前';
+    if (delta < MINUTE) return tt('relative.now');
+    if (delta < HOUR) return tt('relative.minutes', { n: Math.floor(delta / MINUTE) });
+    if (delta < DAY) return tt('relative.hours', { n: Math.floor(delta / HOUR) });
+    if (delta < 2 * DAY) return tt('relative.yesterday');
+    if (delta < 7 * DAY) return tt('relative.days', { n: Math.floor(delta / DAY) });
+    return tt('relative.weeks', { n: Math.floor(delta / (7 * DAY)) });
   }
 
   function titleOf(summary, id) {
@@ -332,7 +521,7 @@ function build(require) {
           workspace: session.workspace,
           label: session.workspace
             ? (session.workspace.title || basenameOf(session.workspace.path) || String(session.workspace.workspaceId))
-            : '未分组',
+            : tt('workspace.ungrouped'),
           level: 0,
           ratio: 0,
           at: undefined,
@@ -561,7 +750,7 @@ function build(require) {
     return React.createElement(
       'span',
       {
-        title: '该会话正在运行',
+        title: tt('running.title'),
         style: {
           display: 'inline-flex',
           alignItems: 'center',
@@ -587,7 +776,7 @@ function build(require) {
           animation: 'ah-pulse 1.2s ease-in-out infinite',
         },
       }),
-      '运行中',
+      tt('running.label'),
     );
   }
 
@@ -624,7 +813,7 @@ function build(require) {
               opacity: count === 0 && !picked ? 0.5 : 1,
             },
           },
-          filter.label,
+          tt(filter.labelKey),
           React.createElement('span', { style: { fontSize: '0.92em', opacity: 0.65 } }, String(count)),
         );
       }),
@@ -643,23 +832,23 @@ function build(require) {
       meta.push(React.createElement('span', {
         key: 'ws',
         style: { maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-      }, session.workspace.title || basenameOf(session.workspace.path) || '未命名工作区'));
+      }, session.workspace.title || basenameOf(session.workspace.path) || tt('workspace.untitled')));
     }
     meta.push(React.createElement('span', { key: 'at' }, relativeOf(session.at, now)));
     if (typeof session.turns === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'turns', icon: '⟳' }, session.turns + ' 轮'));
+      meta.push(React.createElement(MetaChip, { key: 'turns', icon: '⟳' }, tt('fact.turns', { n: session.turns })));
     }
     if (typeof session.tokens === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'tokens', icon: '◈' }, compactNumber(session.tokens) + ' tokens'));
+      meta.push(React.createElement(MetaChip, { key: 'tokens', icon: '◈' }, tt('fact.tokens', { n: compactNumber(session.tokens) })));
     }
     if (typeof session.cacheRate === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'cache', icon: '⚡' }, '缓存 ' + session.cacheRate + '%'));
+      meta.push(React.createElement(MetaChip, { key: 'cache', icon: '⚡' }, tt('fact.cache', { n: session.cacheRate })));
     }
     if (typeof session.contextPct === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'ctx', icon: '◧' }, '上下文 ' + session.contextPct + '%'));
+      meta.push(React.createElement(MetaChip, { key: 'ctx', icon: '◧' }, tt('fact.context', { n: session.contextPct })));
     }
     if (session.open) {
-      meta.push(React.createElement(MetaChip, { key: 'open', icon: '●' }, '当前'));
+      meta.push(React.createElement(MetaChip, { key: 'open', icon: '●' }, tt('fact.current')));
     }
 
     var metaRow = [];
@@ -768,7 +957,7 @@ function build(require) {
         onMouseLeave: function () { setHover(false); },
         onFocus: function () { setHover(true); },
         onBlur: function () { setHover(false); },
-        title: '打开「' + (session.title || session.id) + '」',
+        title: tt('card.openSessionTitle', { title: session.title || session.id }),
         style: buttonStyle,
       },
       children,
@@ -830,7 +1019,7 @@ function build(require) {
     var rank = props.rank;
     var openable = group.workspaceId !== undefined;
 
-    var metaBits = [group.count + ' 个会话', relativeOf(group.at, now)];
+    var metaBits = [tt('group.sessions', { count: group.count }), relativeOf(group.at, now)];
     if (group.tokens > 0) metaBits.push(compactNumber(group.tokens) + ' tokens');
 
     return React.createElement(
@@ -843,7 +1032,7 @@ function build(require) {
         onMouseLeave: function () { setHover(false); },
         onFocus: function () { setHover(true); },
         onBlur: function () { setHover(false); },
-        title: openable ? '打开工作区「' + group.label + '」' : '未分组会话',
+        title: openable ? tt('card.openWorkspaceTitle', { name: group.label }) : tt('workspace.ungroupedTitle'),
         style: {
           display: 'flex',
           alignItems: 'center',
@@ -982,7 +1171,7 @@ function build(require) {
     if (!useSessions || !useWorkspaces) {
       return React.createElement('div', {
         style: { padding: '16px ' + UI.padX + 'px', color: UI.textSecondary },
-      }, '宿主未提供会话数据。');
+      }, tt('panel.noHostData'));
     }
 
     var sessionState = useSessions(function (state) { return state; });
@@ -1040,11 +1229,11 @@ function build(require) {
       key: 'head',
       style: { display: 'flex', alignItems: 'center', gap: 10, padding: '16px ' + UI.padX + 'px 8px' },
     },
-      React.createElement('div', { style: { fontWeight: 650, fontSize: '1.05em', color: UI.textPrimary } }, '最近活跃会话'),
+      React.createElement('div', { style: { fontWeight: 650, fontSize: '1.05em', color: UI.textPrimary } }, tt('panel.title')),
       React.createElement(Segmented, {
         options: [
-          { value: 'sessions', label: '会话 ' + model.total },
-          { value: 'workspaces', label: '工作区 ' + model.workspaceCount },
+          { value: 'sessions', label: tt('panel.sessionsCount', { count: model.total }) },
+          { value: 'workspaces', label: tt('panel.workspacesCount', { count: model.workspaceCount }) },
         ],
         value: view,
         onChange: setView,
@@ -1096,8 +1285,8 @@ function build(require) {
     }
 
     var emptyText = filter !== 'all'
-      ? '该热度档位下暂无' + (view === 'sessions' ? '会话' : '工作区') + '。'
-      : (view === 'sessions' ? '暂无最近活动。' : '暂无活跃工作区。');
+      ? tt(view === 'sessions' ? 'panel.emptyFilteredSessions' : 'panel.emptyFilteredWorkspaces')
+      : tt(view === 'sessions' ? 'panel.empty' : 'panel.emptyWorkspaces');
 
     var list = React.createElement('div', {
       key: 'list',
@@ -1113,7 +1302,7 @@ function build(require) {
       footer = React.createElement('div', {
         key: 'more',
         style: { padding: '2px ' + UI.padX + 'px 10px', fontSize: '0.76em', color: UI.textTertiary },
-      }, '还有 ' + (model.groups.length - groupCount) + ' 个工作区未显示，可切换数量。');
+      }, tt('panel.moreGroups', { count: model.groups.length - groupCount }));
     }
 
     return React.createElement('div', {
@@ -1145,7 +1334,7 @@ function build(require) {
     if (summary && summary.running === true) {
       return React.createElement('span', {
         'aria-hidden': 'true',
-        title: '正在运行',
+        title: tt('running.short'),
         style: {
           display: 'inline-block',
           flex: 'none',
@@ -1159,7 +1348,7 @@ function build(require) {
     if (level <= 0) return null;
     return React.createElement(RowHeatDot, {
       level: level,
-      title: '热度 ' + level + '/5 · ' + relativeOf(at, now),
+      title: tt('dot.tooltip', { level: level, time: relativeOf(at, now) }),
     });
   }
 
@@ -1202,16 +1391,16 @@ function build(require) {
         summary && summary.running === true
           ? React.createElement(RunningBadge, { compact: true })
           : React.createElement(RowHeatDot, { level: level, title: '' }),
-        React.createElement('span', null, '热度 ' + level + '/5 · ' + heatNameOf(level)),
+        React.createElement('span', null, tt('hover.heat', { level: level, name: heatNameOf(level) })),
       ),
-      React.createElement('div', { key: 'at' }, '最后活动：' + relativeOf(at, now)),
+      React.createElement('div', { key: 'at' }, tt('hover.lastActive', { time: relativeOf(at, now) })),
     ];
 
     var statBits = [];
-    if (typeof facts.turns === 'number') statBits.push(facts.turns + ' 轮');
-    if (typeof facts.tokens === 'number') statBits.push(compactNumber(facts.tokens) + ' tokens');
-    if (typeof facts.cacheRate === 'number') statBits.push('缓存 ' + facts.cacheRate + '%');
-    if (typeof facts.contextPct === 'number') statBits.push('上下文 ' + facts.contextPct + '%');
+    if (typeof facts.turns === 'number') statBits.push(tt('fact.turns', { n: facts.turns }));
+    if (typeof facts.tokens === 'number') statBits.push(tt('fact.tokens', { n: compactNumber(facts.tokens) }));
+    if (typeof facts.cacheRate === 'number') statBits.push(tt('fact.cache', { n: facts.cacheRate }));
+    if (typeof facts.contextPct === 'number') statBits.push(tt('fact.context', { n: facts.contextPct }));
     if (statBits.length > 0) {
       rows.push(React.createElement('div', { key: 'stats' }, statBits.join(' · ')));
     }
@@ -1219,7 +1408,9 @@ function build(require) {
     if (group) {
       rows.push(React.createElement('div', { key: 'ws', style: { display: 'flex', alignItems: 'center', gap: 6 } },
         React.createElement(HeatMeter, { level: group.level, ratio: group.ratio, showLabel: false, width: 64, height: 8 }),
-        React.createElement('span', null, '工作区「' + group.label + '」' + (rank === 1 ? '正热' : '排第 ' + rank)),
+        React.createElement('span', null, rank === 1
+          ? tt('hover.workspaceHot', { name: group.label })
+          : tt('hover.workspaceRank', { name: group.label, rank: rank })),
       ));
     }
 
@@ -1265,7 +1456,7 @@ function build(require) {
       var binding = { code: 'KeyH', modifiers: ['primary', 'alt'] };
       var definition = {
         id: 'activity-heat.open',
-        label: function () { return '最近活跃会话'; },
+        label: function () { return tt('shortcut.label'); },
         aliases: ['最近活跃', '最近活跃会话', 'recent activity', 'activity heat'],
         defaults: {
           'desktop:macos': binding,
@@ -1346,11 +1537,15 @@ function build(require) {
 
   /* ---------------- 插件体 ---------------- */
 
-  /** 注入脉冲 keyframes，只注入一次（keyframes 无法内联声明）。 */
+  /**
+   * 注入脉冲 keyframes，只注入一次（keyframes 无法内联声明）。
+   * 由 apply 以 ctx.effect 挂载，插件卸载时移除，避免热重载后残留两个 style。
+   * @returns 清理函数（宿主调用时移除本次注入的 style）。
+   */
   function ensureStyles() {
     try {
-      if (typeof document === 'undefined' || !document.head) return;
-      if (document.getElementById('activity-heat-style')) return;
+      if (typeof document === 'undefined' || !document.head) return undefined;
+      if (document.getElementById('activity-heat-style')) return undefined;
       var style = document.createElement('style');
       style.id = 'activity-heat-style';
       style.textContent = [
@@ -1368,15 +1563,44 @@ function build(require) {
         '}',
       ].join('');
       document.head.appendChild(style);
+      return function disposeStyles() {
+        try {
+          if (style.parentNode) style.parentNode.removeChild(style);
+        } catch (ignored) { /* 宿主已移除时忽略 */ }
+      };
     } catch (ignored) {
       /* 样式注入失败不影响功能 */
+      return undefined;
     }
   }
 
   return {
     apply: function apply(ctx) {
       try {
-        ensureStyles();
+        if (typeof ctx.effect === 'function') ctx.effect(ensureStyles, 'activity-heat: styles');
+        else ensureStyles();
+
+        /* 界面字典注册到宿主 locale 服务；服务缺失时 tt() 自动退回内置中文。 */
+        try {
+          if (typeof ctx.inject === 'function') {
+            ctx.inject(['locale'], function (scope) {
+              try {
+                var locale = scope && (scope.locale
+                  || (typeof scope.get === 'function' ? scope.get('locale') : undefined));
+                if (!locale || typeof locale.register !== 'function') return;
+                var register = function () { return locale.register(NS, { zh: ZH, en: EN }); };
+                if (typeof ctx.effect === 'function') ctx.effect(register, 'activity-heat: locale');
+                else register();
+                if (typeof locale.bind === 'function') activeT = locale.bind(NS);
+              } catch (error) {
+                ahWarn('[activity-heat] locale registration failed:', error && error.message);
+              }
+            });
+          }
+        } catch (error) {
+          ahWarn('[activity-heat] locale inject failed:', error && error.message);
+        }
+
         if (typeof ctx.inject !== 'function') {
           ahWarn('[activity-heat] ctx.inject unavailable; plugin skipped');
           return;
@@ -1394,14 +1618,26 @@ function build(require) {
 
             slots.inject('sidebar.session.row.leading', function () {
               return slots.register(
-                { name: 'sidebar.session.row.leading', id: 'heat-row', order: 20, label: '热点' },
+                {
+                  name: 'sidebar.session.row.leading',
+                  id: 'heat-row',
+                  order: 20,
+                  locale: NS,
+                  label: function () { return tt('sidebar.rowLabel'); },
+                },
                 SessionRowHeat,
               );
             });
 
             slots.inject('sidebar.session.row.hover', function () {
               return slots.register(
-                { name: 'sidebar.session.row.hover', id: 'heat-hover', order: 20, label: '热度' },
+                {
+                  name: 'sidebar.session.row.hover',
+                  id: 'heat-hover',
+                  order: 20,
+                  locale: NS,
+                  label: function () { return tt('sidebar.hoverLabel'); },
+                },
                 SessionHoverHeat,
               );
             });
@@ -1410,7 +1646,14 @@ function build(require) {
 
             slots.inject('sidebar.panellist', function () {
               return slots.register(
-                { name: 'sidebar.panellist', id: 'activity-heat', order: 30, label: '最近活跃会话', inject: injectProps },
+                {
+                  name: 'sidebar.panellist',
+                  id: 'activity-heat',
+                  order: 30,
+                  locale: NS,
+                  label: function () { return tt('nav'); },
+                  inject: injectProps,
+                },
                 HeatRing,
               );
             });

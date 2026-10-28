@@ -1,170 +1,177 @@
-# dsh-activity-heat · 会话热度（最近活跃）
+# dsh-activity-heat · Recent Activity
 
-> 一个 DeepSeek Harness 插件：用「热度」把**最近发生过对话的会话和工作区**顶到眼前，不用在几十个分区里翻找。
+> A DeepSeek Harness plugin that surfaces **the sessions and workspaces you most recently talked to**, using a heat score derived from elapsed time — so the conversation you just had never gets buried.
 
-[English](#english) | 中文
+[English](README.md) | [中文](README.zh.md)
 
 ---
 
-## 它解决什么问题
+## Why
 
-DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话很快被刷下去，找回来要翻半天。
+Sessions pile up in the DSH sidebar, nested inside workspace groups. The one you just spoke in is pushed out of sight within minutes.
 
-这个插件的做法是：按**距最后一次活动的时间**算出 0–100% 的热度，然后用三层视觉把「热」表达出来——越近越醒目。
+This plugin computes a 0–100% heat score from **time since last activity** and expresses it in three places plus a panel — the more recent, the more visible.
 
-## 三处可见 + 一个面板
+## What you see
 
-| 位置 | 表现 |
+| Where | What it does |
 |---|---|
-| **侧栏入口** | 热度环图标，亮度跟随全场最热会话 |
-| **会话行首 16px 格** | 热度点：炽热=实心带光晕 → 温热=实心 → 活跃/近期=描边环 → 陈旧=小点 → 超过 7 天不显示 |
-| **会话悬停卡** | `热度 4/5 · 温热`、`最后活动：40 分钟前`、`所在工作区「X」正热` |
-| **中央面板** | 会话 / 工作区两个视图切换，各带热度筛选与数量选择 |
+| **Sidebar entry** | A heat-ring icon whose brightness follows the hottest session in the profile |
+| **Session row leading cell (16px)** | A heat dot: blazing = solid + glow → warm = solid → active/recent = ring → stale = small dot → hidden after 7 days |
+| **Session hover card** | `Heat 4/5 · Warm`, `Last active: 40 min ago`, `This workspace is hot` |
+| **Main panel** | Sessions / Workspaces views, each with heat filters and a count selector |
 
-### 面板细节
+### Panel
 
-- **顶层切换**：`会话 58` / `工作区 10`，不再是上下混排
-- **数量可选**：会话 `10 / 20 / 30 / 50`，工作区 `5 / 10 / 20`
-- **热度筛选**：全部 / 炽热 / 温热 / 活跃 / 近期 / 陈旧（带实时计数）
-- **每张卡片**：标题、最近一次提示词、工作区、相对时间、轮次、tokens、缓存命中率、上下文占比
-- **点击即跳转**：会话行打开该会话，工作区行打开该工作区
+- **Top-level switch**: `Sessions 58` / `Workspaces 10` — no more mixed list
+- **Count selector**: sessions `10 / 20 / 30 / 50`, workspaces `5 / 10 / 20`
+- **Heat filter**: All / Blazing / Warm / Active / Recent / Stale, with live counts
+- **Every card**: title, most recent prompt, workspace, relative time, turns, tokens, cache hit rate, context usage
+- **Click to open**: a session row opens that session, a workspace row opens that workspace
 
-### 正在运行的会话有专属标识
+### Running sessions are marked
 
-`session.running === true` 的卡片会获得：
+Cards for sessions with `session.running === true` get:
 
-- 标题前 `● 运行中` 描边胶囊（圆点脉冲呼吸）
-- 卡片外边框**环绕跑马灯光带**（`conic-gradient` 旋转，2.2s 一圈）
-- 外层**呼吸外发光**（2.4s 一次）
-- 侧栏行首画品牌色实心点
+- a `● Running` outlined pill before the title (pulsing dot)
+- an **orbiting light band** around the card border (`conic-gradient`, one turn per 2.2 s)
+- a **breathing outer glow** (one cycle per 2.4 s)
+- a solid brand-color dot in the sidebar row
 
-> 尊重 `prefers-reduced-motion`：系统开启减少动态效果时，动画自动静止。
+> `prefers-reduced-motion` is respected: with reduced motion enabled, all animation stops.
 
-## 配色
+## Colors
 
-只用宿主主题令牌，**不写死色值**，因此自动适配明/暗主题：
+Only host theme tokens are used — **no hard-coded colors** — so light and dark themes work automatically:
 
 ```css
---dsw-alias-brand-primary    /* 热度主色 */
---dsw-alias-bg-base          /* 卡片不透明底（遮住跑马灯光带） */
---dsw-alias-label-primary    /* 主文字 */
---dsw-alias-label-secondary  /* 次要文字 */
---dsw-alias-border-l1        /* 分隔与轨道 */
+--dsw-alias-brand-primary    /* heat color */
+--dsw-alias-bg-base          /* opaque card background (hides the orbit band) */
+--dsw-alias-label-primary    /* primary text */
+--dsw-alias-label-secondary  /* secondary text */
+--dsw-alias-border-l1        /* separators and tracks */
 ```
 
-热度用**同一个色相的不同不透明度**表达（0.3 → 1.0），配合可部分填充的刻度条。不用五彩，视觉更收束。
+Heat is expressed as **one hue at different opacities** (0.3 → 1.0) plus a partially filled meter. No rainbow, a tighter look.
 
-## 安装
+## Install
 
-本插件以本地目录 / GitHub 仓库形式安装，**不发布到 npm**（`package.json` 保持 `private: true`）。
+This plugin is installed as a local directory or a GitHub repository; it is **not published to npm** (`private: true`).
 
-### 方式一：GitHub 安装（推荐）
+### Option 1 — GitHub (recommended)
 
 ```bash
-# 在 DSH profile 目录下
-cd ~/.dsh/profiles/<你的 profile>
-pnpm add github:<你的用户名>/dsh-activity-heat
+# inside your DSH profile directory
+cd ~/.dsh/profiles/<your-profile>
+pnpm add github:MarkTina/dsh-activity-heat
 ```
 
-然后在 profile 的 `package.json` 的 `dsh.profile.bundles` 里追加：
+Then append the package name to `dsh.profile.bundles` in that profile's `package.json`:
 
 ```json
 "@local/activity-heat"
 ```
 
-重启 DSH（或开关一次插件）即可加载。
+Restart DSH (or toggle the plugin once) to load it.
 
-### 方式二：本地目录
+### Option 2 — Local checkout
 
 ```bash
-cd ~/.dsh/profiles/<你的 profile>
-pnpm add link:/绝对路径/dsh-activity-heat
+cd ~/.dsh/profiles/<your-profile>
+pnpm add link:/absolute/path/dsh-activity-heat
 ```
 
-同样把 `@local/activity-heat` 加进 `dsh.profile.bundles`。
+Add `@local/activity-heat` to `dsh.profile.bundles` the same way.
 
-## 快捷键
+## Shortcut
 
-默认 **`Ctrl + Alt + H`**（macOS 为 `Cmd + Alt + H`），切换到「最近活跃会话」面板。
+Default **`Ctrl + Alt + H`** (`Cmd + Alt + H` on macOS) switches to the Recent Activity panel.
 
-可在 **设置 → 快捷键** 搜「最近活跃」修改。
+Change it under **Settings → Shortcuts**, searching for “Recent Activity”.
 
-> **为什么不是 `Ctrl+H`？** 宿主把 `Ctrl` + `C/V/X/Z/Y/Q/H` 列为系统保留键（浏览器历史记录等），单独按会被判定为 `reserved` 并拒绝注册。加上 `alt` 后走 web 白名单分支才合法。同理，插件**刻意不声明 Linux profile**——Linux 下 `alt+control` 会被判保留键，声明它会导致整次注册失败。Linux 用户可在设置页自行绑定。
+> **Why not `Ctrl+H`?** The host treats `Ctrl` + `C/V/X/Z/Y/Q/H` as reserved system keys (browser history etc.), so a bare `Ctrl+H` default is rejected as `reserved`. Adding `alt` uses the web whitelist branch. For the same reason the plugin deliberately declares **no Linux profile** — on Linux `alt+control` is treated as reserved and would fail the whole registration. Linux users can bind a key in Settings.
 
-## 配置
+## Configuration
 
-默认值在 `cordis.patch.yml`。覆盖时在 profile 的 `cordis.patch.yml` 里加同名 id 的行（**config 是整体替换，不深合并，需写全字段**）：
+Defaults live in `cordis.patch.yml`. To override, add a row with the same id to your profile's `cordis.patch.yml` (**config is replaced whole, not deep-merged — write every field**):
 
 ```yaml
 - id: activity-heat
   config:
-    hotMinutes: 10        # 炽热窗口（分钟）
-    warmMinutes: 60       # 温热
-    activeMinutes: 360    # 活跃
-    recentMinutes: 1440   # 近期
-    staleDays: 7          # 陈旧（超过即不再显示）
-    topCount: 8           # 面板默认展示条数
-    tickSeconds: 60       # 热度衰减刷新间隔
-    showRowDots: true     # 是否在会话行首显示热度点
-    showHoverHeat: true   # 是否在悬停卡显示热度段
+    hotMinutes: 10        # blazing window (minutes)
+    warmMinutes: 60       # warm
+    activeMinutes: 360    # active
+    recentMinutes: 1440   # recent
+    staleDays: 7          # stale (hidden beyond this)
+    topCount: 8           # default rows in the panel
+    tickSeconds: 60       # heat decay refresh interval
+    showRowDots: true     # show the heat dot at the start of a session row
+    showHoverHeat: true   # show the heat section in the hover card
 ```
 
-## 数据来源
+## Data sources
 
-全部读取宿主**公开快照**，不碰私有 API，不写会话日志：
+Everything is read from **public host snapshots** — no private APIs, nothing written to the session log:
 
-| 用途 | 来源 |
+| Purpose | Source |
 |---|---|
-| 最近活动时间 | `sessions.list.byId[id].updatedAt`（与侧栏行尾时间同源） |
-| 标题 / 草稿 / 子代理 / 归档 | 同上的 `title` `blank` `origin` 与 `workspaces.list.archivedSessionIds` |
-| 工作区归属 | `workspaces.list.items[].sessionIds`（与宿主 `groupByWorkspace` 同一映射） |
-| 轮次 / tokens / 缓存 / 上下文 | `sessions.list.projectionsBySession[id].values.contextTimeline`（由 `dsh-context` 等插件注册；缺失则自动隐藏这几项） |
-| 运行状态 | `sessions.list.byId[id].running` |
+| Last activity time | `sessions.list.byId[id].updatedAt` (same as the sidebar row trailing time) |
+| Title / draft / subagent / archive | the same `title` `blank` `origin`, plus `workspaces.list.archivedSessionIds` |
+| Workspace membership | `workspaces.list.items[].sessionIds` (same mapping as the host `groupByWorkspace`) |
+| Turns / tokens / cache / context | `sessions.list.projectionsBySession[id].values.contextTimeline` (registered by `dsh-context` and friends; the fields hide themselves when absent) |
+| Running state | `sessions.list.byId[id].running` |
 
-**排除**：已归档会话、subagent 子会话、空白草稿会话。
+**Excluded**: archived sessions, subagent child sessions, blank draft sessions.
 
-## 调试
+## Repository layout
 
-正式版**不输出任何日志**。排查时把 `client.js` 顶部的开关改成 `true`，刷新页面即可看到完整链路日志：
+The package follows the DSH bundle layout: a Host entry, a Web client entry, one loader patch, and exported display resources.
+
+```
+dsh-activity-heat/
+├── index.js            Host half — mounts the package, no Host services
+├── client.js           Web half — ModuleLoader factory, slots, locale
+├── cordis.patch.yml    Bundle patch — inserts the activity-heat row + defaults
+├── locale/
+│   ├── zh.json         Plugin metadata + UI dictionary (Chinese)
+│   └── en.json         Plugin metadata + UI dictionary (English)
+├── icon.svg            Plugin icon (exported as ./icon)
+├── test/               Dependency-free self-checks, run with node
+├── package.json        Manifest — dsh.bundle.patch, dsh.client, exports, files
+├── README.md           This file
+├── README.zh.md        Chinese README
+├── CHANGELOG.md
+└── LICENSE
+```
+
+Visible UI text is routed through the host **Client locale service** (`ctx.locale`), falling back to the bundled Chinese dictionary when the service is unavailable. The two locale JSON files carry the same keys; `node test/locale.cjs` keeps them and the inlined dictionary in sync.
+
+## Debugging
+
+Release builds log nothing. To trace the full chain, flip the switch at the top of `client.js` to `true` and reload the page:
 
 ```js
-var ACTIVITY_HEAT_DEBUG = false;   // ← 改成 true
+var ACTIVITY_HEAT_DEBUG = false;   // ← change to true
 ```
 
-## 自检
+## Self-checks
 
-仓库自带纯逻辑测试，用最小 React 替身加载**真实的 `client.js`**，不需要浏览器：
+The repo ships dependency-free logic tests that load the **real `client.js`** against a minimal React stand-in — no browser required:
 
 ```bash
-node harness.cjs              # 注册 / 排序 / 过滤 / 渲染 / 点击跳转
-node check-shortcut.cjs       # 快捷键绑定是否符合宿主保留键规则
-node check-boot-timing.cjs    # 重启时序：slots 晚就绪时能否恢复
+node test/panel.cjs        # registration / sorting / filtering / rendering / click-through
+node test/shortcut.cjs     # shortcut defaults against host reserved-key rules
+node test/boot-timing.cjs  # restart timing: recovery when slots become ready late
+node test/locale.cjs       # locale dictionaries and metadata stay in sync
 ```
 
-## 已知限制
+`pnpm test` runs all four.
 
-- 轮次 / tokens / 缓存命中率 / 上下文占比依赖 `contextTimeline` 投影。若 profile 未安装 `dsh-context` 之类提供该投影的插件，这几项会自动隐藏（其余功能正常）。
-- 快捷键不声明 Linux 默认值，Linux 用户需在设置页自行绑定。
+## Known limitations
 
-## 许可
+- Turns / tokens / cache hit rate / context usage depend on the `contextTimeline` projection. Profiles without `dsh-context` (or another provider) hide those fields; everything else keeps working.
+- No Linux default shortcut is declared; Linux users bind one in Settings.
+
+## License
 
 [MIT](LICENSE)
-
----
-
-<a id="english"></a>
-## English
-
-A DeepSeek Harness plugin that surfaces **recently active sessions and workspaces** with a heat score derived from elapsed time — so the conversation you just had never gets buried.
-
-- **Sidebar entry**: a heat ring whose brightness follows the hottest session
-- **Session row leading cell**: a heat dot (solid + glow → solid → ring → small dot → hidden after 7 days)
-- **Hover card**: `Heat 4/5`, last activity, workspace rank
-- **Panel**: switch between Sessions / Workspaces, filter by heat band, choose how many to show, and click any row to open it
-- **Running sessions**: a `Running` badge, an orbiting light band around the card border, and a breathing glow
-
-Colors come only from host theme tokens (`--dsw-alias-brand-primary` etc.), so light/dark themes work automatically. All data is read from public host snapshots; nothing is written to the session log. Logging is off by default — flip `ACTIVITY_HEAT_DEBUG` to `true` in `client.js` to diagnose.
-
-Default shortcut: `Ctrl + Alt + H` (`Cmd + Alt + H` on macOS). `Ctrl+H` alone is a reserved system key and will be rejected by the host.
-
-Licensed under the [MIT License](LICENSE).

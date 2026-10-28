@@ -2,8 +2,23 @@
   "name": "@local/activity-heat",
   "version": "0.1.0",
   "private": true,
-  "description": "Activity heat marks for DSH sessions and workspaces — a sidebar panel entry, a per-row heat dot and a hover-card heat section that make the most recently active conversations obvious. | DSH 会话与工作区热度标识——侧栏入口、行内热度点与悬停卡热度段，让最近发生对话的分区与会话立刻可见。",
+  "description": "Heat marks that make the sessions and workspaces with the most recent conversations obvious: a sidebar entry, a per-row heat dot and a hover-card heat section. | 会话热度：用热度标识最近发生过对话的会话与工作区。",
+  "icon": "icon.svg",
   "type": "module",
+  "author": "MarkTina",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MarkTina/dsh-activity-heat.git"
+  },
+  "homepage": "https://github.com/MarkTina/dsh-activity-heat#readme",
+  "bugs": {
+    "url": "https://github.com/MarkTina/dsh-activity-heat/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "dsh": ">=0.2.0-rc.2"
+  },
   "main": "./index.js",
   "exports": {
     ".": "./index.js",
@@ -19,22 +34,28 @@
     "locale/*.json",
     "icon.svg",
     "README.md",
+    "README.zh.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "keywords": [
     "dsh",
     "dsh-plugin",
     "deepseek-harness",
+    "deepseek",
+    "harness",
     "session",
     "workspace",
     "recency",
     "activity",
-    "heat"
+    "heat",
+    "sidebar",
+    "panel"
   ],
   "scripts": {
-    "test": "node harness.cjs && node check-shortcut.cjs && node check-boot-timing.cjs"
+    "check": "node --check index.js && node --check client.js",
+    "test": "node test/panel.cjs && node test/shortcut.cjs && node test/boot-timing.cjs && node test/locale.cjs"
   },
-  "license": "MIT",
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
@@ -42,7 +63,15 @@
     "client": {
       "platform": "web",
       "immediately": true,
-      "inject": []
+      "inject": [
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    },
+    "compatibility": {
+      "dsh": "0.2.0-rc.2",
+      "dshReleases": {
+        "0.2.0-rc.2": "compatible"
+      }
     }
   }
 }

@@ -10,7 +10,7 @@ const path = require('path');
 const fs = require('fs');
 const vm = require('vm');
 
-const src = fs.readFileSync(path.join(__dirname, 'client.js'), 'utf8');
+const src = fs.readFileSync(path.join(__dirname, '..', 'client.js'), 'utf8');
 let plugin;
 
 const R = {
@@ -99,7 +99,8 @@ plugin.apply(ctx);
 
 assert(seatRegs.length === 0, 'slots 未就绪时暂时没有 seat（符合预期，没有崩溃）');
 assert(shortcutRegs.length === 1, '快捷键不等 slots，apply 当场就注册了');
-assert(pendingCallbacks.length === 1, 'slots 的注册被挂起等待，而不是永久放弃');
+assert(pendingCallbacks.some((item) => item.deps.includes('slots')), 'slots 的注册被挂起等待，而不是永久放弃');
+assert(pendingCallbacks.some((item) => item.deps.includes('locale')), 'locale 服务未就绪时同样挂起等待');
 
 /* 服务就绪：宿主补发回调 */
 slotsReady = true;
