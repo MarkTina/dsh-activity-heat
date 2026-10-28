@@ -37,7 +37,7 @@ This plugin computes a 0–100% heat score from **time since last activity** and
 
 Cards for sessions with `session.running === true` get:
 
-- a whale-tail mark with a **Working** label in the card's right-hand whitespace (the mark sways, bobs and breathes on a CSS loop — no more outlined pill)
+- a whale-tail mark with a **Working** label in the card's right-hand whitespace — the mark is a 12-frame animated GIF that plays its own loop (no CSS wobble), 28 px tall
 - an **orbiting light band** around the card border (`conic-gradient`, one turn per 2.2 s)
 - a **breathing outer glow** (one cycle per 2.4 s)
 - a solid blue dot in the sidebar row
@@ -148,7 +148,8 @@ dsh-activity-heat/
 │   └── en.json         Plugin metadata + UI dictionary (English)
 ├── icon.svg            Plugin icon (exported as ./icon)
 ├── assets/
-│   └── active.png      Whale-tail badge for running sessions (inlined into client.js)
+│   ├── active.gif      Animated whale-tail badge (inlined into client.js)
+│   └── active.png      Static source frame for the GIF
 ├── test/               Dependency-free self-checks, run with node
 ├── package.json        Manifest — dsh.bundle.patch, dsh.client, exports, files
 ├── README.md           This file

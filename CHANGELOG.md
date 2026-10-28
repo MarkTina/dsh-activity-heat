@@ -20,7 +20,7 @@ First public layout of the plugin.
 - Workspace cards are taller (roomier padding, larger title and meter) and their running state no longer leaks the orbit band as colour patches.
 - Long session lists scroll with the native scrollbar hidden and a floating `⌃⌄` hint on the right.
 - Session card meta now reads as three hairline-separated groups: ① cache hit rate + context usage ② turns + tokens ③ accumulated time + current state.
-- Running sessions drop the outlined pill: the whale-tail mark plus a "Working" label now sits in the card's right-hand whitespace, swaying and bobbing on a CSS loop. Hover cards and workspace rows reuse the same label.
+- Running sessions drop the outlined pill: the whale-tail mark plus a "Working" label now sits in the card's right-hand whitespace. The mark is a 12-frame GIF that plays its own loop (no CSS transform), 28 px tall. Hover cards and workspace rows reuse the same label.
 - The scrolling list keeps 12 px of vertical padding, so the running card's breathing glow is no longer clipped at the top or bottom edge.
 - The card's right column stacks three rows — workspace name, heat meter, relative time — inside a fixed 168 px, and heat level labels have a fixed width so meters stop shifting between rows.
 - Cards show the accumulated conversation time; hovering it opens a time-breakdown card (donut, legend and proportional timeline) built from `contextTimeline.timing`.

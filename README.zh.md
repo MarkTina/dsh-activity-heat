@@ -37,7 +37,7 @@ DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话�
 
 `session.running === true` 的卡片会获得：
 
-- 卡片右侧留白处的**鲸尾 + 「工作中」**标识（`assets/active.png` 内联为 data URI，由 CSS 做摆动、上浮与呼吸——不再用标题前的小徽章）
+- 卡片右侧留白处的**鲸尾 + 「工作中」**标识——鲸尾是 12 帧 GIF，靠自己的帧序列循环播放（不套 CSS 晃动），高度 28px
 - 卡片外边框**环绕跑马灯光带**（`conic-gradient` 旋转，2.2s 一圈）
 - 外层**呼吸外发光**（2.4s 一次）
 - 侧栏行首画蓝色实心点
@@ -148,7 +148,8 @@ dsh-activity-heat/
 │   └── en.json         插件元数据 + UI 字典（英文）
 ├── icon.svg            插件图标（以 ./icon 导出）
 ├── assets/
-│   └── active.png      运行中徽标的鲸尾标识（内联进 client.js）
+│   ├── active.gif      鲸尾动图（内联进 client.js）
+│   └── active.png      动图的静态源帧
 ├── test/               免依赖自检，用 node 直接运行
 ├── package.json        清单——dsh.bundle.patch、dsh.client、exports、files
 ├── README.md           英文 README

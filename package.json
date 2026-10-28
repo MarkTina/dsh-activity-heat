@@ -34,6 +34,7 @@
     "cordis.patch.yml",
     "locale/*.json",
     "assets/active.png",
+    "assets/active.gif",
     "icon.svg",
     "README.md",
     "README.zh.md",
