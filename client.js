@@ -1492,12 +1492,11 @@ function build(require) {
       margin: running ? 0 : '0 0 8px',
       border: running ? 'none' : UI.border,
       borderRadius: running ? Math.max(2, UI.radius - 2) : UI.radius,
-      // 运行中的卡片必须是实底：半透明底会让背后的跑马灯透出来，形成色块。
-      background: running
-        ? (hover
-          ? 'color-mix(in srgb, var(--dsw-alias-bg-base, #ffffff) 94%, var(--color-blue-500, #3b82f6))'
-          : 'var(--dsw-alias-bg-base, #ffffff)')
-        : (hover ? UI.cardBgHover : UI.cardBg),
+      // 运行中的卡片必须是实底；hover 的浅蓝用叠加渐变，不碰底色透明度
+      background: running ? 'var(--dsw-alias-bg-base, #ffffff)' : (hover ? UI.cardBgHover : UI.cardBg),
+      backgroundImage: running && hover
+        ? 'linear-gradient(rgba(59,130,246,0.07), rgba(59,130,246,0.07))'
+        : 'none',
       cursor: 'pointer',
       textAlign: 'left',
       font: 'inherit',
@@ -1564,12 +1563,15 @@ function build(require) {
           margin: running ? 0 : '0 0 10px',
           border: running ? 'none' : UI.border,
           borderRadius: running ? Math.max(2, UI.radius - 2) : UI.radius,
-          // 运行中的卡片必须是实底：半透明底会让背后的跑马灯透出来，形成色块
-          background: running
-            ? (hover
-              ? 'color-mix(in srgb, var(--dsw-alias-bg-base, #ffffff) 94%, var(--color-blue-500, #3b82f6))'
-              : 'var(--dsw-alias-bg-base, #ffffff)')
-            : (hover && openable ? UI.cardBgHover : UI.cardBg),
+          // 关键：按钮必须在跑马灯之上（定位 + z-index），否则旋转的色带会盖在卡片上。
+          position: running ? 'relative' : undefined,
+          zIndex: running ? 1 : undefined,
+          overflow: 'hidden',
+          // 运行中的卡片必须是实底；hover 的浅蓝用叠加渐变，不碰底色透明度
+          background: running ? 'var(--dsw-alias-bg-base, #ffffff)' : (hover && openable ? UI.cardBgHover : UI.cardBg),
+          backgroundImage: running && hover
+            ? 'linear-gradient(rgba(59,130,246,0.07), rgba(59,130,246,0.07))'
+            : 'none',
           cursor: openable ? 'pointer' : 'default',
           textAlign: 'left',
           font: 'inherit',

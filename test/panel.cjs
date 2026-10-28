@@ -512,6 +512,11 @@ function collect(tree) {
   );
   check(wrappers.length === 1, '只有含运行会话的工作区有呼吸外层', wrappers.length);
   check(orbits.length === 1, '只有含运行会话的工作区有跑马灯', orbits.length);
+  const aboveOrbit = c.nodes.filter(
+    (x) => x.type === 'button' && x.props && x.props.style && x.props.style.zIndex === 1
+      && x.props.style.position === 'relative',
+  );
+  check(aboveOrbit.length >= 1, '运行中工作区按钮压在光带之上（定位 + z-index）', aboveOrbit.length);
   check(all.indexOf('tok') !== -1 && all.indexOf('tokens') === -1, '工作区用量文案与状态栏一致');
 }
 
