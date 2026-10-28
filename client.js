@@ -1366,11 +1366,13 @@ function build(require) {
       ? (session.workspace.title || basenameOf(session.workspace.path) || tt('workspace.untitled'))
       : '';
 
-    // 信息顺序：两个百分比在前，用量居中，相对时间收到最右
-    var meta = [];
+    // 三组信息：① 缓存命中 / 上下文 ② 轮次 / tokens ③ 累计耗时 / 当前
+    var groups = [];
+
+    var groupA = [];
     if (session.cacheRate !== undefined && session.cacheRate !== '') {
       var cachePct = Number(session.cacheRate);
-      meta.push(React.createElement(MetaChip, { key: 'cache', icon: React.createElement(MetricIcon, { name: 'cache' }) },
+      groupA.push(React.createElement(MetaChip, { key: 'cache', icon: React.createElement(MetricIcon, { name: 'cache' }) },
         tt('fact.cache', { n: session.cacheRate }),
         React.createElement(MiniMeter, {
           ratio: isFinite(cachePct) ? cachePct / 100 : 0,
@@ -1379,7 +1381,7 @@ function build(require) {
       ));
     }
     if (typeof session.contextPct === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'ctx', icon: React.createElement(MetricIcon, { name: 'context' }) },
+      groupA.push(React.createElement(MetaChip, { key: 'ctx', icon: React.createElement(MetricIcon, { name: 'context' }) },
         tt('fact.context', { n: session.contextPct }),
         React.createElement(MiniMeter, {
           ratio: session.contextPct / 100,
@@ -1387,25 +1389,48 @@ function build(require) {
         }),
       ));
     }
+    if (groupA.length) groups.push(groupA);
+
+    var groupB = [];
     if (typeof session.turns === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'turns', icon: React.createElement(MetricIcon, { name: 'turns' }) }, tt('fact.turns', { n: session.turns })));
+      groupB.push(React.createElement(MetaChip, { key: 'turns', icon: React.createElement(MetricIcon, { name: 'turns' }) }, tt('fact.turns', { n: session.turns })));
     }
     if (typeof session.tokens === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'tokens', icon: React.createElement(MetricIcon, { name: 'tokens' }) }, tt('fact.tokens', { n: compactNumber(session.tokens) })));
+      groupB.push(React.createElement(MetaChip, { key: 'tokens', icon: React.createElement(MetricIcon, { name: 'tokens' }) }, tt('fact.tokens', { n: compactNumber(session.tokens) })));
     }
+    if (groupB.length) groups.push(groupB);
+
+    var groupC = [];
     if (session.timing && typeof session.timing.wallMs === 'number' && session.timing.wallMs > 0) {
-      meta.push(React.createElement(DurationChip, { key: 'dur', timing: session.timing }));
+      groupC.push(React.createElement(DurationChip, { key: 'dur', timing: session.timing }));
     }
     if (session.open) {
-      meta.push(React.createElement(MetaChip, { key: 'open', icon: React.createElement(MetricIcon, { name: 'current' }) }, tt('fact.current')));
+      groupC.push(React.createElement(MetaChip, { key: 'open', icon: React.createElement(MetricIcon, { name: 'current' }) }, tt('fact.current')));
     }
+    if (groupC.length) groups.push(groupC);
 
+    // 组内用圆点分隔，组间用竖线 + 更大留白，让同类信息聚在一起
     var metaRow = [];
-    for (var i = 0; i < meta.length; i += 1) {
-      if (i > 0) metaRow.push(React.createElement('span', { key: 'sep' + i, style: { opacity: 0.35 } }, '·'));
-      metaRow.push(meta[i]);
+    for (var g = 0; g < groups.length; g += 1) {
+      if (g > 0) {
+        metaRow.push(React.createElement('span', {
+          key: 'divider' + g,
+          'aria-hidden': 'true',
+          style: {
+            flex: 'none',
+            width: 1,
+            height: 12,
+            alignSelf: 'center',
+            margin: '0 5px',
+            background: 'var(--dsw-alias-border-l1, rgba(127,127,127,0.3))',
+          },
+        }));
+      }
+      for (var j = 0; j < groups[g].length; j += 1) {
+        if (j > 0) metaRow.push(React.createElement('span', { key: 'sep' + g + '_' + j, style: { opacity: 0.3 } }, '·'));
+        metaRow.push(groups[g][j]);
+      }
     }
-    // 相对时间不再放在 meta 行：挪到右侧信息列的最底部
 
     var children = [
       React.createElement('span', {

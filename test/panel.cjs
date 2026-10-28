@@ -561,6 +561,10 @@ function collect(tree) {
     cardButtons.length > 0 && cardButtons.every((b) => !b.props.title),
     '卡片用 aria-label，不弹原生 tooltip 遮挡浮层',
   );
+  const dividers = c.nodes.filter(
+    (n) => n.props && n.props.style && n.props.style.width === 1 && n.props.style.height === 12,
+  );
+  check(dividers.length >= 2, 'meta 行按组插入竖线分隔', dividers.length);
   check(
     rightCol && rightCol.children && rightCol.children.length === 3,
     '右侧列三行：工作区名 / 热度 / 时间',
