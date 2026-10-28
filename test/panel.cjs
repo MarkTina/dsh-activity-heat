@@ -497,5 +497,29 @@ function collect(tree) {
   check(all.indexOf('tok') !== -1 && all.indexOf('tokens') === -1, '工作区用量文案与状态栏一致');
 }
 
+/* ================= 11. 指标图标与滚动列表 ================= */
+{
+  const b = boot(false);
+  const reg = b.regs.find((r) => r.o.name === 'main');
+  const injected = typeof reg.o.inject === 'function' ? reg.o.inject() : {};
+  const c = collect(reg.C({ ...injected, ...panelProps }));
+
+  const icons = c.components.filter((x) => x.name === 'MetricIcon').map((x) => x.props.name);
+  check(
+    ['turns', 'tokens', 'cache', 'context', 'current'].every((n) => icons.indexOf(n) !== -1),
+    '五个指标统一用 SVG 图标',
+    icons.join(','),
+  );
+  check(c.texts.join(' ').indexOf('⚡') === -1, '不再使用彩色 emoji 图标');
+
+  const listEl = c.nodes.find((n) => n.props && n.props.className === 'ah-list');
+  check(Boolean(listEl), '列表容器带 ah-list 类');
+  check(listEl && listEl.props.style.overflowY === 'auto', '列表可纵向滚动');
+  check(
+    listEl && String(listEl.props.style.maxHeight).indexOf('100vh') !== -1,
+    '列表高度受视口限制',
+  );
+}
+
 console.log(failed === 0 ? '\nHARNESS PASSED' : '\nHARNESS FAILED (' + failed + ')');
 process.exitCode = failed === 0 ? 0 : 1;

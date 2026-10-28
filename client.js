@@ -882,6 +882,45 @@ function build(require) {
     return HEAT_INK;
   }
 
+  /**
+   * 指标图标：统一 12px、1.3 描边、currentColor 的线条画风。
+   * 用 SVG 而不是 emoji——emoji 会带彩色和不同的字重，和周围文字不在一个体系里。
+   */
+  function MetricIcon(props) {
+    var name = props && props.name;
+    var common = {
+      width: 12,
+      height: 12,
+      viewBox: '0 0 12 12',
+      fill: 'none',
+      stroke: 'currentColor',
+      strokeWidth: 1.3,
+      strokeLinecap: 'round',
+      strokeLinejoin: 'round',
+      'aria-hidden': 'true',
+      style: { display: 'block' },
+    };
+    var inner;
+    if (name === 'turns') {
+      inner = [
+        React.createElement('path', { key: 'arc', d: 'M9.8 6.2A4 4 0 1 1 6 2' }),
+        React.createElement('path', { key: 'head', d: 'M6 0.6 8.6 2 6 3.6' }),
+      ];
+    } else if (name === 'tokens') {
+      inner = React.createElement('path', { d: 'M6 1.4 10.6 6 6 10.6 1.4 6z' });
+    } else if (name === 'cache') {
+      inner = React.createElement('path', { d: 'M6.8 1 2.8 6.6h2.5L5.2 11l4-5.8H6.6z' });
+    } else if (name === 'context') {
+      inner = [
+        React.createElement('rect', { key: 'box', x: 1.6, y: 1.6, width: 8.8, height: 8.8, rx: 1.4 }),
+        React.createElement('path', { key: 'ticks', d: 'M6 3.4v5.2M3.4 6h5.2' }),
+      ];
+    } else {
+      inner = React.createElement('circle', { cx: 6, cy: 6, r: 2.6, stroke: 'none', fill: 'currentColor' });
+    }
+    return React.createElement('svg', common, inner);
+  }
+
   function MetaChip(props) {
     return React.createElement(
       'span',
@@ -899,7 +938,7 @@ function build(require) {
           flex: 'none',
         },
       },
-      props && props.icon ? React.createElement('span', { style: { opacity: 0.55 } }, props.icon) : null,
+      props && props.icon ? React.createElement('span', { style: { opacity: 0.6, display: 'inline-flex' } }, props.icon) : null,
       props && props.children,
     );
   }
@@ -999,7 +1038,7 @@ function build(require) {
         style: {
           position: 'relative',
           margin: '0 0 8px',
-          padding: 2,
+          padding: 1.5,
           borderRadius: UI.radius,
           overflow: 'hidden',
           background: 'var(--dsw-alias-bg-base, #ffffff)',
@@ -1021,8 +1060,8 @@ function build(require) {
           background:
             'conic-gradient(from 0deg,' +
             ' transparent 0deg, transparent 250deg,' +
-            ' color-mix(in srgb, var(--color-blue-500, #3b82f6) 95%, transparent) 310deg,' +
-            ' color-mix(in srgb, var(--color-blue-500, #3b82f6) 35%, transparent) 335deg,' +
+            ' color-mix(in srgb, var(--color-blue-500, #3b82f6) 72%, transparent) 310deg,' +
+            ' color-mix(in srgb, var(--color-blue-500, #3b82f6) 20%, transparent) 335deg,' +
             ' transparent 360deg)',
           animation: 'ah-orbit 2.2s linear infinite',
           pointerEvents: 'none',
@@ -1048,14 +1087,14 @@ function build(require) {
     var meta = [];
     meta.push(React.createElement('span', { key: 'at' }, relativeOf(session.at, now)));
     if (typeof session.turns === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'turns', icon: '⟳' }, tt('fact.turns', { n: session.turns })));
+      meta.push(React.createElement(MetaChip, { key: 'turns', icon: React.createElement(MetricIcon, { name: 'turns' }) }, tt('fact.turns', { n: session.turns })));
     }
     if (typeof session.tokens === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'tokens', icon: '◈' }, tt('fact.tokens', { n: compactNumber(session.tokens) })));
+      meta.push(React.createElement(MetaChip, { key: 'tokens', icon: React.createElement(MetricIcon, { name: 'tokens' }) }, tt('fact.tokens', { n: compactNumber(session.tokens) })));
     }
     if (session.cacheRate !== undefined && session.cacheRate !== '') {
       var cachePct = Number(session.cacheRate);
-      meta.push(React.createElement(MetaChip, { key: 'cache', icon: '⚡' },
+      meta.push(React.createElement(MetaChip, { key: 'cache', icon: React.createElement(MetricIcon, { name: 'cache' }) },
         tt('fact.cache', { n: session.cacheRate }),
         React.createElement(MiniMeter, {
           ratio: isFinite(cachePct) ? cachePct / 100 : 0,
@@ -1064,7 +1103,7 @@ function build(require) {
       ));
     }
     if (typeof session.contextPct === 'number') {
-      meta.push(React.createElement(MetaChip, { key: 'ctx', icon: '◧' },
+      meta.push(React.createElement(MetaChip, { key: 'ctx', icon: React.createElement(MetricIcon, { name: 'context' }) },
         tt('fact.context', { n: session.contextPct }),
         React.createElement(MiniMeter, {
           ratio: session.contextPct / 100,
@@ -1073,7 +1112,7 @@ function build(require) {
       ));
     }
     if (session.open) {
-      meta.push(React.createElement(MetaChip, { key: 'open', icon: '●' }, tt('fact.current')));
+      meta.push(React.createElement(MetaChip, { key: 'open', icon: React.createElement(MetricIcon, { name: 'current' }) }, tt('fact.current')));
     }
 
     var metaRow = [];
@@ -1182,9 +1221,11 @@ function build(require) {
       margin: running ? 0 : '0 0 8px',
       border: running ? 'none' : UI.border,
       borderRadius: running ? Math.max(2, UI.radius - 2) : UI.radius,
-      // 运行中的卡片用不透明底色，遮住背后的跑马灯光带（半透明会透出来）。
+      // 运行中的卡片必须是实底：半透明底会让背后的跑马灯透出来，形成色块。
       background: running
-        ? (hover ? 'var(--dsw-alias-bg-layer-2, rgba(127,127,127,0.12))' : 'var(--dsw-alias-bg-base, #ffffff)')
+        ? (hover
+          ? 'color-mix(in srgb, var(--dsw-alias-bg-base, #ffffff) 94%, var(--color-blue-500, #3b82f6))'
+          : 'var(--dsw-alias-bg-base, #ffffff)')
         : (hover ? UI.cardBgHover : UI.cardBg),
       cursor: 'pointer',
       textAlign: 'left',
@@ -1245,16 +1286,18 @@ function build(require) {
         style: {
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
+          gap: 14,
           width: '100%',
-          padding: '9px 14px',
+          padding: '12px 16px',
           // 运行中时由外层容器控制间距和边框，按钮自身不再留 margin
-          margin: running ? 0 : '0 0 8px',
+          margin: running ? 0 : '0 0 10px',
           border: running ? 'none' : UI.border,
           borderRadius: running ? Math.max(2, UI.radius - 2) : UI.radius,
-          // 运行中的卡片用不透明底色，遮住背后的跑马灯光带
+          // 运行中的卡片必须是实底：半透明底会让背后的跑马灯透出来，形成色块
           background: running
-            ? (hover ? 'var(--dsw-alias-bg-layer-2, rgba(127,127,127,0.12))' : 'var(--dsw-alias-bg-base, #ffffff)')
+            ? (hover
+              ? 'color-mix(in srgb, var(--dsw-alias-bg-base, #ffffff) 94%, var(--color-blue-500, #3b82f6))'
+              : 'var(--dsw-alias-bg-base, #ffffff)')
             : (hover && openable ? UI.cardBgHover : UI.cardBg),
           cursor: openable ? 'pointer' : 'default',
           textAlign: 'left',
@@ -1285,28 +1328,28 @@ function build(require) {
             style: {
               color: UI.textPrimary,
               fontWeight: 500,
-              fontSize: '0.92em',
-              lineHeight: '20px',
+              fontSize: '0.98em',
+              lineHeight: '22px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
             },
           }, group.label),
         ),
-        React.createElement('span', { style: { color: UI.textTertiary, fontSize: '0.76em', lineHeight: '16px' } }, metaBits.join(' · ')),
+        React.createElement('span', { style: { color: UI.textTertiary, fontSize: '0.8em', lineHeight: '18px' } }, metaBits.join(' · ')),
       ),
       React.createElement(
         'span',
-        { key: 'right', style: { flex: 'none', display: 'flex', alignItems: 'center', gap: 8 } },
-        React.createElement(HeatMeter, { level: group.level, ratio: group.ratio, showLabel: true, width: 84, height: 10 }),
+        { key: 'right', style: { flex: 'none', display: 'flex', alignItems: 'center', gap: 10 } },
+        React.createElement(HeatMeter, { level: group.level, ratio: group.ratio, showLabel: true, width: 100, height: 11 }),
         React.createElement('span', {
           style: {
             flex: 'none',
-            minWidth: 24,
-            padding: '0 5px',
-            borderRadius: 5,
-            fontSize: '0.7em',
-            lineHeight: '18px',
+            minWidth: 26,
+            padding: '1px 6px',
+            borderRadius: 6,
+            fontSize: '0.74em',
+            lineHeight: '20px',
             textAlign: 'center',
             color: UI.textSecondary,
             background: 'var(--dsw-alias-bg-layer-1, rgba(127,127,127,0.08))',
@@ -1394,6 +1437,33 @@ function build(require) {
     var filterState = React.useState('all');
     var filter = filterState[0];
     var setFilter = filterState[1];
+
+    // 列表滚动：隐藏原生滚动条，靠右侧的浮动提示告诉用户还能上下滑。
+    var listRef = React.useRef ? React.useRef(null) : { current: null };
+    var scrollState = React.useState(false);
+    var canScroll = scrollState[0];
+    var setCanScroll = scrollState[1];
+    React.useEffect(function () {
+      var el = listRef.current;
+      if (!el) return undefined;
+      var measure = function () {
+        setCanScroll(el.scrollHeight > el.clientHeight + 4);
+      };
+      measure();
+      var cleanups = [];
+      if (typeof window !== 'undefined' && window.addEventListener) {
+        window.addEventListener('resize', measure);
+        cleanups.push(function () { window.removeEventListener('resize', measure); });
+      }
+      if (typeof ResizeObserver !== 'undefined') {
+        var observer = new ResizeObserver(measure);
+        observer.observe(el);
+        cleanups.push(function () { observer.disconnect(); });
+      }
+      return function () {
+        for (var i = 0; i < cleanups.length; i += 1) cleanups[i]();
+      };
+    }, [view, filter, topCount, groupCount]);
 
     var now = Date.now();
 
@@ -1517,14 +1587,59 @@ function build(require) {
       ? tt(view === 'sessions' ? 'panel.emptyFilteredSessions' : 'panel.emptyFilteredWorkspaces')
       : tt(view === 'sessions' ? 'panel.empty' : 'panel.emptyWorkspaces');
 
+    var emptyHint = React.createElement('div', {
+      style: { padding: '8px 0 14px', fontSize: '0.82em', color: UI.textTertiary },
+    }, emptyText);
+
+    // 隐藏原生滚动条（.ah-list 由 ensureStyles 注入），右侧浮标提示可以上下滑动。
+    var scrollHint = canScroll
+      ? React.createElement('span', {
+          'aria-hidden': 'true',
+          style: {
+            position: 'absolute',
+            right: 4,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 3,
+            padding: '7px 4px',
+            borderRadius: 999,
+            background: 'var(--dsw-alias-bg-layer-2, rgba(127,127,127,0.12))',
+            border: '1px solid var(--dsw-alias-border-l1, rgba(127,127,127,0.18))',
+            color: UI.textTertiary,
+            pointerEvents: 'none',
+            opacity: 0.92,
+            boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+          },
+        },
+          React.createElement('span', { style: { fontSize: 10, lineHeight: '10px' } }, '⌃'),
+          React.createElement('span', {
+            style: { width: 1, height: 12, background: 'currentColor', opacity: 0.35 },
+          }),
+          React.createElement('span', { style: { fontSize: 10, lineHeight: '10px' } }, '⌄'),
+        )
+      : null;
+
     var list = React.createElement('div', {
       key: 'list',
-      style: { display: 'flex', flexDirection: 'column', padding: '0 ' + UI.padX + 'px' },
-    }, cards.length > 0
-      ? cards
-      : React.createElement('div', {
-          style: { padding: '8px 0 14px', fontSize: '0.82em', color: UI.textTertiary },
-        }, emptyText));
+      style: { position: 'relative', display: 'flex', flexDirection: 'column', minHeight: 0, flex: '1 1 auto' },
+    },
+      React.createElement('div', {
+        ref: listRef,
+        className: 'ah-list',
+        style: {
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '0 ' + UI.padX + 'px',
+          maxHeight: 'calc(100vh - 236px)',
+          overflowY: 'auto',
+          overscrollBehavior: 'contain',
+        },
+      }, cards.length > 0 ? cards : emptyHint),
+      scrollHint,
+    );
 
     var footer = null;
     if (view === 'workspaces' && filter === 'all' && model.groups.length > groupCount) {
@@ -1795,6 +1910,9 @@ function build(require) {
         '@keyframes ah-breathe{0%,100%{box-shadow:none}50%{box-shadow:none}}',
         '@keyframes ah-tail{0%,100%{transform:none}50%{transform:none}}',
         '}',
+        // 列表自身的滚动条隐藏：保留滚动能力，右侧用浮标提示可以上下滑
+        '.ah-list{scrollbar-width:none;-ms-overflow-style:none;}',
+        '.ah-list::-webkit-scrollbar{width:0;height:0;display:none;}',
       ].join('');
       document.head.appendChild(style);
       return function disposeStyles() {

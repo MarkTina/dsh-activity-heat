@@ -27,6 +27,8 @@ This plugin computes a 0–100% heat score from **time since last activity** and
 - **Count selector**: sessions `10 / 20 / 30 / 50`, workspaces `5 / 10 / 20`
 - **Heat filter**: All / Blazing / Warm / Active / Recent / Stale, with live counts
 - **Every card**: title and most recent prompt on the left; the workspace name sits above the heat meter on the right; relative time, turns, tokens, cache hit rate and context usage run along the bottom, and both percentages carry a mini progress bar (context turns amber above 60% and red above 85%)
+- **One icon language**: all five metrics share 12 px stroke icons drawn from `currentColor` — no colored emoji
+- **Long lists scroll**: the list caps its height, hides its native scrollbar, and shows a floating `⌃⌄` handle on the right while more rows remain
 - **Click to open**: a session row opens that session, a workspace row opens that workspace
 
 ### Running sessions are marked
