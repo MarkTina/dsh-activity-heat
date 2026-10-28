@@ -556,6 +556,11 @@ function collect(tree) {
     (n) => n.props && n.props.style && n.props.style.width === 168 && n.props.style.justifyContent === 'space-between',
   );
   check(Boolean(rightCol), '右侧信息列固定宽度并两行对齐');
+  check(
+    rightCol && rightCol.children && rightCol.children.length === 3,
+    '右侧列三行：工作区名 / 热度 / 时间',
+    rightCol && rightCol.children ? rightCol.children.length : 'none',
+  );
 }
 
 console.log(failed === 0 ? '\nHARNESS PASSED' : '\nHARNESS FAILED (' + failed + ')');

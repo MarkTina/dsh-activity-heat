@@ -1384,11 +1384,7 @@ function build(require) {
       if (i > 0) metaRow.push(React.createElement('span', { key: 'sep' + i, style: { opacity: 0.35 } }, '·'));
       metaRow.push(meta[i]);
     }
-    // 相对时间单独收尾：不加分隔符，用 auto margin 贴到行尾
-    metaRow.push(React.createElement('span', {
-      key: 'at',
-      style: { marginLeft: 'auto', paddingLeft: 10, minWidth: 58, textAlign: 'right', whiteSpace: 'nowrap', opacity: 0.9 },
-    }, relativeOf(session.at, now)));
+    // 相对时间不再放在 meta 行：挪到右侧信息列的最底部
 
     var children = [
       React.createElement('span', {
@@ -1477,7 +1473,7 @@ function build(require) {
             paddingBottom: 1,
           },
         },
-        // 第一行固定给工作区名，第二行固定给热度计：两行分别对齐标题行与 meta 行
+        // 三行：工作区名（上）→ 热度计（中）→ 相对时间（下）
         workspaceName
           ? React.createElement('span', {
               style: {
@@ -1493,6 +1489,17 @@ function build(require) {
             }, workspaceName)
           : React.createElement('span', { style: { lineHeight: '18px' } }),
         React.createElement(HeatMeter, { level: session.level, ratio: session.ratio, showLabel: true, width: 96, height: 10 }),
+        React.createElement('span', {
+          style: {
+            width: '100%',
+            textAlign: 'right',
+            fontSize: '0.74em',
+            lineHeight: '16px',
+            color: UI.textTertiary,
+            fontVariantNumeric: 'tabular-nums',
+            whiteSpace: 'nowrap',
+          },
+        }, relativeOf(session.at, now)),
       ),
     ];
 
