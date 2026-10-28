@@ -280,6 +280,7 @@ function collect(tree) {
   check(['10', '20', '30', '50'].every((v) => segLabels.indexOf(v) !== -1), '会话数量选项 10/20/30/50');
 
   check(all.indexOf('14 轮') !== -1, '轮次取宿主 sessionStats（与状态栏一致）');
+  check(all.indexOf('40 步') !== -1, '步数取宿主 sessionStats.steps');
   check(all.indexOf('510k tok') !== -1, 'tokens 取 tokenUsage 计费总量（与状态栏一致）');
   check(all.indexOf('缓存命中 60%') !== -1, '缓存命中率与状态栏同算法');
   check(all.indexOf('上下文 80%') !== -1, '上下文占比取 contextPressure（与状态栏一致）');
@@ -566,8 +567,8 @@ function collect(tree) {
   );
   check(dividers.length >= 2, 'meta 行按组插入竖线分隔', dividers.length);
   check(
-    rightCol && rightCol.children && rightCol.children.length === 3,
-    '右侧列三行：工作区名 / 热度 / 时间',
+    rightCol && rightCol.children && rightCol.children.length === 2,
+    '右侧列两行：工作区名 / 热度',
     rightCol && rightCol.children ? rightCol.children.length : 'none',
   );
 }

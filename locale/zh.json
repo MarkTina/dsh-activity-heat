@@ -40,6 +40,7 @@
   },
   "fact": {
     "turns": "{n} 轮",
+    "steps": "{n} 步",
     "tokens": "{n} tok",
     "cache": "缓存命中 {n}%",
     "context": "上下文 {n}%",

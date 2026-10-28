@@ -26,9 +26,9 @@ This plugin computes a 0–100% heat score from **time since last activity** and
 - **Top-level switch**: `Sessions 58` / `Workspaces 10` — no more mixed list
 - **Count selector**: sessions `10 / 20 / 30 / 50`, workspaces `5 / 10 / 20`
 - **Heat filter**: All / Blazing / Warm / Active / Recent / Stale, with live counts
-- **Every card**: the bottom row is split into three groups divided by hairlines — ① cache hit rate + context usage (each with a mini progress bar) ② turns + tokens ③ accumulated conversation time + current state; items inside a group use a dot, groups are separated by a vertical rule
+- **Every card**: the bottom row is split into three groups divided by hairlines — ① cache hit rate + context usage (each with a mini progress bar) ② turns + steps + tokens ③ accumulated conversation time + relative time + current state; items inside a group use a dot, groups are separated by a vertical rule
 - **Time breakdown**: hovering the conversation time opens a card with the active duration, a donut of wait / thinking / reply / tool-argument / tool-run / other, its legend and a proportional timeline strip — same source (`contextTimeline.timing`) and same segmentation as the host's timing panel; the card is portaled to `document.body` so the scrolling list can never clip it
-- **Right column**: a fixed 168 px column stacks the workspace name (top), the heat meter with its level label (middle) and the relative time (bottom), so every row lines up
+- **Right column**: a fixed 168 px column stacks the workspace name (top) and the heat meter with its level label (bottom)
 - **One icon language**: all five metrics share 12 px stroke icons drawn from `currentColor` — no colored emoji
 - **Long lists scroll**: the list caps its height, keeps 12 px of vertical padding so the first/last card's glow is not clipped, uses block flow (30–50 rows keep full height instead of being squashed), hides its native scrollbar, and shows a floating `⌃⌄` handle on the right while more rows remain
 - **Click to open**: a session row opens that session, a workspace row opens that workspace
@@ -124,7 +124,7 @@ Everything is read from **public host snapshots** — no private APIs, nothing w
 | Last activity time | `sessions.list.byId[id].updatedAt` (same as the sidebar row trailing time) |
 | Title / draft / subagent / archive | the same `title` `blank` `origin`, plus `workspaces.list.archivedSessionIds` |
 | Workspace membership | `workspaces.list.items[].sessionIds` (same mapping as the host `groupByWorkspace`) |
-| Turns | `sessions.list.projectionsBySession[id].values.sessionStats.turns` — the value the composer activity pill reads |
+| Turns / steps | `sessions.list.projectionsBySession[id].values.sessionStats.turns` / `.steps` — the values the composer activity pill reads |
 | Tokens | `…values.tokenUsage` — billed input (`uncachedInputTokens + cacheReadTokens + cacheWriteTokens`) plus `outputTokens`, the same whole-log total as the composer usage pill |
 | Cache hit rate | `…values.tokenUsage.cacheReadTokens / billed input`, using the host's own rounding (a partial hit never displays as 100%) |
 | Context usage | `…values.contextPressure` — `projectedTokens ?? pressureTokens` over `contextWindow`, the value the composer context meter reads |

@@ -26,9 +26,9 @@ DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话�
 - **顶层切换**：`会话 58` / `工作区 10`，不再是上下混排
 - **数量可选**：会话 `10 / 20 / 30 / 50`，工作区 `5 / 10 / 20`
 - **热度筛选**：全部 / 炽热 / 温热 / 活跃 / 近期 / 陈旧（带实时计数）
-- **每张卡片**：底部按三组信息排布，组间用细竖线隔开——① 缓存命中率、上下文占比（各带迷你进度条）② 轮次、tokens ③ 累计对话时长、当前状态；组内用圆点分隔
+- **每张卡片**：底部按三组信息排布，组间用细竖线隔开——① 缓存命中率、上下文占比（各带迷你进度条）② 轮次、步数、tokens ③ 累计对话时长、相对时间、当前状态；组内用圆点分隔
 - **耗时分布**：悬浮累计对话时长会展开小卡片——活跃时长、等待/思考/回复/工具参数/工具执行/其他的环形图、图例与按比例铺排的时间轴，数据来自 `contextTimeline.timing`，分段口径与宿主的耗时统计一致；浮层通过 portal 挂到 `document.body`，不会被滚动列表裁剪
-- **右侧信息列**：固定 168px，自上而下是工作区名、热度计（含档位）、相对时间，多行之间不会错位
+- **右侧信息列**：固定 168px，两行——工作区名（上）、热度计与档位（下）
 - **统一图标语言**：五个指标共用 12px 描边图标，全部取自 `currentColor`——不再有彩色 emoji
 - **长列表可滚动**：列表限高，上下留 12px 让首尾卡片的呼吸光晕不被裁掉，块级布局（30–50 条也保持完整高度，不会被压扁），隐藏原生滚动条，右侧用浮动的 `⌃⌄` 提示还能上下滑
 - **点击即跳转**：会话行打开该会话，工作区行打开该工作区
@@ -124,7 +124,7 @@ pnpm add link:/绝对路径/dsh-activity-heat
 | 最近活动时间 | `sessions.list.byId[id].updatedAt`（与侧栏行尾时间同源） |
 | 标题 / 草稿 / 子代理 / 归档 | 同上的 `title` `blank` `origin` 与 `workspaces.list.archivedSessionIds` |
 | 工作区归属 | `workspaces.list.items[].sessionIds`（与宿主 `groupByWorkspace` 同一映射） |
-| 轮次 | `sessions.list.projectionsBySession[id].values.sessionStats.turns`——与 composer 活动胶囊同源 |
+| 轮次 / 步数 | `sessions.list.projectionsBySession[id].values.sessionStats.turns` / `.steps`——与 composer 活动胶囊同源 |
 | tokens | `…values.tokenUsage`——计费输入（`uncachedInputTokens + cacheReadTokens + cacheWriteTokens`）加 `outputTokens`，与 composer 用量胶囊同源的整段日志总量 |
 | 缓存命中率 | `…values.tokenUsage.cacheReadTokens / 计费输入`，沿用宿主的取整规则（非满命中不会显示成 100%） |
 | 上下文占比 | `…values.contextPressure`——`projectedTokens ?? pressureTokens` 除以 `contextWindow`，与 composer 上下文环同源 |

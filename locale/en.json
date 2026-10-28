@@ -40,6 +40,7 @@
   },
   "fact": {
     "turns": "{n} turns",
+    "steps": "{n} steps",
     "tokens": "{n} tok",
     "cache": "Cache hit {n}%",
     "context": "context {n}%",

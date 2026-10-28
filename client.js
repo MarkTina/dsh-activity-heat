@@ -62,6 +62,7 @@ var AH_I18N = /* AH_I18N_START */ {
     },
     fact: {
       turns: '{n} 轮',
+      steps: '{n} 步',
       tokens: '{n} tok',
       cache: '缓存命中 {n}%',
       context: '上下文 {n}%',
@@ -141,6 +142,7 @@ var AH_I18N = /* AH_I18N_START */ {
     },
     fact: {
       turns: '{n} turns',
+      steps: '{n} steps',
       tokens: '{n} tok',
       cache: 'Cache hit {n}%',
       context: 'context {n}%',
@@ -565,6 +567,11 @@ function build(require) {
           out.turns = statsTurns;
           fromStatusBar = true;
         }
+        var statsSteps = numberAt(stats, 'steps');
+        if (statsSteps !== undefined && statsSteps > 0) {
+          out.steps = statsSteps;
+          fromStatusBar = true;
+        }
       }
 
       var usage = values.tokenUsage;
@@ -678,6 +685,7 @@ function build(require) {
         open: Boolean(summary.retainedBy && summary.retainedBy.mainView > 0),
         running: summary.running === true,
         turns: facts.turns,
+        steps: facts.steps,
         tokens: facts.tokens,
         prompt: facts.prompt,
         cacheRate: facts.cacheRate,
@@ -977,6 +985,9 @@ function build(require) {
         React.createElement('path', { key: 'arc', d: 'M9.8 6.2A4 4 0 1 1 6 2' }),
         React.createElement('path', { key: 'head', d: 'M6 0.6 8.6 2 6 3.6' }),
       ];
+    } else if (name === 'steps') {
+      // 三级台阶：表示"步"
+      inner = React.createElement('path', { d: 'M2.4 9.6h2.4V7.2h2.4V4.8h2.4' });
     } else if (name === 'tokens') {
       inner = React.createElement('path', { d: 'M6 1.4 10.6 6 6 10.6 1.4 6z' });
     } else if (name === 'cache') {
@@ -1391,6 +1402,9 @@ function build(require) {
     if (typeof session.turns === 'number') {
       groupB.push(React.createElement(MetaChip, { key: 'turns', icon: React.createElement(MetricIcon, { name: 'turns' }) }, tt('fact.turns', { n: session.turns })));
     }
+    if (typeof session.steps === 'number') {
+      groupB.push(React.createElement(MetaChip, { key: 'steps', icon: React.createElement(MetricIcon, { name: 'steps' }) }, tt('fact.steps', { n: session.steps })));
+    }
     if (typeof session.tokens === 'number') {
       groupB.push(React.createElement(MetaChip, { key: 'tokens', icon: React.createElement(MetricIcon, { name: 'tokens' }) }, tt('fact.tokens', { n: compactNumber(session.tokens) })));
     }
@@ -1399,6 +1413,12 @@ function build(require) {
     var groupC = [];
     if (session.timing && typeof session.timing.wallMs === 'number' && session.timing.wallMs > 0) {
       groupC.push(React.createElement(DurationChip, { key: 'dur', timing: session.timing }));
+    }
+    if (session.at !== undefined) {
+      groupC.push(React.createElement('span', {
+        key: 'at',
+        style: { whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' },
+      }, relativeOf(session.at, now)));
     }
     if (session.open) {
       groupC.push(React.createElement(MetaChip, { key: 'open', icon: React.createElement(MetricIcon, { name: 'current' }) }, tt('fact.current')));
@@ -1532,17 +1552,6 @@ function build(require) {
             }, workspaceName)
           : React.createElement('span', { style: { lineHeight: '20px' } }),
         React.createElement(HeatMeter, { level: session.level, ratio: session.ratio, showLabel: true, width: 96, height: 10 }),
-        React.createElement('span', {
-          style: {
-            width: '100%',
-            textAlign: 'right',
-            fontSize: '0.8em',
-            lineHeight: '18px',
-            color: UI.textTertiary,
-            fontVariantNumeric: 'tabular-nums',
-            whiteSpace: 'nowrap',
-          },
-        }, relativeOf(session.at, now)),
       ),
     ];
 
