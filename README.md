@@ -85,7 +85,7 @@ Then append the package name to `dsh.profile.bundles` in that profile's `package
 "@local/activity-heat"
 ```
 
-**Restart DSH** to load it. A page refresh only reloads the UI: the Host keeps its module generation, and toggling the plugin does not re-read changed files either. After editing a `link:` checkout you must quit DSH completely and start it again.
+**First install** normally activates through the host's HMR — if the row does not appear, restart DSH once. **Updating an already-installed copy** (same path, changed files) always needs a full quit-and-relaunch: a page refresh only reloads the UI, and toggling the plugin does not re-read changed modules.
 
 > Desktop profiles are managed by the Electron app. Install through its plugin manager (GitHub / local directory) rather than running `pnpm` inside `~/.dsh/profiles/desktop` — the app owns that directory and will reject or overwrite manual changes.
 

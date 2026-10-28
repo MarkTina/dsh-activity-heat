@@ -85,7 +85,7 @@ pnpm add github:MarkTina/dsh-activity-heat#v0.1.0
 "@local/activity-heat"
 ```
 
-**重启 DSH** 才会加载。刷新页面只重载界面，Host 的模块代际不会变；开关插件也不会重新读取改动过的文件。改过 `link:` 目录后必须完全退出 DSH 再启动。
+**首次安装**通常会由宿主的 HMR 直接激活；如果列表里没出现，重启一次 DSH。**更新已安装的副本**（同路径、文件变了）则必须完全退出再启动：刷新页面只重载界面，开关插件也不会重新读取改动过的模块。
 
 > Desktop profile 由 Electron 应用独占管理。请通过应用内的插件管理（GitHub / 本地目录）安装，不要在 `~/.dsh/profiles/desktop` 里直接跑 `pnpm`——那个目录归应用所有，手改会被拒绝或覆盖。
 
