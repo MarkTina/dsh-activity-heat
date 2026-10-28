@@ -17,7 +17,7 @@ This plugin computes a 0–100% heat score from **time since last activity** and
 | Where | What it does |
 |---|---|
 | **Sidebar entry** | A heat-ring icon whose brightness follows the hottest session in the profile |
-| **Session row leading cell (16px)** | A heat dot: blazing = solid + glow → warm = solid → active/recent = ring → stale = small dot → hidden after 7 days |
+| **Session title** | A persistent blue underline beneath the title: the hotter, the deeper and more saturated the blue; only active sessions (within ~6 hours) gently pulse between two shades; hidden after 7 days. The row-leading cell stays with the host's state dot and the schedule clock |
 | **Session hover card** | `Heat 4/5 · Warm`, `Last active: 40 min ago`, `This workspace is hot` |
 | **Main panel** | Sessions / Workspaces views, each with heat filters and a count selector |
 
@@ -41,7 +41,7 @@ Cards for sessions with `session.running === true` get:
 - a whale-tail mark with a **Working** label in the card's right-hand whitespace — the mark is a 12-frame animated GIF that plays its own loop (no CSS wobble), 28 px tall
 - an **orbiting light band** around the card border (`conic-gradient`, one turn per 2.2 s)
 - a **breathing outer glow** (one cycle per 2.4 s)
-- a solid blue dot in the sidebar row
+- the row-leading cell is left entirely to the host: running/pending rows draw the native `StateDot`, sessions with scheduled tasks draw the clock marker, and the plugin puts nothing there. Heat shows only as the persistent underline beneath the title
 
 Workspace cards get the same treatment when **any** session inside that workspace is running — same whale-tail label, same orbiting band, same breathing glow — so live work is visible from the Workspaces view too.
 
@@ -120,7 +120,7 @@ Defaults live in `cordis.patch.yml`. To override, add a row with the same id to 
     staleDays: 7          # stale (hidden beyond this)
     topCount: 8           # default rows in the panel
     tickSeconds: 60       # heat decay refresh interval
-    showRowDots: true     # show the heat dot at the start of a session row
+    showRowDots: true     # show the heat underline beneath a session title
     showHoverHeat: true   # show the heat section in the hover card
 ```
 

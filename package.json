@@ -1,8 +1,8 @@
 {
   "name": "@local/activity-heat",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
-  "description": "Heat marks that make the sessions and workspaces with the most recent conversations obvious: a sidebar entry, a per-row heat dot and a hover-card heat section. | 会话热度：用热度标识最近发生过对话的会话与工作区。",
+  "description": "Heat marks that make the sessions and workspaces with the most recent conversations obvious: a sidebar entry, a persistent heat underline beneath each session title and a hover-card heat section. | 会话热度：用热度标识最近发生过对话的会话与工作区。",
   "icon": "icon.svg",
   "type": "module",
   "author": "MarkTina",

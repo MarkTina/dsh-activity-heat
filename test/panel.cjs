@@ -5,7 +5,7 @@
  * - 四个 seat 的注册与 id
  * - 面板：会话/工作区视图、数量选择、热度筛选、卡片内容、点击跳转
  * - 热度：连续比例、单色、主题令牌
- * - 运行中：徽标、跑马灯层、行首实心点
+ * - 运行中：徽标、跑马灯层、行首交给原生状态点
  * - 日志：正式模式静默、测试模式输出
  *
  * 运行：node test/panel.cjs
@@ -340,19 +340,31 @@ function collect(tree) {
   sessionCards[0].props.onClick();
   check(b.opened[0] && b.opened[0].indexOf('session:') === 0, '点击会话跳转', b.opened[0]);
 
-  /* 行首热度点 */
+  /* 行首不再渲染可见标记；热度改为标题下方常驻下划线（颜色深浅表热度，仅活跃会话闪动） */
   const rowReg = b.regs.find((r) => r.o.name === 'sidebar.session.row.leading');
-  const dotOf = (id) => {
+  const rowOf = (id) => {
     const inj = typeof rowReg.o.inject === 'function' ? rowReg.o.inject() : {};
-    const el = rowReg.C({ ...inj, sessionId: id, ...panelProps });
-    if (el === null) return null;
-    return typeof el.type === 'function' ? el.type(el.props) : el;
+    return rowReg.C({ ...inj, sessionId: id, ...panelProps });
   };
-  check(dotOf('run') && dotOf('run').props.title === '正在运行', '运行中的行首画实心点');
-  const hotDot = dotOf('hot');
-  check(hotDot && hotDot.props.style.opacity === 1, '炽热会话不透明度 1');
-  check(String(hotDot.props.style.background).indexOf('--color-blue-500') !== -1, '热度色用蓝色令牌');
-  check(dotOf('archived') === null, '归档会话不画行首点');
+  check(rowOf('run') === null, '行首不渲染可见节点（运行中交给原生状态点）');
+  check(rowOf('archived') === null, '行首不渲染可见节点（归档）');
+  check(rowOf('hot') === null, '行首不渲染可见节点（把格子让给定时任务时钟）');
+  check(rowOf('recent') === null, '行首不渲染可见节点（冷门会话同样不占格）');
+  const flowStyle = b.env.styles.find((s) => String(s.textContent || '').indexOf('session:hot') !== -1);
+  const flowCss = flowStyle ? String(flowStyle.textContent) : '';
+  const rules = flowCss.split('}').filter(Boolean);
+  const hotRule = rules.filter((r) => r.indexOf('session:hot') !== -1).join('');
+  const recentRule = rules.filter((r) => r.indexOf('session:recent') !== -1).join('');
+  check(Boolean(flowStyle), '为会话生成标题下划线规则');
+  check(hotRule.indexOf('_title') !== -1, '下划线作用在标题元素上');
+  check(hotRule.indexOf('background-image:linear-gradient') !== -1, '下划线常驻（背景线）');
+  check(hotRule.indexOf('padding-bottom:5px') !== -1 && hotRule.indexOf('padding-top:5px') !== -1, '上下对称 padding 留出间距且不位移');
+  check(hotRule.indexOf('background-size:200% 2px') !== -1, '活跃会话用宽渐变线扫动');
+  check(hotRule.indexOf('--color-blue-500') !== -1, '下划线用蓝色令牌');
+  check(hotRule.indexOf('animation:ah-title-flow') !== -1, '活跃会话带闪动');
+  check(recentRule !== '' && recentRule.indexOf('animation:') === -1, '非活跃会话只有静态下划线');
+  check(recentRule.indexOf('background-size:100% 2px') !== -1, '非活跃会话线不扫动');
+  check(String(b.env.styles.map((s) => s.textContent || '').join('')).indexOf('session:run') === -1, '运行中不生成热度下划线');
 
   /* 悬停卡 */
   const hoverReg = b.regs.find((r) => r.o.name === 'sidebar.session.row.hover');
@@ -404,6 +416,7 @@ function collect(tree) {
   check(css.indexOf('ah-orbit') !== -1, '含跑马灯 keyframes');
   check(css.indexOf('ah-breathe') !== -1, '含呼吸 keyframes');
   check(css.indexOf('ah-pulse') !== -1, '含脉冲 keyframes');
+  check(css.indexOf('ah-title-flow') !== -1, '含标题下划线流动 keyframes');
   check(css.indexOf('prefers-reduced-motion') !== -1, '尊重减少动态偏好');
 }
 

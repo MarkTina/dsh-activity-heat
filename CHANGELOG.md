@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 — 2026-10-28
+
+- Heat in the sidebar is now a **persistent underline beneath each session title** instead of any mark in the row-leading cell. The leading cell is shared with the host's native `StateDot` (non-idle rows) and the schedule plugin's clock marker, so anything the plugin drew there crowded them. The underline adds no DOM and occupies no cell: the row-leading slot is kept only to read the session id/heat and write a stylesheet rule, and its component returns `null`.
+- The line is a **background line** with symmetric 5 px vertical padding (so it sits clear of the title, never shifts text, and is not clipped by the title's `overflow:hidden`). Its **color depth encodes heat** (pale blue → strong blue); only active sessions (level ≥ 3, within ~6 h) sweep a 200%-wide gradient to create a gentle shimmer. `prefers-reduced-motion` stops the sweep.
+- Running/pending sessions draw nothing extra — their state is the host's native dot.
+
 ## 0.1.0 — 2026-10-28
 
 First public layout of the plugin.

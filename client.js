@@ -806,6 +806,101 @@ function build(require) {
     };
   }
 
+  /* ---------------- 标题下划线（热度） ---------------- */
+
+  /**
+   * 热度改用「会话标题下方一条来回流动的光线」表达，不再占用行首 16px 格。
+   *
+   * 为什么彻底离开行首格：这一格除了宿主的原生状态点（非 idle 行由宿主绘制），
+   * 还会被「定时任务」插件用来画时钟标记（它同样占用 `sidebar.session.row.leading`）。
+   * 插件在这里再放任何可见元素，都会和状态点或时钟并排拥挤。
+   *
+   * 做法：行首 slot 仍然注册，但组件只借这个 seat 读到本行 sessionId 与热度，
+   * 把规则写进一个 `<style id="activity-heat-title-flow">`，然后 `return null`——
+   * 行首不渲染任何可见节点；标题下方叠一层背景光带，不新增 DOM、不占布局。
+   */
+  var titleFlowLevels = {};
+  var titleFlowStyle = null;
+
+  /** CSS 属性值里的引号/反斜杠转义（data-row-key 用双引号包裹）。 */
+  function cssString(value) {
+    return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
+  var ACTIVE_MIN_LEVEL = 3; // ≥「活跃」档（近 6 小时内）才加闪动
+
+  /**
+   * 单个会话的热度下划线规则。
+   *
+   * 线常驻整条，**颜色深浅随热度**：越热越深、越接近纯蓝，越冷越淡。
+   * 用「背景线 + 上下对称 padding」而不是 `text-decoration`：标题元素带
+   * `overflow:hidden`，下划线一旦低于行盒底就会被裁掉（这就是"看不见"的原因）；
+   * 背景绘制在 padding 盒内，padding-bottom 又天然制造了与文字的间距。
+   * 上下 padding 相等，标题文字在 32px 行里仍然垂直居中，不会位移。
+   * 动效只给活跃会话（level ≥ 3）：渐变线用 200% 背景宽度，靠 background-position
+   * 往返扫动，形成"闪动"；冷门会话只有静态线。
+   */
+  function titleFlowRule(id, level) {
+    var baseAlpha = Math.round(20 + level * 14); // 34% .. 90%
+    var hotAlpha = Math.min(100, baseAlpha + 30);
+    var base = 'color-mix(in srgb, var(--color-blue-500, #3b82f6) ' + baseAlpha + '%, transparent)';
+    var hot = 'color-mix(in srgb, var(--color-blue-500, #3b82f6) ' + hotAlpha + '%, transparent)';
+    var active = level >= ACTIVE_MIN_LEVEL;
+    var image = active
+      ? 'linear-gradient(90deg,' + base + ' 0%,' + hot + ' 50%,' + base + ' 100%)'
+      : 'linear-gradient(90deg,' + base + ' 0%,' + base + ' 100%)';
+    var size = active ? '200% 2px' : '100% 2px';
+    var motion = '';
+    if (active) {
+      var duration = (3.0 - level * 0.16).toFixed(2);
+      motion = 'animation:ah-title-flow ' + duration + 's ease-in-out infinite alternate;';
+    }
+    return '[data-row-key="session:' + cssString(id) + '"] [class*="_title"]{'
+      + 'padding-top:5px;'
+      + 'padding-bottom:5px;'
+      + 'background-image:' + image + ';'
+      + 'background-repeat:no-repeat;'
+      + 'background-size:' + size + ';'
+      + 'background-position:0 100%;'
+      + motion
+      + '}';
+  }
+
+  /** 把所有已登记会话的热度规则拼成一个 style 标签（增量更新）。 */
+  function syncTitleFlowStyles() {
+    try {
+      if (typeof document === 'undefined' || !document.head) return;
+      var css = '';
+      for (var id in titleFlowLevels) {
+        if (!Object.prototype.hasOwnProperty.call(titleFlowLevels, id)) continue;
+        var level = titleFlowLevels[id];
+        if (level > 0) css += titleFlowRule(id, level);
+      }
+      if (css === '') {
+        if (titleFlowStyle && titleFlowStyle.parentNode) titleFlowStyle.parentNode.removeChild(titleFlowStyle);
+        titleFlowStyle = null;
+        return;
+      }
+      if (!titleFlowStyle) titleFlowStyle = document.getElementById('activity-heat-title-flow');
+      if (!titleFlowStyle) {
+        titleFlowStyle = document.createElement('style');
+        titleFlowStyle.id = 'activity-heat-title-flow';
+        document.head.appendChild(titleFlowStyle);
+      }
+      titleFlowStyle.textContent = css;
+    } catch (ignored) {
+      /* 样式注入失败不影响功能 */
+    }
+  }
+
+  /** 登记/清除某个会话的热度级别，并刷新下划线样式。 */
+  function setTitleFlowLevel(sessionId, level) {
+    var key = String(sessionId);
+    if (level > 0) titleFlowLevels[key] = level;
+    else delete titleFlowLevels[key];
+    syncTitleFlowStyles();
+  }
+
   /* ---------------- 组件 ---------------- */
 
   /**
@@ -893,25 +988,53 @@ function build(require) {
     );
   }
 
-  function RowHeatDot(props) {
+  /**
+   * 悬停卡热度条：把热度画成一根竖向温度条（约 2.5px 宽，高度 8→18px）。
+   *
+   * 只用于会话悬停卡内部（`sidebar.session.row.hover`），作为档位的可视化补充；
+   * 侧栏行首已改为「标题下划线流动光线」（见 titleFlowRule），不再在行首格画任何标记，
+   * 以免与原生状态点、定时任务时钟抢占同一个 16px 格。
+   * @param props.level - 0..5 档位（<=0 不渲染）
+   * @param props.title - 原生 tooltip 文本
+   * @param props.width - 容器宽，默认 16
+   * @param props.height - 容器高，默认 20
+   * @param props.align - 'start'（默认）| 'center'
+   */
+  function RowHeatBar(props) {
     var level = Math.max(0, Math.min(5, (props && props.level) || 0));
     if (level <= 0) return null;
-    var filled = level >= 4;
-    return React.createElement('span', {
-      title: props && props.title,
-      'aria-hidden': 'true',
-      style: {
-        display: 'inline-block',
-        flex: 'none',
-        width: 7 + level,
-        height: 7 + level,
-        borderRadius: '50%',
-        boxSizing: 'border-box',
-        background: filled ? HEAT_INK : 'transparent',
-        border: filled ? 'none' : '1.5px solid ' + HEAT_INK,
-        opacity: heatAlphaOf(level),
+    var width = props && typeof props.width === 'number' ? props.width : 16;
+    var height = props && typeof props.height === 'number' ? props.height : 20;
+    var align = props && props.align === 'center' ? 'center' : 'flex-start';
+    var barWidth = 2.5;
+    var barHeight = Math.min(height - 2, Math.round(6 + level * 2.4));
+    return React.createElement(
+      'span',
+      {
+        title: props && props.title,
+        'aria-hidden': 'true',
+        style: {
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: align,
+          width: width,
+          height: height,
+          boxSizing: 'border-box',
+          flex: 'none',
+        },
       },
-    });
+      React.createElement('span', {
+        style: {
+          width: barWidth,
+          height: barHeight,
+          borderRadius: 999,
+          background: HEAT_INK,
+          opacity: heatAlphaOf(level),
+          flex: 'none',
+          transition: 'height 200ms ease, opacity 200ms ease',
+        },
+      }),
+    );
   }
 
   function HeatRing(props) {
@@ -2273,40 +2396,44 @@ function build(require) {
     useMinuteTick();
     var useSessions = props && props.useSessions;
     var useWorkspaces = props && props.useWorkspaces;
-    var summary = useSessions
-      ? useSessions(function (state) { return state && state.byId ? state.byId[sessionId] : undefined; })
-      : undefined;
-    var archived = useWorkspaces
-      ? useWorkspaces(function (state) {
-          return state && Array.isArray(state.archivedSessionIds)
-            ? state.archivedSessionIds.indexOf(sessionId) !== -1
-            : false;
-        })
-      : false;
-    if (archived) return null;
+
+    // 宿主数据读取全部兜底：本组件一旦在渲染期抛错，会被宿主判定为
+    // "slot entry crashed" 并把整个插件停用，所以任何异常都必须吞掉。
+    var summary;
+    var archived = false;
+    try {
+      summary = useSessions
+        ? useSessions(function (state) { return state && state.byId ? state.byId[sessionId] : undefined; })
+        : undefined;
+    } catch (ignored) { summary = undefined; }
+    try {
+      archived = useWorkspaces
+        ? useWorkspaces(function (state) {
+            return state && Array.isArray(state.archivedSessionIds)
+              ? state.archivedSessionIds.indexOf(sessionId) !== -1
+              : false;
+          })
+        : false;
+    } catch (ignored) { archived = false; }
+
     var at = lastActiveOf(summary);
-    if (at === undefined) return null;
-    var now = Date.now();
-    var level = heatLevelOf(now - at);
-    if (summary && summary.running === true) {
-      return React.createElement('span', {
-        'aria-hidden': 'true',
-        title: tt('running.short'),
-        style: {
-          display: 'inline-block',
-          flex: 'none',
-          width: 8,
-          height: 8,
-          borderRadius: '50%',
-          background: HEAT_INK,
-        },
-      });
+    var level = 0;
+    if (!archived && summary && summary.running !== true && at !== undefined) {
+      level = heatLevelOf(Date.now() - at);
     }
-    if (level <= 0) return null;
-    return React.createElement(RowHeatDot, {
-      level: level,
-      title: tt('dot.tooltip', { level: level, time: relativeOf(at, now) }),
-    });
+
+    // 把热度写进标题下方的背景线；卸载时撤销该会话的规则。
+    React.useEffect(function () {
+      try {
+        setTitleFlowLevel(sessionId, level);
+      } catch (ignored) { /* 样式同步失败不影响侧栏 */ }
+      return function () {
+        try { setTitleFlowLevel(sessionId, 0); } catch (ignored) { /* ignore */ }
+      };
+    }, [sessionId, level]);
+
+    // 行首格完全让给原生状态点与定时任务时钟：这里不渲染任何可见节点。
+    return null;
   }
 
   function SessionHoverHeat(props) {
@@ -2347,7 +2474,7 @@ function build(require) {
       React.createElement('div', { key: 'heat', style: { display: 'flex', alignItems: 'center', gap: 6 } },
         summary && summary.running === true
           ? React.createElement(WorkingTag, { compact: true })
-          : React.createElement(RowHeatDot, { level: level, title: '' }),
+          : React.createElement(RowHeatBar, { level: level, title: '', width: 10, height: 16, align: 'center' }),
         React.createElement('span', null, tt('hover.heat', { level: level, name: heatNameOf(level) })),
       ),
       React.createElement('div', { key: 'at' }, tt('hover.lastActive', { time: relativeOf(at, now) })),
@@ -2516,10 +2643,14 @@ function build(require) {
         '0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--color-blue-500, #3b82f6) 0%, transparent)}',
         '50%{box-shadow:0 0 14px 2px color-mix(in srgb, var(--color-blue-500, #3b82f6) 45%, transparent)}',
         '}',
+        // 标题下划线：常驻整条；活跃会话用 200% 宽的渐变线左右往返，形成"闪动"
+        '@keyframes ah-title-flow{from{background-position-x:0%}to{background-position-x:100%}}',
         // 鲸尾徽标由 GIF 自己的帧序列驱动，这里不再注册动画
         '@media (prefers-reduced-motion: reduce){',
         '@keyframes ah-orbit{from{transform:rotate(0deg)}to{transform:rotate(0deg)}}',
         '@keyframes ah-breathe{0%,100%{box-shadow:none}50%{box-shadow:none}}',
+        // 减少动态时：下划线保留，但停止闪动
+        '[data-row-key^="session:"] [class*="_title"]{animation:none!important}',
         '}',
         // 列表自身的滚动条隐藏：保留滚动能力，右侧用浮标提示可以上下滑
         '.ah-list{scrollbar-width:none;-ms-overflow-style:none;}',

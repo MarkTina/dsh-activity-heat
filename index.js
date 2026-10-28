@@ -2,7 +2,7 @@
  * @local/activity-heat — Host half (no-op).
  *
  * Everything this plugin does lives in the browser half (client.js): the
- * sidebar panel entry, the per-row heat dot and the hover-card heat section.
+ * sidebar panel entry, the persistent heat underline under each session title and the hover-card heat section.
  * This module exists only so the loader entry mounts the package, which lets
  * dsh-client-modules pick up the `dsh.client` declaration and serve the
  * browser artifact to the page. No Host service, session event or projection

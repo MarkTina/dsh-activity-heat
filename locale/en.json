@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Recent Activity",
-    "description": "Heat marks that make the sessions and workspaces with the most recent conversations obvious: a sidebar entry, a per-row heat dot, and a hover-card heat section."
+    "description": "Heat marks that make the sessions and workspaces with the most recent conversations obvious: a sidebar entry, a persistent heat underline beneath each session title, and a hover-card heat section."
   },
   "nav": "Recent Activity",
   "panel": {
