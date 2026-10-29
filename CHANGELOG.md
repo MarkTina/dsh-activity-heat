@@ -1,5 +1,59 @@
 # Changelog
 
+## 0.5.5 — 2026-10-29
+
+- **重绘插件图标（`icon.svg`，白色系）。** 从原来的极简“环+点”改为“会话行 + 热度圆点”：右侧三条长度/深浅递减的会话行代表侧栏会话列表，最上面（最近活跃）那行前是一个带同色脉冲环与极淡热晕的蓝色圆点——对应插件真正在做的事（在列表里标出最近活跃的会话）。底色改为白色圆角卡片 + 极淡描边，适配浅色界面；只有“热度”用品牌蓝 `#3b82f6`，会话文本用中性 slate 灰阶，符合 design.md 的“一个色相只表达一件事”。
+
+## 0.5.4 — 2026-10-29
+
+- **修复侧栏标题圆点/圆环"像被边缘截断"（光晕左侧被裁）。** 根因有两层：① 本环境把 `border-radius:50%` 渲染成 squircle（超椭圆），小圆点四边发平；② 更关键：圆点原来画在 `_title::before` 上，而宿主会话标题 `.wnFoaW_title` 是 `overflow:hidden`，长标题 hover 跑马灯时还会加左 12px 渐隐 `mask-image`——圆点贴着标题内容盒左缘，外发光向左溢出的部分被直接裁掉，跑马灯时圆点本身也会被淡掉。现在把圆点改画在**会话行的 `::before`**（行不裁剪、不参与标题 mask），并给标题加 `padding-left:13px` 占位，文字位置与原来完全一致；同时补 `corner-shape:round`、空心态去掉会填满内圈的 `inset 0 0 4px` 内发光。
+
+## 0.5.3 — 2026-10-29
+
+- **侧栏菜单项改用宿主原生 `MenuItemButton`。** 在 Module Loader lane 下通过 `require('@deepseek-ai/dsh-client-ui-primitives')` 取宿主原生菜单组件，行高、字号、图标槽位、悬停底色与 `separatorBefore` 分隔线完全跟随原生菜单，不再靠手调像素；取不到 primitives 时退回自绘按钮（`AH_CSS` 的 `ah-side-action`）。
+
+## 0.5.2 — 2026-10-29
+
+- **侧栏动作与原生菜单视觉对齐。** 插件动作的文字与图标统一使用 `--dsw-alias-label-primary`（不再继承成灰色），字号改为继承宿主菜单、行内边距 6×8、图标与文字间距 8px，与原生行保持一致。
+- **分组分隔线。** 第一个插件动作（在终端中打开）上方增加一条与菜单同宽的发丝分隔线，把宿主内置动作（置顶/重命名/分叉/归档/复制 ID）与插件附加动作分开。
+
+## 0.5.1 — 2026-10-29
+
+- **侧栏行动作补齐图标。** 0.5.0 新增的「在终端中打开 / 复制标题 / 复制工作目录 / 下载会话日志」只有文字，与宿主原生菜单项不对齐；现在补上 16px、1.4 描边、`currentColor` 的内联 SVG 图标，并把行高与图标间距对齐原生菜单行（`menu.cjs` 增加图标回归断言）。
+
+## 0.5.0 — 2026-10-29
+
+**P0 — 会话管理动作下沉与停止归档**
+
+- **侧栏原生行动作面。** `sidebar.workspaces.session.menu.item` 新增「在终端中打开 / 复制标题 / 复制工作目录 / 下载会话日志」，`sidebar.workspaces.session.row.action` 新增行尾终端按钮；每个席位独立 `safeRegister`，未声明的 slot 只跳过，不影响其他席位。
+- **停止并归档。** 运行中会话的归档项改为「停止并归档…」；确认框展示宿主 `WorkspaceActiveSessionError.activity` 归一后的活动清单，确认后调用 `archiveSession(id, { stopActivity: true })`。普通归档行为不变。
+- **动作目录统一。** 新增 `SESSION_ACTION_DEFS` 作为 id / 文案 / 顺序的单一来源，面板与侧栏共用；侧栏动作统一走 `runSidebarSessionAction`。
+- 测试覆盖：侧栏动作注册、行菜单 4 项 + 行按钮 1 个、停止并归档 `stopActivity` 传参、运行中菜单改名。
+
+## 0.4.1 — 2026-10-29
+
+- **修复启动崩溃（`import failed`）。** 0.4.0 在 `apply` 阶段新增了多个 slot / 服务注册，旧结构把它们放在同一个 `try` 里：任意一个席位冲突（尤其 `conversation.session.header.corner`，该 single slot 已被 ui-sidebar-right 的右侧栏按钮占用）都会中断整段注册并让插件启动失败。现在每个席位独立 `try/catch`，失败只跳过该项，不影响面板与入口。
+- **不再为可选服务建立 inject 依赖。** `commandUi` / `sidebarRightTabs` 改为 `ctx.get` 轮询；服务缺失时既不挂起插件，也不拖垮启动。
+- **激活失败可见。** factory / apply / 席位注册失败改为 `console.error` 输出堆栈，后续崩溃能在 crash log 里直接定位，而不是只显示 “see console”。
+- **移除会话头角落按钮。** 该 single slot 归 ui-sidebar-right 所有；轻量入口保留折叠态徽章与侧栏「更多」菜单。
+- 崩溃恢复会把它从 profile 的 `dsh.profile.bundles` 里移除；重新启用时需把 `@local/activity-heat` 加回该数组。
+
+## 0.4.0 — 2026-10-29
+
+**P1 — 状态语义与触达面**
+
+- **五态状态。** 「等待回答」扩展为三种「等待用户处理」：**等待审批 / 计划待审 / 等待回答**，数据来自宿主的 `pendingInteraction.kind`（approval / plan-review / question），拿不到时退回 `userQuestions` 投影。三者共用同一只琥珀色鲸尾（一个色相只表达“需要你动手”），只换文案与无障碍名称。
+- **范围视图。** 会话视图顶部新增 **常规 / 已归档 / 子代理** 切换：已归档行可直接「恢复会话」，子代理行按父会话归属展示；默认仍是常规（排除归档/子代理/空白）。
+- **轻量触达。** 折叠态徽章（`sidebar.toggle.badge`，显示需要关注的会话数）与侧栏「更多」菜单入口（`sidebar.panellist.actions`）——不打开中央面板也能进入最近活跃。会话头角落按钮因与 ui-sidebar-right 的 single slot 冲突，0.4.1 已移除。
+
+**P2 — 监控、批量与命令**
+
+- **底部活动条**（`shell.bottom`）：只在存在「运行中 / 等待处理」会话时占位，横向列出最多 6 个，点击直接打开；没有活动时不预留高度。
+- **批量操作**：会话视图新增「选择」模式，可多选后 **归档所选 / 置顶所选 / 复制 ID**；运行中的会话批量归档走 `archiveSession(id, { stopActivity: true })`。
+- **右侧栏常驻面板**：注册 `sidebarRightTabs` 类型与 `sidebar.right.pane.tab` 正文，把最近活跃会话停靠在右栏（从右侧栏引导页选择「最近活跃会话」打开），不占主面板。
+- **`/heat` 命令**：通过 `ctx.commandUi` 注册客户端命令，`/heat` 直接进入最近活跃面板。
+- 测试扩展到 21 组断言，覆盖五态、范围视图、三件套、底部条、批量、右侧栏与命令。
+
 ## 0.3.3 — 2026-10-29
 
 - **Three heat bands.** The six-step grey → blue ramp (whose grey-blue middle read muddy in light themes) collapses to three bands: light grey (cold/stale/recent), deep grey (active) and bright blue (warm/blazing).

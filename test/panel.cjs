@@ -167,6 +167,9 @@ function boot(debug, opts) {
   const env = load(debug);
   const regs = [];
   const opened = [];
+  const wsCalls = [];
+  const commandDefs = [];
+  const rightbarDefs = [];
   const shortcutDefs = [];
   const layoutCalls = [];
 
@@ -181,6 +184,12 @@ function boot(debug, opts) {
     uiWorkspace: {
       openSession: (id) => opened.push('session:' + id),
       openWorkspace: (id) => opened.push('workspace:' + id),
+      pinSession: (id) => { wsCalls.push('pin:' + id); return Promise.resolve(); },
+      unpinSession: (id) => { wsCalls.push('unpin:' + id); return Promise.resolve(); },
+      archiveSession: (id, opts) => { wsCalls.push('archive:' + id + (opts && opts.stopActivity ? '!' : '')); return Promise.resolve(); },
+      unarchiveSession: (id) => { wsCalls.push('unarchive:' + id); return Promise.resolve(); },
+      forkSession: (id) => { wsCalls.push('fork:' + id); return Promise.resolve(); },
+      startSession: (id) => { wsCalls.push('start:' + id); return Promise.resolve(); },
     },
     shortcuts: {
       register: (d) => {
@@ -188,6 +197,18 @@ function boot(debug, opts) {
         return () => {};
       },
       catalog: { getSnapshot: () => [] },
+    },
+    commandUi: {
+      register: (c) => {
+        commandDefs.push(c);
+        return () => {};
+      },
+    },
+    sidebarRightTabs: {
+      register: (d) => {
+        rightbarDefs.push(d);
+        return () => {};
+      },
     },
     layout: { selectPanel: (id) => layoutCalls.push(id) },
   };
@@ -208,7 +229,7 @@ function boot(debug, opts) {
     },
   });
 
-  return { env, regs, opened, shortcutDefs, layoutCalls, services };
+  return { env, regs, opened, wsCalls, commandDefs, rightbarDefs, shortcutDefs, layoutCalls, services };
 }
 
 /** 递归展开函数组件，收集按钮、文本与指定组件 props。 */
@@ -243,12 +264,16 @@ function collect(tree) {
   const b = boot(false);
   const withCtx = { ...panelProps, ctx: { get: (n) => b.services[n] } };
 
-  check(
-    b.regs.map((r) => r.o.name).join(',') ===
-      'sidebar.session.row.leading,sidebar.session.row.hover,sidebar.panellist,main',
-    '注册四个 seat',
-    b.regs.map((r) => r.o.name).join(','),
-  );
+  const seatNames = b.regs.map((r) => r.o.name);
+  ['sidebar.session.row.leading', 'sidebar.session.row.hover', 'sidebar.toggle.badge',
+    'sidebar.panellist.actions', 'shell.bottom', 'sidebar.panellist', 'main',
+    'sidebar.right.pane.tab'].forEach((name) => {
+    check(seatNames.indexOf(name) !== -1, '注册 seat ' + name, seatNames.join(','));
+  });
+  check(seatNames.filter((n) => n === 'sidebar.workspaces.session.menu.item').length === 4,
+    '侧栏行菜单注册 4 个插件动作', seatNames.filter((n) => n === 'sidebar.workspaces.session.menu.item').length);
+  check(seatNames.filter((n) => n === 'sidebar.workspaces.session.row.action').length === 1,
+    '侧栏行按钮注册终端动作', seatNames.filter((n) => n === 'sidebar.workspaces.session.row.action').length);
   check(b.regs.find((r) => r.o.name === 'main').o.key === 'activity-heat', 'main 面板 key 与入口 id 一致');
   const panellist = b.regs.find((r) => r.o.name === 'sidebar.panellist');
   check(typeof panellist.o.label === 'function' && panellist.o.label() === '最近活跃会话', '侧栏入口名为「最近活跃会话」');
@@ -263,8 +288,8 @@ function collect(tree) {
   check(all.indexOf('最近活跃会话') === -1, '面板不再渲染标题（视图切换直接打头）');
   check(all.indexOf('会话 6') !== -1, '显示会话总数 6（排除归档/子代理/空白）');
   check(all.indexOf('工作区 3') !== -1, '显示工作区总数');
-  check(all.indexOf('子代理') === -1, '排除子代理会话');
-  check(all.indexOf('已归档') === -1, '排除归档会话');
+  check(!titled.some((x) => String(x.props['aria-label']).indexOf('子代理') !== -1), '排除子代理会话');
+  check(!titled.some((x) => String(x.props['aria-label']).indexOf('已归档') !== -1), '排除归档会话');
 
   const sessionCards = titled.filter((x) => String(x.props['aria-label']).indexOf('打开「') === 0);
   check(sessionCards.length === 6, '默认会话视图展示全部 6 个（默认上限 10）', sessionCards.length);
@@ -380,9 +405,11 @@ function collect(tree) {
   const hotRule = rules.filter((r) => r.indexOf('session:hot') !== -1).join('');
   const recentRule = rules.filter((r) => r.indexOf('session:recent') !== -1).join('');
   check(Boolean(flowStyle), '为会话生成标题前圆点规则');
-  check(hotRule.indexOf('_title"]::before') !== -1, '圆点画在标题的 ::before 上（不占行首格）');
+  check(hotRule.indexOf('[data-row-key="session:hot"]::before') !== -1, '圆点画在会话行的 ::before 上（脱离标题 overflow 裁剪与跑马灯 mask）');
+  check(hotRule.indexOf('padding-left:13px') !== -1, '标题左内边距为圆点留位（文字位置不变）');
   check(hotRule.indexOf('border-radius:50%') !== -1, '圆点形状');
-  check(hotRule.indexOf('top:-2px') !== -1, '圆点上移对齐字形中轴');
+  check(hotRule.indexOf('corner-shape:round') !== -1, '圆点是纯圆（corner-shape:round）');
+  check(hotRule.indexOf('margin-top:-3.5px') !== -1, '圆点垂直居中（不用 transform，避让脉冲动画）');
   check(hotRule.indexOf('background:var(--color-blue-500') !== -1, '最热圆点是纯蓝');
   check(recentRule.indexOf('--dsw-alias-label') !== -1, '低热度圆点走中性灰阶（不再全蓝）');
   check(hotRule.indexOf('border:none') !== -1, '高热为实心无描边');
@@ -795,8 +822,8 @@ function collect(tree) {
   }));
   const all = view.texts.join(' | ');
   check(all.indexOf('等待回答') !== -1, '未回答的提问显示「等待回答」');
-  const tags = view.components.filter((x) => x.name === 'AwaitingTag');
-  check(tags.length === 1, '等待回答用 AwaitingTag', tags.length);
+  const tags = view.components.filter((x) => x.name === 'PendingTag' && x.props.kind === 'question');
+  check(tags.length === 1, '等待回答用 PendingTag(question)', tags.length);
   const css = b.env.styles[0] ? b.env.styles[0].textContent : '';
   check(css.indexOf('--dsw-alias-state-warn-primary') !== -1, '等待回答用宿主 warn 琥珀色');
   check(css.indexOf('ah-awaiting-breathe') !== -1 || css.indexOf('ah-done-breathe 3.2s') !== -1, '等待回答有轻微呼吸');
@@ -824,6 +851,214 @@ function collect(tree) {
   const bothText = bothView.texts.join(' ');
   check(bothText.indexOf('等待回答') !== -1, '等待回答优先于已完成');
   check(bothText.indexOf('已完成') === -1, '等待回答时不显示已完成');
+}
+
+/* ================= 15. 五态：审批 / 计划待审 ================= */
+{
+  const b = boot(false);
+  const reg = b.regs.find((r) => r.o.name === 'main');
+  const injected = typeof reg.o.inject === 'function' ? reg.o.inject() : {};
+  const now = Date.now();
+  const state = {
+    ids: ['a', 'p'],
+    byId: {
+      a: { id: 'a', title: '待审批的会话', updatedAt: now - 60000 },
+      p: { id: 'p', title: '待审计划的会话', updatedAt: now - 60000 },
+    },
+    projectionsBySession: {},
+  };
+  const statuses = new Map([
+    ['a', { pendingInteraction: { kind: 'approval' } }],
+    ['p', { pendingInteraction: { kind: 'plan-review' } }],
+  ]);
+  const view = collect(reg.C({
+    ...injected,
+    useSessions: (sel) => sel(state),
+    useWorkspaces: (sel) => sel({ archivedSessionIds: [], items: [] }),
+    useSessionStatus: (sel) => sel(statuses),
+  }));
+  const all = view.texts.join(' | ');
+  check(all.indexOf('等待审批') !== -1, '读取 pendingInteraction 显示「等待审批」');
+  check(all.indexOf('计划待审') !== -1, '读取 pendingInteraction 显示「计划待审」');
+  const approvals = view.components.filter((x) => x.name === 'PendingTag' && x.props.kind === 'approval');
+  const plans = view.components.filter((x) => x.name === 'PendingTag' && x.props.kind === 'plan-review');
+  check(approvals.length === 1, '审批用 PendingTag(approval)', approvals.length);
+  check(plans.length === 1, '计划审阅用 PendingTag(plan-review)', plans.length);
+}
+
+/* ================= 16. 范围视图：已归档 / 子代理 ================= */
+{
+  const b = boot(false);
+  const reg = b.regs.find((r) => r.o.name === 'main');
+  const injected = typeof reg.o.inject === 'function' ? reg.o.inject() : {};
+
+  const archivedView = collect(reg.C({
+    ...injected,
+    initialRange: 'archived',
+    useSessions: (sel) => sel(sessions),
+    useWorkspaces: (sel) => sel(workspaces),
+  }));
+  const archivedLabels = archivedView.buttons
+    .filter((x) => x.props['aria-label'])
+    .map((x) => String(x.props['aria-label']));
+  check(archivedLabels.some((l) => l.indexOf('已归档') !== -1), '归档范围显示已归档会话', archivedLabels.join(','));
+  check(!archivedLabels.some((l) => l.indexOf('炽热会话') !== -1), '归档范围不显示常规会话');
+  const archivedCard = archivedView.components.find(
+    (x) => x.name === 'SessionCard' && x.props.session && x.props.session.archived === true,
+  );
+  check(Boolean(archivedCard), '归档卡片带 archived 标记');
+  check(
+    Boolean(archivedCard && (archivedCard.props.menuItems || []).some((i) => i.id === 'restore')),
+    '归档卡片菜单含「恢复会话」',
+  );
+
+  const subView = collect(reg.C({
+    ...injected,
+    initialRange: 'subagent',
+    useSessions: (sel) => sel(sessions),
+    useWorkspaces: (sel) => sel(workspaces),
+  }));
+  const subLabels = subView.buttons
+    .filter((x) => x.props['aria-label'])
+    .map((x) => String(x.props['aria-label']));
+  check(subLabels.some((l) => l.indexOf('子代理') !== -1), '子代理范围显示子代理会话', subLabels.join(','));
+  check(!subLabels.some((l) => l.indexOf('炽热会话') !== -1), '子代理范围不显示常规会话');
+}
+
+/* ================= 17. 轻量触达：徽章 / 更多菜单 / 会话头角落 ================= */
+{
+  const b = boot(false);
+
+  const badgeReg = b.regs.find((r) => r.o.name === 'sidebar.toggle.badge');
+  check(Boolean(badgeReg), '注册折叠徽章 seat');
+  const badgeInj = badgeReg && typeof badgeReg.o.inject === 'function' ? badgeReg.o.inject() : {};
+  const badge = collect(badgeReg.C({
+    ...badgeInj,
+    useSessions: (sel) => sel({ ids: ['run', 'hot'], byId: { run: { id: 'run', running: true }, hot: { id: 'hot' } } }),
+  }));
+  check(badge.texts.join('').indexOf('1') !== -1, '徽章统计运行中会话数', badge.texts.join(''));
+  const emptyBadge = collect(badgeReg.C({
+    ...badgeInj,
+    useSessions: (sel) => sel({ ids: [], byId: {} }),
+  }));
+  check(emptyBadge.texts.length === 0, '无关注会话时徽章不渲染');
+
+  const moreReg = b.regs.find((r) => r.o.name === 'sidebar.panellist.actions');
+  check(Boolean(moreReg), '注册「更多」菜单 seat');
+  const moreInj = moreReg && typeof moreReg.o.inject === 'function' ? moreReg.o.inject() : {};
+  let opened = null;
+  let dismissed = false;
+  const more = collect(moreReg.C({
+    ...moreInj,
+    onOpen: (id) => { opened = id; },
+    onDismiss: () => { dismissed = true; },
+  }));
+  check(more.texts.join('').indexOf('最近活跃会话') !== -1, '更多菜单行文案');
+  const moreBtn = more.buttons[0];
+  check(Boolean(moreBtn), '更多菜单行是按钮');
+  if (moreBtn && typeof moreBtn.props.onClick === 'function') moreBtn.props.onClick();
+  check(opened === 'activity-heat', '更多菜单点击打开面板', opened);
+  check(dismissed, '更多菜单点击后关闭');
+}
+
+/* ================= 18. 底部活动条 ================= */
+{
+  const b = boot(false);
+  const reg = b.regs.find((r) => r.o.name === 'shell.bottom');
+  check(Boolean(reg), '注册底部活动条 seat');
+  const inj = reg && typeof reg.o.inject === 'function' ? reg.o.inject() : {};
+  const view = collect(reg.C({
+    ...inj,
+    useSessions: (sel) => sel({
+      ids: ['run', 'hot'],
+      byId: {
+        run: { id: 'run', title: '运行中', running: true, updatedAt: 1 },
+        hot: { id: 'hot', title: '空闲', updatedAt: 2 },
+      },
+    }),
+    useWorkspaces: (sel) => sel({ archivedSessionIds: [], items: [] }),
+  }));
+  check(view.texts.join(' ').indexOf('运行中') !== -1, '活动条列出运行中会话');
+  check(view.texts.join(' ').indexOf('空闲') === -1, '活动条不含空闲会话');
+  const chip = view.buttons[0];
+  check(Boolean(chip), '活动条 chip 是按钮');
+  if (chip && typeof chip.props.onClick === 'function') chip.props.onClick();
+  check(b.opened.indexOf('session:run') !== -1, '点击 chip 打开会话', b.opened.join(','));
+  const none = collect(reg.C({
+    ...inj,
+    useSessions: (sel) => sel({ ids: [], byId: {} }),
+    useWorkspaces: (sel) => sel({ archivedSessionIds: [], items: [] }),
+  }));
+  check(none.texts.length === 0, '无活动时活动条不渲染');
+}
+
+/* ================= 19. 批量操作 ================= */
+{
+  const b = boot(false);
+  const reg = b.regs.find((r) => r.o.name === 'main');
+  const injected = typeof reg.o.inject === 'function' ? reg.o.inject() : {};
+  const view = collect(reg.C({
+    ...injected,
+    initialSelectMode: true,
+    initialSelected: ['run', 'hot'],
+    useSessions: (sel) => sel(sessions),
+    useWorkspaces: (sel) => sel(workspaces),
+  }));
+  const all = view.texts.join(' | ');
+  check(all.indexOf('已选 2') !== -1, '批量条显示已选数量', all);
+  check(all.indexOf('✓') !== -1, '选中卡片显示勾选标记');
+  const labels = view.buttons.map((x) => String((x.children && x.children[0]) || ''));
+  check(labels.indexOf('归档所选') !== -1, '批量条含归档所选');
+  check(labels.indexOf('置顶所选') !== -1, '批量条含置顶所选');
+  check(labels.indexOf('复制 ID') !== -1, '批量条含复制 ID');
+
+  const archBtn = view.buttons.find((x) => String((x.children && x.children[0]) || '') === '归档所选');
+  check(Boolean(archBtn), '找到归档所选按钮');
+  if (archBtn && typeof archBtn.props.onClick === 'function') archBtn.props.onClick();
+  check(b.wsCalls.some((c) => c === 'archive:hot'), '批量归档调用 archiveSession', b.wsCalls.join(','));
+  check(b.wsCalls.some((c) => c === 'archive:run!'), '运行中会话走 stopActivity 归档', b.wsCalls.join(','));
+
+  const pinBtn = view.buttons.find((x) => String((x.children && x.children[0]) || '') === '置顶所选');
+  if (pinBtn && typeof pinBtn.props.onClick === 'function') pinBtn.props.onClick();
+  check(b.wsCalls.some((c) => c === 'pin:run'), '批量置顶调用 pinSession', b.wsCalls.join(','));
+}
+
+/* ================= 20. 斜杠命令 /heat ================= */
+{
+  const b = boot(false);
+  check(b.commandDefs.length === 1, '注册了 /heat 命令', b.commandDefs.length);
+  const d = b.commandDefs[0] || {};
+  check(d.name === 'heat', '命令名为 heat');
+  check(d.ui && d.ui.kind === 'action', '命令是客户端 action');
+  check(typeof d.available === 'function' && d.available() === true, '命令默认可用');
+  if (d.ui && typeof d.ui.run === 'function') d.ui.run({});
+  check(b.layoutCalls[b.layoutCalls.length - 1] === 'activity-heat', '执行命令进入面板', b.layoutCalls.join(','));
+}
+
+/* ================= 21. 右侧栏常驻面板 ================= */
+{
+  const b = boot(false);
+  check(b.rightbarDefs.length === 1, '注册右侧栏 tab 类型', b.rightbarDefs.length);
+  const def = b.rightbarDefs[0] || {};
+  check(def.id === '@local/activity-heat/active', 'tab 类型 id 正确');
+  check(def.kind === 'activity-heat.active', 'tab kind 正确');
+  check(Array.isArray(def.guide) && def.guide.length === 1, 'tab 类型含引导入口');
+
+  const bodyReg = b.regs.find((r) => r.o.name === 'sidebar.right.pane.tab');
+  check(Boolean(bodyReg), '注册右侧栏正文 seat');
+  check(bodyReg && bodyReg.o.key === '@local/activity-heat/active', '正文 seat key 与类型 id 一致');
+
+  const inj = bodyReg && typeof bodyReg.o.inject === 'function' ? bodyReg.o.inject() : {};
+  const view = collect(bodyReg.C({
+    ...inj,
+    useSessions: (sel) => sel(sessions),
+    useWorkspaces: (sel) => sel(workspaces),
+  }));
+  check(view.texts.join(' ').indexOf('炽热会话') !== -1, '右侧栏列出最近活跃会话');
+  const rowBtn = view.buttons.find((x) => String(x.props['aria-label'] || '').indexOf('炽热会话') !== -1);
+  check(Boolean(rowBtn), '右侧栏行是按钮');
+  if (rowBtn && typeof rowBtn.props.onClick === 'function') rowBtn.props.onClick();
+  check(b.opened.indexOf('session:hot') !== -1, '右侧栏点击打开会话', b.opened.join(','));
 }
 
 console.log(failed === 0 ? '\nHARNESS PASSED' : '\nHARNESS FAILED (' + failed + ')');

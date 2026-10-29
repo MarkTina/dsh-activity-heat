@@ -111,11 +111,18 @@ for (const item of waiting) {
   if (missing.length === 0) item.cb({ ...services, get: (n) => services[n], effect: runEffect });
 }
 
-assert(
-  seatRegs.map((r) => r.o.name).join(',') ===
-    'sidebar.session.row.leading,sidebar.session.row.hover,sidebar.panellist,main',
-  'slots 就绪后四个 seat 全部注册',
-);
+{
+  const names = seatRegs.map((r) => r.o.name);
+  ['sidebar.session.row.leading', 'sidebar.session.row.hover', 'sidebar.toggle.badge',
+    'sidebar.panellist.actions', 'shell.bottom', 'sidebar.panellist', 'main',
+    'sidebar.right.pane.tab'].forEach((name) => {
+    assert(names.includes(name), 'slots 就绪后注册 ' + name);
+  });
+  assert(names.filter((n) => n === 'sidebar.workspaces.session.menu.item').length === 4,
+    '侧栏行菜单注册 4 个插件动作');
+  assert(names.filter((n) => n === 'sidebar.workspaces.session.row.action').length === 1,
+    '侧栏行按钮注册终端动作');
+}
 assert(shortcutRegs.length === 1, '快捷键没有被重复注册');
 
 /* ---------- 场景 B：slots 一开始就绪（开关插件后的情况） ---------- */
@@ -147,7 +154,7 @@ plugin.apply({
   },
 });
 
-assert(seatRegs2.length === 4, 'slots 就绪时立即注册四个 seat');
+assert(seatRegs2.length === 13, 'slots 就绪时立即注册 8 个核心 seat + 4 个侧栏菜单动作 + 1 个行按钮');
 assert(shortcutRegs2.length === 1, 'slots 就绪时快捷键也注册');
 assert(shortcutRegs2[0].defaults['web:windows'].code === 'KeyH', '默认组合键为 KeyH（Ctrl+Alt+H）');
 

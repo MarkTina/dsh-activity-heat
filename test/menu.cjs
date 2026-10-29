@@ -249,8 +249,8 @@ const services = {
       calls.push(['unpin', id]);
       return Promise.resolve();
     },
-    archiveSession: (id) => {
-      calls.push(['archive', id]);
+    archiveSession: (id, options) => {
+      calls.push(['archive', id, options]);
       return Promise.resolve();
     },
     unarchiveSession: (id) => {
@@ -415,8 +415,12 @@ function reset() {
   view = render();
   items = itemsOf(menuOf(view));
   const runArchive = items.find((item) => item.id === 'archive');
-  check(runArchive.disabled === true, '运行中会话禁用归档');
-  check(runArchive.hint === '正在运行，请先停止', '运行中归档显示原因');
+  check(runArchive.disabled !== true, '运行中会话可停止并归档');
+  check(runArchive.label === '停止并归档…', '运行中归档改名为停止并归档');
+  runArchive.onSelect();
+  view = render();
+  const stopConfirm = view.components.find((entry) => entry.name === 'ConfirmArchive' && entry.props.open);
+  check(Boolean(stopConfirm) && stopConfirm.props.stop === true, '运行中归档打开停止确认');
 
   /* 复制 */
   reset();
@@ -486,6 +490,81 @@ function reset() {
   confirmButton.props.onClick();
   await flush();
   check(calls.some((call) => call[0] === 'archive' && call[1] === 'hot'), '确认后调用 archiveSession');
+
+  /* 停止并归档：运行中的会话传 stopActivity */
+  reset();
+  view = render();
+  rightClick(cardByTitle(view, '运行中的会话'));
+  view = render();
+  itemsOf(menuOf(view)).find((item) => item.id === 'archive').onSelect();
+  view = render();
+  const stopDlg = view.components.find((entry) => entry.name === 'ConfirmArchive' && entry.props.open);
+  const stopButtons = buttonsOf(stopDlg.type(stopDlg.props));
+  const stopButton = stopButtons.find((button) => String((button.children && button.children[0]) || '') === '停止并归档');
+  check(Boolean(stopButton), '停止确认框有「停止并归档」按钮');
+  stopButton.props.onClick();
+  await flush();
+  check(
+    calls.some((call) => call[0] === 'archive' && call[1] === 'run' && call[2] && call[2].stopActivity === true),
+    '确认后以 stopActivity 归档运行中会话',
+  );
+
+  /* 归档被拒时升级为停止并归档，并列出仍在跑的工作 */
+  {
+    const original = services.uiWorkspace.archiveSession;
+    services.uiWorkspace.archiveSession = () => Promise.reject({
+      message: 'session is active',
+      activity: { turn: [{ title: '进行中的回合' }] },
+    });
+    reset();
+    view = render();
+    rightClick(cardByTitle(view, '炽热会话'));
+    view = render();
+    itemsOf(menuOf(view)).find((item) => item.id === 'archive').onSelect();
+    view = render();
+    const firstDialog = view.components.find((entry) => entry.name === 'ConfirmArchive' && entry.props.open);
+    const firstButtons = buttonsOf(firstDialog.type(firstDialog.props));
+    firstButtons.find((button) => String((button.children && button.children[0]) || '') === '归档').props.onClick();
+    await flush();
+    view = render();
+    const upgraded = view.components.find((entry) => entry.name === 'ConfirmArchive' && entry.props.open);
+    check(Boolean(upgraded) && upgraded.props.stop === true, '归档被拒后升级为停止并归档');
+    check(
+      Boolean(upgraded) && Array.isArray(upgraded.props.activity)
+        && upgraded.props.activity.join(' ').indexOf('进行中的回合') !== -1,
+      '确认框列出仍在运行的工作',
+      upgraded && JSON.stringify(upgraded.props.activity),
+    );
+    services.uiWorkspace.archiveSession = original;
+  }
+
+  /* 侧栏原生行菜单动作 */
+  {
+    const termReg = regs.find((entry) => entry.options.id === 'ah-terminal');
+    check(Boolean(termReg), '侧栏行菜单注册「在终端中打开」');
+    const inj = termReg && typeof termReg.options.inject === 'function' ? termReg.options.inject() : {};
+    let menuClosed = false;
+    const node = termReg.Component({
+      ...inj,
+      sessionId: 'hot',
+      displayTitle: '炽热会话',
+      useSessions: (sel) => sel({ byId: { hot: { id: 'hot', cwd: 'D:/p/alpha' } } }),
+      useMenuOpenState: () => [true, (value) => { menuClosed = value === false; }],
+    });
+    check(Boolean(node) && node.type === 'button', '侧栏动作是一个菜单按钮');
+    const childNodes = Array.isArray(node.children) ? node.children.flat(2) : [];
+    check(
+      childNodes.some((child) => child && child.type === 'svg'),
+      '侧栏动作带与原生菜单一致的图标',
+    );
+    check(String(node.props.className || '').indexOf('ah-side-action--group') !== -1,
+      '插件动作分组前有分隔线标记');
+    node.props.onClick();
+    await flush();
+    check(terminalCalls.length > 0 && terminalCalls[terminalCalls.length - 1].path === 'D:/p/alpha',
+      '侧栏终端动作打开会话目录', JSON.stringify(terminalCalls));
+    check(menuClosed, '侧栏动作点击后关闭宿主菜单');
+  }
 
   /* 重命名 */
   reset();

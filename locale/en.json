@@ -16,6 +16,7 @@
     "noHostData": "Session data is not available."
   },
   "filter": { "all": "All" },
+  "range": { "active": "Active", "archived": "Archived", "subagent": "Subagents" },
   "level": {
     "hot": "Blazing",
     "warm": "Warm",
@@ -50,7 +51,11 @@
     "done": "Done",
     "doneTitle": "Finished, not viewed yet",
     "awaiting": "Waiting",
-    "awaitingTitle": "This session is waiting for your answer"
+    "awaitingTitle": "This session is waiting for your answer",
+    "approval": "Approval",
+    "approvalTitle": "This session is waiting for your approval",
+    "planReview": "Review plan",
+    "planReviewTitle": "This session plan is waiting for review"
   },
   "fact": {
     "turns": "{n} turns",
@@ -84,7 +89,21 @@
     "openWorkspaceTitle": "Open workspace “{name}”"
   },
   "sidebar": { "rowLabel": "Heat", "hoverLabel": "Heat" },
+  "badge": { "title": "{count} sessions need attention" },
+  "bottom": { "title": "Active {count}", "more": "+{count}", "open": "Open “{title}”" },
+  "batch": {
+    "select": "Select",
+    "exit": "Exit select",
+    "count": "{count} selected",
+    "archive": "Archive selected",
+    "pin": "Pin selected",
+    "copy": "Copy IDs",
+    "archived": "Archived {count} sessions",
+    "pinned": "Pinned {count} sessions"
+  },
   "shortcut": { "label": "Recent Activity" },
+  "command": { "openLabel": "Recent Activity", "openDesc": "Open the recent activity panel" },
+  "rightbar": { "title": "Recent Activity", "guideTitle": "Recent Activity", "guideDesc": "Dock recently active sessions in the right sidebar", "empty": "No recent activity" },
   "tokens": {
     "title": "Token usage",
     "cacheHit": "Cache hit",
@@ -120,6 +139,10 @@
     "downloadLog": "Download session log",
     "archive": "Archive session",
     "archiveRunningHint": "Running — stop it first",
+    "stopArchive": "Stop and archive…",
+    "stopArchiveHint": "Stops the running turn, subagents, jobs and schedules first",
+    "unarchive": "Restore session",
+    "archivedOpenHint": "Archived — restore it first",
     "unavailable": "Not supported by this host",
     "openTerminal": "Open in terminal",
     "openWith": "Open in…",
@@ -133,6 +156,7 @@
     "renamed": "Renamed",
     "forked": "Branch created",
     "archived": "Archived",
+    "archivedStopped": "Stopped and archived",
     "unarchived": "Restored",
     "undo": "Undo",
     "openedWith": "Opened in {app}",
@@ -143,6 +167,11 @@
     "archiveBody": "“{title}” leaves the recent list and can be restored from archived sessions in the sidebar.",
     "archiveConfirm": "Archive",
     "archiving": "Archiving…",
+    "stopArchiveTitle": "Stop and archive?",
+    "stopArchiveBody": "“{title}” is still running. Continuing stops its running turn, subagents, jobs and schedules first, then archives it; stopping is irreversible.",
+    "stopArchiveConfirm": "Stop and archive",
+    "stopping": "Stopping…",
+    "activityTitle": "Still running",
     "renameTitle": "Rename session",
     "renamePlaceholder": "Session title",
     "save": "Save",

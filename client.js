@@ -46,6 +46,7 @@ var AH_I18N = /* AH_I18N_START */ {
       stale: '陈旧',
       cold: '冷却',
     },
+    range: { active: '常规', archived: '已归档', subagent: '子代理' },
     hover: {
       heat: '热度 {level}/5 · {name}',
       heatLevel: '热度 {level}/5',
@@ -73,6 +74,10 @@ var AH_I18N = /* AH_I18N_START */ {
       doneTitle: '该会话已完成，尚未查看',
       awaiting: '等待回答',
       awaitingTitle: '该会话在等待你的回答',
+      approval: '等待审批',
+      approvalTitle: '该会话在等待你的授权',
+      planReview: '计划待审',
+      planReviewTitle: '该会话的计划在等待你审阅',
     },
     fact: {
       turns: '{n} 轮',
@@ -106,6 +111,18 @@ var AH_I18N = /* AH_I18N_START */ {
       openWorkspaceTitle: '打开工作区「{name}」',
     },
     sidebar: { rowLabel: '热点', hoverLabel: '热度' },
+    badge: { title: '{count} 个会话需要关注' },
+    bottom: { title: '活跃会话 {count}', more: '+{count}', open: '打开「{title}」' },
+    batch: {
+      select: '选择',
+      exit: '退出选择',
+      count: '已选 {count}',
+      archive: '归档所选',
+      pin: '置顶所选',
+      copy: '复制 ID',
+      archived: '已归档 {count} 个会话',
+      pinned: '已置顶 {count} 个会话',
+    },
     tokens: {
       title: 'Token 用量',
       cacheHit: '缓存命中',
@@ -115,6 +132,8 @@ var AH_I18N = /* AH_I18N_START */ {
       output: '输出',
     },
     shortcut: { label: '最近活跃会话' },
+    command: { openLabel: '最近活跃会话', openDesc: '打开最近活跃会话面板' },
+    rightbar: { title: '最近活跃', guideTitle: '最近活跃会话', guideDesc: '把最近活跃会话停靠在右侧栏', empty: '暂无最近活动' },
     relative: {
       now: '刚刚',
       minutes: '{n} 分钟前',
@@ -142,6 +161,10 @@ var AH_I18N = /* AH_I18N_START */ {
       downloadLog: '下载会话日志',
       archive: '归档会话',
       archiveRunningHint: '正在运行，请先停止',
+      stopArchive: '停止并归档…',
+      stopArchiveHint: '先停止进行中的回合、子代理、后台任务与定时提醒',
+      unarchive: '恢复会话',
+      archivedOpenHint: '已归档，请先恢复',
       unavailable: '当前宿主不支持',
       openTerminal: '在终端中打开',
       openWith: '在其他应用中打开…',
@@ -155,6 +178,7 @@ var AH_I18N = /* AH_I18N_START */ {
       renamed: '已重命名',
       forked: '已创建分支',
       archived: '已归档',
+      archivedStopped: '已停止并归档',
       unarchived: '已恢复',
       undo: '撤销',
       openedWith: '已在 {app} 中打开',
@@ -165,6 +189,11 @@ var AH_I18N = /* AH_I18N_START */ {
       archiveBody: '「{title}」会从最近活跃列表移除，可在侧栏的已归档会话中恢复。',
       archiveConfirm: '归档',
       archiving: '归档中…',
+      stopArchiveTitle: '停止并归档？',
+      stopArchiveBody: '「{title}」仍在运行。继续会先停止它进行中的回合、子代理、后台任务与定时提醒，然后归档；停止不可逆。',
+      stopArchiveConfirm: '停止并归档',
+      stopping: '正在停止…',
+      activityTitle: '仍在运行的工作',
       renameTitle: '重命名会话',
       renamePlaceholder: '会话标题',
       save: '保存',
@@ -248,6 +277,7 @@ var AH_I18N = /* AH_I18N_START */ {
       stale: 'Stale',
       cold: 'Cold',
     },
+    range: { active: 'Active', archived: 'Archived', subagent: 'Subagents' },
     hover: {
       heat: 'Heat {level}/5 · {name}',
       heatLevel: 'Heat {level}/5',
@@ -275,6 +305,10 @@ var AH_I18N = /* AH_I18N_START */ {
       doneTitle: 'Finished, not viewed yet',
       awaiting: 'Waiting',
       awaitingTitle: 'This session is waiting for your answer',
+      approval: 'Approval',
+      approvalTitle: 'This session is waiting for your approval',
+      planReview: 'Review plan',
+      planReviewTitle: 'This session plan is waiting for review',
     },
     fact: {
       turns: '{n} turns',
@@ -308,6 +342,18 @@ var AH_I18N = /* AH_I18N_START */ {
       openWorkspaceTitle: 'Open workspace “{name}”',
     },
     sidebar: { rowLabel: 'Heat', hoverLabel: 'Heat' },
+    badge: { title: '{count} sessions need attention' },
+    bottom: { title: 'Active {count}', more: '+{count}', open: 'Open “{title}”' },
+    batch: {
+      select: 'Select',
+      exit: 'Exit select',
+      count: '{count} selected',
+      archive: 'Archive selected',
+      pin: 'Pin selected',
+      copy: 'Copy IDs',
+      archived: 'Archived {count} sessions',
+      pinned: 'Pinned {count} sessions',
+    },
     tokens: {
       title: 'Token usage',
       cacheHit: 'Cache hit',
@@ -317,6 +363,8 @@ var AH_I18N = /* AH_I18N_START */ {
       output: 'Output',
     },
     shortcut: { label: 'Recent Activity' },
+    command: { openLabel: 'Recent Activity', openDesc: 'Open the recent activity panel' },
+    rightbar: { title: 'Recent Activity', guideTitle: 'Recent Activity', guideDesc: 'Dock recently active sessions in the right sidebar', empty: 'No recent activity' },
     relative: {
       now: 'just now',
       minutes: '{n} min ago',
@@ -344,6 +392,10 @@ var AH_I18N = /* AH_I18N_START */ {
       downloadLog: 'Download session log',
       archive: 'Archive session',
       archiveRunningHint: 'Running — stop it first',
+      stopArchive: 'Stop and archive…',
+      stopArchiveHint: 'Stops the running turn, subagents, jobs and schedules first',
+      unarchive: 'Restore session',
+      archivedOpenHint: 'Archived — restore it first',
       unavailable: 'Not supported by this host',
       openTerminal: 'Open in terminal',
       openWith: 'Open in…',
@@ -357,6 +409,7 @@ var AH_I18N = /* AH_I18N_START */ {
       renamed: 'Renamed',
       forked: 'Branch created',
       archived: 'Archived',
+      archivedStopped: 'Stopped and archived',
       unarchived: 'Restored',
       undo: 'Undo',
       openedWith: 'Opened in {app}',
@@ -367,6 +420,11 @@ var AH_I18N = /* AH_I18N_START */ {
       archiveBody: '“{title}” leaves the recent list and can be restored from archived sessions in the sidebar.',
       archiveConfirm: 'Archive',
       archiving: 'Archiving…',
+      stopArchiveTitle: 'Stop and archive?',
+      stopArchiveBody: '“{title}” is still running. Continuing stops its running turn, subagents, jobs and schedules first, then archives it; stopping is irreversible.',
+      stopArchiveConfirm: 'Stop and archive',
+      stopping: 'Stopping…',
+      activityTitle: 'Still running',
       renameTitle: 'Rename session',
       renamePlaceholder: 'Session title',
       save: 'Save',
@@ -461,8 +519,8 @@ window.__ModuleLoader__.load({
     try {
       return build(require);
     } catch (error) {
-      // 关键防线：factory 永不抛出。
-      ahWarn('[activity-heat] factory failed, plugin disabled:', error && error.message);
+      // 关键防线：factory 永不抛出；但激活失败必须留下可诊断的错误。
+      try { console.error('[activity-heat] factory failed, plugin disabled:', error && (error.stack || error.message)); } catch (ignored) {}
       return { apply: function noop() {} };
     }
   },
@@ -486,12 +544,25 @@ function build(require) {
     ReactDOM = null;
   }
 
+  // 宿主 UI primitives（Module Loader 的 baseline external）。能拿到就用原生
+  // MenuItemButton，行高/字号/图标槽位/分隔线/悬停与原生菜单完全一致；
+  // 测试或其它加载 lane 拿不到时退回自绘按钮（样式见 AH_CSS 的 ah-side-action）。
+  var Primitives = null;
+  try {
+    Primitives = require('@deepseek-ai/dsh-client-ui-primitives');
+  } catch (error) {
+    Primitives = null;
+  }
+
   var MINUTE = 60000;
   var HOUR = 60 * MINUTE;
   var DAY = 24 * HOUR;
 
   /** 字典命名空间，与 package name 一致（宿主按此注册与绑定）。 */
   var NS = '@local/activity-heat';
+  /** 右侧栏 tab 类型身份：类型 id 与 kind 都由本插件拥有。 */
+  var RIGHTBAR_ID = '@local/activity-heat/active';
+  var RIGHTBAR_KIND = 'activity-heat.active';
 
   /** 把嵌套字典压成 `a.b.c` 形式的平表，供 t() 与 ctx.locale 使用。 */
   function flattenDict(source, prefix, out) {
@@ -950,6 +1021,14 @@ function build(require) {
     '.ah-list{scrollbar-width:none;-ms-overflow-style:none;}',
     '.ah-list::-webkit-scrollbar{width:0;height:0;display:none;}',
 
+    /* ---------- 侧栏原生行菜单：插件动作对齐宿主原生行 ---------- */
+    '.ah-side-action{color:var(--dsw-alias-label-primary, inherit);background:transparent;border:0;font:inherit;}',
+    '.ah-side-action:hover{background:var(--dsw-alias-interactive-bg-hover, color-mix(in srgb, currentColor 8%, transparent));}',
+    '.ah-side-action[aria-disabled="true"]{opacity:.45;cursor:default;}',
+    '.ah-side-action--group{position:relative;margin-top:7px;}',
+    '.ah-side-action--group::before{content:"";position:absolute;left:-8px;right:-8px;top:-4px;height:1px;',
+    'background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.18)) 72%, transparent);}',
+
     /* ---------- 减少动态 ---------- */
     '@media (prefers-reduced-motion: reduce){',
     '@keyframes ah-orbit{from{transform:rotate(0deg)}to{transform:rotate(0deg)}}',
@@ -961,7 +1040,7 @@ function build(require) {
     '.ah-menu,.ah-dialog,.ah-toast{',
     'animation:none!important;transition:none!important;}',
     '.ah-card:hover{transform:none;box-shadow:none;}',
-    '[data-row-key^="session:"] [class*="_title"]::before{animation:none!important}',
+    '[data-row-key^="session:"]::before{animation:none!important}',
     '}',
   ].join('');
 
@@ -1358,6 +1437,19 @@ function build(require) {
    * 提示词仍来自 `contextTimeline`（状态栏不展示提示词）。
    * 宿主未提供这些投影时，回退到旧版 `contextTimeline` 的字段。
    */
+  /**
+   * 从客户端状态域（useSessionStatus / uiSession）取出"等待用户处理"的分类。
+   * 宿主的 pendingInteraction.kind 只有三种：approval / plan-review / question。
+   * 读不到状态域时返回 undefined，由调用方退回 userQuestions 投影。
+   */
+  function pendingKindOf(status) {
+    try {
+      var kind = status && status.pendingInteraction && status.pendingInteraction.kind;
+      if (kind === 'approval' || kind === 'plan-review' || kind === 'question') return kind;
+    } catch (ignored) { /* 状态结构未知时静默降级 */ }
+    return undefined;
+  }
+
   function factsFromProjection(projections) {
     var out = {};
     try {
@@ -1474,7 +1566,12 @@ function build(require) {
   }
 
   /** 派生活动模型。 */
-  function buildModel(sessionState, workspaceState, now, topCount, groupCount) {
+  function buildModel(sessionState, workspaceState, now, topCount, groupCount, opts) {
+    opts = opts || {};
+    // 范围：常规（排除归档/子代理）/ 已归档 / 子代理；非 sessions 视图一律走常规。
+    var range = opts.range === 'archived' || opts.range === 'subagent' ? opts.range : 'active';
+    // 状态读取器：由宿主 useSessionStatus 注入，拿不到时退回 userQuestions 投影。
+    var statusOf = typeof opts.statusOf === 'function' ? opts.statusOf : undefined;
     var limitTop = typeof topCount === 'number' && topCount > 0 ? topCount : 8;
     var limitGroups = typeof groupCount === 'number' && groupCount > 0 ? groupCount : 20;
     var ids = sessionState && Array.isArray(sessionState.ids) ? sessionState.ids : [];
@@ -1503,15 +1600,31 @@ function build(require) {
     var hasSelection = selected !== null;
     for (var i = 0; i < ids.length; i += 1) {
       var id = ids[i];
-      if (archivedOf[String(id)]) continue;
       var summary = byId[id];
-      if (!summary || summary.origin === 'subagent') continue;
+      if (!summary) continue;
+      var isArchived = archivedOf[String(id)] === true;
+      var isSubagent = summary.origin === 'subagent';
+      if (range === 'active') {
+        if (isArchived || isSubagent) continue;
+      } else if (range === 'archived') {
+        if (!isArchived || isSubagent) continue;
+      } else if (!isSubagent) {
+        continue;
+      }
+      if (range !== 'active' && summary.blank === true) continue;
       var at = lastActiveOf(summary);
       var facts = factsFromProjection(projections[id]);
       var open = hasSelection
         ? selected[String(id)] === true
         : Boolean(summary.retainedBy && summary.retainedBy.mainView > 0);
       var running = summary.running === true;
+      // 等待用户处理：优先取 client 侧 pendingInteraction（审批/计划/提问），
+      // 拿不到状态域时退回宿主的 userQuestions 投影（只覆盖提问）。
+      var pending;
+      if (statusOf) {
+        try { pending = pendingKindOf(statusOf(id)); } catch (ignored) { pending = undefined; }
+      }
+      if (!pending && facts.awaiting === true) pending = 'question';
       // 宿主的 updatedAt 只在一轮开始/结束刷新，长任务运行中不会更新；
       // 因此"正在工作"不能只按时间算，否则会被 10 分钟前的空闲会话压下去。
       // 运行中的会话按最高热度计（level 5），真实时间仍留给右侧的"最后活动"。
@@ -1532,7 +1645,11 @@ function build(require) {
         open: open,
         running: running,
         done: doneUnseenOf(id, at, running, open, now),
-        awaiting: facts.awaiting === true,
+        pending: pending,
+        awaiting: pending === 'question' || facts.awaiting === true,
+        archived: isArchived,
+        subagent: isSubagent,
+        parentSessionId: typeof summary.parentSessionId === 'string' ? summary.parentSessionId : undefined,
         turns: facts.turns,
         steps: facts.steps,
         tokens: facts.tokens,
@@ -1646,7 +1763,7 @@ function build(require) {
     };
   }
 
-  /* ---------------- 标题下划线（热度） ---------------- */
+  /* ---------------- 标题前圆点（热度） ---------------- */
 
   /**
    * 热度改用「会话标题文字前一个小圆点」表达，不再占用行首 16px 格。
@@ -1657,7 +1774,8 @@ function build(require) {
    *
    * 做法：行首 slot 仍然注册，但组件只借这个 seat 读到本行 sessionId 与热度，
    * 把规则写进一个 `<style id="activity-heat-title-dot">`，然后 `return null`——
-   * 行首不渲染任何可见节点；圆点画在标题元素的 `::before` 上，不新增 DOM、不占布局。
+   * 行首不渲染任何可见节点；圆点画在**会话行**的 `::before` 上（用标题 `padding-left`
+   * 占位，视觉上仍在标题文字前），不新增 DOM、不占行首格。
    */
   var titleFlowLevels = {};
   var titleFlowStyle = null;
@@ -1672,8 +1790,10 @@ function build(require) {
   /**
    * 单个会话的热度标记规则：在**标题文字前面**画一个小圆点。
    *
-   * 位置：用标题元素自身的 `::before`，所以圆点紧贴标题文字，属于标题盒内，
-   * **不占用行首 16px 格**，也就不会和原生状态点、定时任务时钟挤在一起。
+   * 位置：圆点画在**会话行**的 `::before` 上（不是标题元素），再用标题的
+   * `padding-left` 把它占的 7px + 6px 间距让出来——视觉上仍是"标题前的小圆点"，
+   * 但避开了标题 `overflow:hidden` 的裁剪与跑马灯 mask 的渐隐（见函数内注释）。
+   * **不占用行首 16px 格**，所以不会和原生状态点、定时任务时钟挤在一起。
    * 热度表达：
    * - 颜色深浅：透明度 35%→100%，越热越深、越接近纯蓝；
    * - 实心/空心：level ≥ 4（温热/炽热）实心，低档空心描边；
@@ -1685,36 +1805,56 @@ function build(require) {
     var ink = heatToneOf(level);
     var halo = 'color-mix(in srgb, ' + ink + ' 55%, transparent)';
     var rowKey = '[data-row-key="session:' + cssString(id) + '"]';
-    var selector = rowKey + ' [class*="_title"]::before';
-    var css = selector + '{'
+    // 圆点画在**会话行**的 ::before 上，而不是标题元素的 ::before。
+    //
+    // 原因（宿主 Rows.module.css 已核实）：会话标题 `.wnFoaW_title` 是
+    // `overflow:hidden; white-space:nowrap; text-overflow:ellipsis`，而且 hover
+    // 长标题时会横向跑马灯、并加 `mask-image: linear-gradient(90deg,transparent,#000 12px)`
+    // 把左侧 12px 渐隐。圆点若贴在标题内容盒左边缘（原来的 `_title::before`），
+    // ① 向外发光向左溢出的部分会被 `overflow:hidden` 直接裁掉；
+    // ② 跑马灯时左 12px 的 mask 还会把圆点本身一起淡掉。
+    // 行元素没有 overflow 裁剪、也不参与标题的跑马灯 mask，画在行上就都安全。
+    //
+    // 位置：行内左缘 = padding-inline-start(8 + --dsh-workspace-indent) + 前导格 16px
+    // + 标题 margin-left 4px；圆点左缘落在这里（即标题文字原来的起点）。
+    // 同时给标题加 13px 左内边距，把圆点 7px + 间距 6px 的位置让出来——文字位置与
+    // 原来 `::before` 占位时完全一致，不会移动。
+    var css = rowKey + '{position:relative;}'
+      + rowKey + ' [class*="_title"]{padding-left:13px;}'
+      + rowKey + '::before{'
       + 'content:"";'
-      + 'display:inline-block;'
+      + 'position:absolute;'
+      + 'left:calc(var(--dsh-workspace-indent, 0px) + 28px);'
+      + 'top:50%;'
+      // 用 margin 而不是 transform 垂直居中：活跃会话的 ah-dot-pulse 动画占用了
+      // transform，若这里也写 transform:translateY(-50%) 会被动画覆盖、圆点上跳。
+      + 'margin-top:-3.5px;'
       + 'box-sizing:border-box;'
       + 'width:7px;'
       + 'height:7px;'
       + 'border-radius:50%;'
-      + 'margin-right:6px;'
-      + 'vertical-align:middle;'
-      // 视觉微调：vertical-align:middle 对中文字形会偏低约 2px，
-      // 用 position:relative 上移对齐字形中轴（不用 transform，避免与脉冲动画冲突）
-      + 'position:relative;'
-      + 'top:-2px;'
+      // 宿主把圆角一律画成 squircle（超椭圆），它自己的圆形组件都显式写
+      // `corner-shape:round`；不写的话 7px 小圆会被画成"圆角方块"。
+      + 'corner-shape:round;'
+      + 'pointer-events:none;'
       // 实心点在高光方向上再叠一层径向渐变，让它是"有厚度的玻璃珠"而不是纯色块
       + (solid
         ? 'background:' + ink + ';'
           + 'background-image:radial-gradient(circle at 34% 30%, color-mix(in srgb, #fff 36%, transparent), transparent 62%);'
           + 'border:none;'
           + 'box-shadow:0 0 6px ' + ink + ';'
+        // 空心环去掉原来的 `inset 0 0 4px` 内发光：7px 小圆的内圈只有 4px，
+        // 4px 模糊的内阴影几乎把内圈填满，空心环会糊成一坨。
         : 'background:transparent;border:1.5px solid ' + ink + ';'
-          + 'box-shadow:inset 0 0 4px ' + halo + ';')
+          + 'box-shadow:none;')
       + '}';
     if (level >= ACTIVE_MIN_LEVEL) {
       var duration = (2.6 - level * 0.16).toFixed(2);
-      css += selector + '{animation:ah-dot-pulse ' + duration + 's ease-in-out infinite;}';
+      css += rowKey + '::before{animation:ah-dot-pulse ' + duration + 's ease-in-out infinite;}';
     }
     // 行悬浮：圆点外扩一圈柔光。用 box-shadow 而不是 transform，
     // 因为活跃会话的脉冲动画已经占用了 transform，改它会打架。
-    css += rowKey + ':hover [class*="_title"]::before{'
+    css += rowKey + ':hover::before{'
       + 'box-shadow:0 0 0 3px ' + halo + ', 0 0 8px ' + ink + ';'
       + 'filter:brightness(1.12);'
       + '}';
@@ -2475,12 +2615,16 @@ function build(require) {
     var compact = props && props.compact === true;
     var isDone = (props && props.variant) !== 'awaiting';
     var size = statusIconSize(compact);
+    var ariaLabel = (props && props.ariaLabel)
+      || tt(isDone ? 'status.doneTitle' : 'status.awaitingTitle');
+    var textLabel = (props && props.label)
+      || tt(isDone ? 'status.done' : 'status.awaiting');
     return React.createElement(
       'span',
       {
         className: isDone ? AH.doneTag : AH.awaitingTag,
         role: 'img',
-        'aria-label': tt(isDone ? 'status.doneTitle' : 'status.awaitingTitle'),
+        'aria-label': ariaLabel,
         style: {
           display: 'inline-flex',
           flexDirection: stacked ? 'column' : 'row',
@@ -2511,8 +2655,24 @@ function build(require) {
         },
         React.createElement('path', { d: DONE_TAIL_PATH, fill: 'currentColor', stroke: 'none' }),
       ),
-      tt(isDone ? 'status.done' : 'status.awaiting'),
+      textLabel,
     );
+  }
+
+  /**
+   * 「等待用户处理」的三种子状态：等待审批 / 计划待审 / 等待回答。
+   * 共用同一只琥珀色鲸尾（一个色相只表达一件事：需要你动手），只换文案与无障碍名称。
+   */
+  function PendingTag(props) {
+    var kind = props && props.kind;
+    var key = kind === 'approval' ? 'approval' : (kind === 'plan-review' ? 'planReview' : 'awaiting');
+    return React.createElement(StatusTailTag, {
+      variant: 'awaiting',
+      stacked: props && props.stacked === true,
+      compact: props && props.compact === true,
+      label: tt('status.' + key),
+      ariaLabel: tt('status.' + key + 'Title'),
+    });
   }
 
   function DoneTag(props) {
@@ -2529,6 +2689,291 @@ function build(require) {
       stacked: props && props.stacked === true,
       compact: props && props.compact === true,
     });
+  }
+
+  /* ---------------- 轻量触达席位的组件（P1-6） ---------------- */
+
+  /**
+   * 侧栏折叠态顶部徽章：只做状态提示，不承载点击。
+   * 统计"需要你关注"的会话数（运行中 + 等待审批/计划/回答）。
+   * 拿不到 useSessions 时直接不渲染，避免在未知宿主上凭空多一个点。
+   */
+  function ToggleBadge(props) {
+    var useSessions = props && props.useSessions;
+    if (!useSessions) return null;
+    var state;
+    try { state = useSessions(function (s) { return s; }); } catch (ignored) { state = null; }
+    var ids = state && Array.isArray(state.ids) ? state.ids : [];
+    var byId = (state && state.byId) || {};
+    var statuses = null;
+    try {
+      statuses = props && props.useSessionStatus
+        ? props.useSessionStatus(function (s) { return s; })
+        : null;
+    } catch (ignored) { statuses = null; }
+    var count = 0;
+    for (var i = 0; i < ids.length; i += 1) {
+      var summary = byId[ids[i]];
+      if (!summary) continue;
+      var status = statuses && typeof statuses.get === 'function' ? statuses.get(ids[i]) : undefined;
+      if (summary.running === true || pendingKindOf(status)) count += 1;
+    }
+    if (count <= 0) return null;
+    return React.createElement('span', {
+      className: 'ah-collapse-badge',
+      role: 'status',
+      'aria-label': tt('badge.title', { count: count }),
+      style: {
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999,
+        fontSize: 10, lineHeight: '16px', fontWeight: 700,
+        color: '#fff', background: 'var(--color-blue-500, #3b82f6)',
+        boxShadow: '0 0 6px color-mix(in srgb, var(--color-blue-500, #3b82f6) 45%, transparent)',
+        flex: 'none',
+      },
+    }, String(count));
+  }
+
+  /** 侧栏「更多」菜单里的一行：打开最近活跃面板。 */
+  function PanellistAction(props) {
+    var onOpen = props && props.onOpen;
+    if (typeof onOpen !== 'function') return null;
+    return React.createElement('button', {
+      type: 'button',
+      role: 'menuitem',
+      className: 'ah-more-item',
+      onClick: function () {
+        try { if (typeof props.onDismiss === 'function') props.onDismiss(); } catch (ignored) { /* ignore */ }
+        try { onOpen('activity-heat'); } catch (ignored) { /* ignore */ }
+      },
+      style: {
+        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+        padding: '6px 10px', border: 'none', borderRadius: 6,
+        background: 'transparent', color: 'inherit', font: 'inherit',
+        fontSize: '0.86em', textAlign: 'left', cursor: 'pointer',
+      },
+    }, React.createElement(HeatRing, { size: 14, level: 4 }), tt('nav'));
+  }
+
+  /**
+   * 底部活动条（shell.bottom）：只有存在「运行中 / 等待处理」的会话时才占位。
+   * 横向列出最多 6 个，点击直接打开；没有活动时返回 null，不预留高度。
+   */
+  function BottomActivityBar(props) {
+    var useSessions = props && props.useSessions;
+    var useWorkspaces = props && props.useWorkspaces;
+    if (!useSessions) return null;
+    var state;
+    try { state = useSessions(function (s) { return s; }); } catch (ignored) { return null; }
+    if (!state || !Array.isArray(state.ids)) return null;
+    var byId = state.byId || {};
+    var archived = {};
+    try {
+      var ws = useWorkspaces ? useWorkspaces(function (s) { return s; }) : null;
+      if (ws && Array.isArray(ws.archivedSessionIds)) {
+        for (var a = 0; a < ws.archivedSessionIds.length; a += 1) {
+          archived[String(ws.archivedSessionIds[a])] = true;
+        }
+      }
+    } catch (ignored) { /* 归档集缺失不影响 */ }
+    var statuses = null;
+    try {
+      statuses = props && props.useSessionStatus
+        ? props.useSessionStatus(function (s) { return s; })
+        : null;
+    } catch (ignored) { statuses = null; }
+
+    var live = [];
+    for (var i = 0; i < state.ids.length; i += 1) {
+      var id = state.ids[i];
+      var summary = byId[id];
+      if (!summary || summary.blank === true || summary.origin === 'subagent') continue;
+      if (archived[String(id)]) continue;
+      var status = statuses && typeof statuses.get === 'function' ? statuses.get(id) : undefined;
+      var pending = pendingKindOf(status);
+      if (summary.running !== true && !pending) continue;
+      live.push({ id: id, title: titleOf(summary, id), at: lastActiveOf(summary), running: summary.running === true, pending: pending });
+    }
+    if (live.length === 0) return null;
+    live.sort(function (x, y) {
+      if (x.running !== y.running) return x.running ? -1 : 1;
+      return (y.at || 0) - (x.at || 0);
+    });
+    var shown = live.slice(0, 6);
+    var ctx = props && props.ctx;
+    var uiWorkspace = ctx && typeof ctx.get === 'function' ? ctx.get('uiWorkspace') : undefined;
+
+    var chips = shown.map(function (item) {
+      return React.createElement('button', {
+        key: item.id,
+        type: 'button',
+        className: 'ah-bottom-chip',
+        'aria-label': tt('bottom.open', { title: item.title }),
+        onClick: function () {
+          try {
+            if (uiWorkspace && typeof uiWorkspace.openSession === 'function') uiWorkspace.openSession(item.id);
+          } catch (ignored) { /* 打开失败不影响其他 chip */ }
+        },
+        style: {
+          display: 'inline-flex', alignItems: 'center', gap: 5, flex: 'none',
+          maxWidth: 200, padding: '2px 8px', borderRadius: 999,
+          border: '1px solid color-mix(in srgb, var(--color-blue-500, #3b82f6) 24%, transparent)',
+          background: 'color-mix(in srgb, var(--color-blue-500, #3b82f6) 10%, transparent)',
+          color: 'var(--dsw-alias-label-secondary)', font: 'inherit', fontSize: '0.78em',
+          lineHeight: '18px', cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+        },
+      },
+        React.createElement('span', {
+          'aria-hidden': 'true',
+          style: {
+            width: 6, height: 6, borderRadius: 999, flex: 'none',
+            background: item.pending
+              ? 'var(--dsw-alias-state-warn-primary, #f59e0b)'
+              : 'var(--color-blue-500, #3b82f6)',
+          },
+        }),
+        item.title,
+      );
+    });
+
+    return React.createElement('div', {
+      className: 'ah-bottom-bar',
+      style: {
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '5px 12px', minHeight: 30, boxSizing: 'border-box',
+        borderTop: '1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,0.18)) 72%, transparent)',
+        background: 'color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,0.08)) 62%, transparent)',
+        overflowX: 'auto', overflowY: 'hidden',
+      },
+    },
+      React.createElement('span', {
+        style: { flex: 'none', fontSize: '0.76em', color: 'var(--dsw-alias-label-tertiary)', whiteSpace: 'nowrap' },
+      }, tt('bottom.title', { count: live.length })),
+      chips,
+      live.length > shown.length
+        ? React.createElement('span', {
+            style: { flex: 'none', fontSize: '0.76em', color: 'var(--dsw-alias-label-tertiary)' },
+          }, tt('bottom.more', { count: live.length - shown.length }))
+        : null,
+    );
+  }
+
+  /**
+   * 右侧栏常驻面板（sidebar.right.pane.tab）：把最近活跃会话停靠在右栏，
+   * 不占主面板。数据源与中央面板共用 buildModel；拿不到 root hooks 时显示占位。
+   */
+  function RightbarActivityPanel(props) {
+    var useSessions = props && props.useSessions;
+    var useWorkspaces = props && props.useWorkspaces;
+    var ctx = props && props.ctx;
+    if (!useSessions) {
+      return React.createElement('div', {
+        style: { padding: '12px 14px', fontSize: '0.82em', color: 'var(--dsw-alias-label-tertiary)' },
+      }, tt('rightbar.empty'));
+    }
+    var state;
+    try { state = useSessions(function (s) { return s; }); } catch (ignored) { state = null; }
+    var ws;
+    try {
+      ws = useWorkspaces ? useWorkspaces(function (s) { return s; }) : { archivedSessionIds: [], items: [] };
+    } catch (ignored) { ws = { archivedSessionIds: [], items: [] }; }
+    var statuses = null;
+    try {
+      statuses = props && props.useSessionStatus ? props.useSessionStatus(function (s) { return s; }) : null;
+    } catch (ignored) { statuses = null; }
+    var statusOf = statuses && typeof statuses.get === 'function'
+      ? function (statusId) { return statuses.get(statusId); }
+      : undefined;
+    var now = Date.now();
+    var model = buildModel(state || { ids: [], byId: {}, projectionsBySession: {} }, ws, now, 12, 5, { statusOf: statusOf });
+    var rows = model.allSessions.slice(0, 12);
+    var uiWorkspace = ctx && typeof ctx.get === 'function' ? ctx.get('uiWorkspace') : undefined;
+
+    if (rows.length === 0) {
+      return React.createElement('div', {
+        style: { padding: '12px 14px', fontSize: '0.82em', color: 'var(--dsw-alias-label-tertiary)' },
+      }, tt('rightbar.empty'));
+    }
+
+    var items = rows.map(function (item) {
+      var key = item.pending === 'approval' ? 'approval'
+        : (item.pending === 'plan-review' ? 'planReview' : (item.pending === 'question' ? 'awaiting' : undefined));
+      var sub = key
+        ? tt('status.' + key)
+        : (item.running ? tt('running.working') : tt('hover.lastActive', { time: relativeOf(item.at, now) }));
+      return React.createElement('button', {
+        key: item.id,
+        type: 'button',
+        className: 'ah-rightbar-row',
+        'aria-label': tt('card.openSessionTitle', { title: item.title || item.id }),
+        onClick: function () {
+          try {
+            if (uiWorkspace && typeof uiWorkspace.openSession === 'function') uiWorkspace.openSession(item.id);
+          } catch (ignored) { /* ignore */ }
+        },
+        style: {
+          display: 'flex', flexDirection: 'column', gap: 1, width: '100%',
+          padding: '6px 8px', border: 'none', borderRadius: 6, background: 'transparent',
+          color: 'inherit', font: 'inherit', textAlign: 'left', cursor: 'pointer',
+        },
+      },
+        React.createElement('span', {
+          style: { display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 },
+        },
+          React.createElement('span', {
+            'aria-hidden': 'true',
+            style: {
+              width: 6, height: 6, borderRadius: 999, flex: 'none',
+              background: item.running ? 'var(--color-blue-500, #3b82f6)'
+                : (key ? 'var(--dsw-alias-state-warn-primary, #f59e0b)' : 'var(--dsw-alias-label-tertiary)'),
+            },
+          }),
+          React.createElement('span', {
+            style: {
+              minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              fontSize: '0.86em', color: 'var(--dsw-alias-label-primary)',
+            },
+          }, item.title || item.id),
+        ),
+        React.createElement('span', {
+          style: {
+            paddingLeft: 12, fontSize: '0.74em', color: 'var(--dsw-alias-label-tertiary)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          },
+        }, sub),
+      );
+    });
+
+    return React.createElement('div', {
+      className: 'ah-rightbar',
+      style: {
+        display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 6px',
+        height: '100%', boxSizing: 'border-box', overflowY: 'auto',
+      },
+    }, items);
+  }
+
+  /** 会话头角落按钮：一键进入最近活跃面板（与 Session 日志控件同排）。 */
+  function SessionHeaderCorner(props) {
+    var ctx = props && props.ctx;
+    return React.createElement('button', {
+      type: 'button',
+      className: 'ah-corner-button',
+      'aria-label': tt('nav'),
+      title: tt('nav'),
+      onClick: function () {
+        try {
+          var layout = ctx && typeof ctx.get === 'function' ? ctx.get('layout') : undefined;
+          if (layout && typeof layout.selectPanel === 'function') layout.selectPanel('activity-heat');
+        } catch (ignored) { /* 宿主未挂载 layout 时忽略 */ }
+      },
+      style: {
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 28, height: 28, padding: 0, border: 'none', borderRadius: 8,
+        background: 'transparent', color: 'var(--dsw-alias-label-secondary)',
+        cursor: 'pointer', flex: 'none',
+      },
+    }, React.createElement(HeatRing, { size: 16, level: 4 }));
   }
 
   function FilterBar(props) {
@@ -2831,6 +3276,182 @@ function build(require) {
   }
 
   /** 宿主公开方法的逐项能力检测：升级后缺哪个就只禁用哪个菜单项。 */
+  /**
+   * 统一会话动作目录（P0-3）。
+   * 面板右键菜单、侧栏原生行菜单、侧栏行操作按钮都从这一张表取 id / 文案 / 顺序，
+   * 避免三处各写一套导致漂移。`sidebarMenu` / `sidebarRow` 标记该动作是否也挂到侧栏。
+   */
+  var SESSION_ACTION_DEFS = [
+    { id: 'open', labelKey: 'menu.openSession', order: 10 },
+    { id: 'terminal', labelKey: 'menu.openTerminal', order: 20, needsCwd: true, sidebarMenu: true, sidebarRow: true, groupStart: true },
+    { id: 'open-with', labelKey: 'menu.openWith', order: 30, needsCwd: true },
+    { id: 'copy-id', labelKey: 'menu.copyId', order: 40, separatorBefore: true },
+    { id: 'copy-title', labelKey: 'menu.copyTitle', order: 50, sidebarMenu: true },
+    { id: 'copy-prompt', labelKey: 'menu.copyPrompt', order: 60 },
+    { id: 'copy-cwd', labelKey: 'menu.copyCwd', order: 70, needsCwd: true, sidebarMenu: true },
+    { id: 'pin', labelKey: 'menu.pin', order: 80, separatorBefore: true },
+    { id: 'rename', labelKey: 'menu.rename', order: 90 },
+    { id: 'fork', labelKey: 'menu.fork', order: 100 },
+    { id: 'download', labelKey: 'menu.downloadLog', order: 110, separatorBefore: true, sidebarMenu: true },
+    { id: 'archive', labelKey: 'menu.archive', order: 120, separatorBefore: true, danger: true },
+    { id: 'restore', labelKey: 'menu.unarchive', order: 130, separatorBefore: true, archivedOnly: true },
+  ];
+  var SESSION_ACTION_BY_ID = {};
+  for (var _sa = 0; _sa < SESSION_ACTION_DEFS.length; _sa += 1) {
+    SESSION_ACTION_BY_ID[SESSION_ACTION_DEFS[_sa].id] = SESSION_ACTION_DEFS[_sa];
+  }
+
+  /** 侧栏行菜单/行按钮共用的会话摘要读取（依赖宿主注入 useSessions）。 */
+  function sidebarSummaryOf(props, sessionId) {
+    try {
+      if (!props || typeof props.useSessions !== 'function') return undefined;
+      return props.useSessions(function (state) {
+        return state && state.byId ? state.byId[sessionId] : undefined;
+      });
+    } catch (ignored) { return undefined; }
+  }
+
+  /** 侧栏动作共用执行器：只做不依赖面板状态的轻量动作。 */
+  function runSidebarSessionAction(actionId, ctx, sessionId, displayTitle, summary) {
+    var path = summary && typeof summary.cwd === 'string' ? summary.cwd : '';
+    if (actionId === 'terminal') {
+      if (!isAbsolutePath(path) || typeof fetch !== 'function') return false;
+      try {
+        fetch('activity-heat/open-terminal', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ path: path }),
+        });
+      } catch (ignored) { /* 静默：侧栏无面板级 toast */ }
+      return true;
+    }
+    if (actionId === 'copy-title') {
+      copyText(displayTitle || sessionId);
+      return true;
+    }
+    if (actionId === 'copy-cwd') {
+      if (path) copyText(path);
+      return true;
+    }
+    if (actionId === 'download') {
+      downloadSessionLog(sessionId);
+      return true;
+    }
+    return false;
+  }
+
+  /** 侧栏会话行菜单里的一行：点击后关闭宿主菜单并执行对应动作。 */
+  /**
+   * 侧栏行菜单动作图标：与宿主原生菜单同规格（16px、1.4 描边、currentColor），
+   * 不用 emoji、不写死颜色（design.md §2 / 牢记事项「图标不要用 emoji」）。
+   */
+  function SidebarActionIcon(actionId, size) {
+    var s = typeof size === 'number' && size > 0 ? size : 16;
+    var shared = {
+      width: s, height: s, viewBox: '0 0 16 16', fill: 'none',
+      stroke: 'currentColor', strokeWidth: 1.4, strokeLinecap: 'round', strokeLinejoin: 'round',
+      'aria-hidden': 'true', style: { display: 'block', flex: 'none' },
+    };
+    if (actionId === 'copy-title') {
+      return React.createElement('svg', shared,
+        React.createElement('rect', { x: 5.5, y: 5.5, width: 8, height: 8, rx: 1.2 }),
+        React.createElement('path', { d: 'M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2' }),
+      );
+    }
+    if (actionId === 'copy-cwd') {
+      return React.createElement('svg', shared,
+        React.createElement('path', { d: 'M2.5 4.6a1 1 0 0 1 1-1h3l1.4 1.5h4.6a1 1 0 0 1 1 1v5.8a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z' }),
+      );
+    }
+    if (actionId === 'download') {
+      return React.createElement('svg', shared,
+        React.createElement('path', { d: 'M8 2.5v7.2M5.4 7.2 8 9.8l2.6-2.6M3 12.7h10' }),
+      );
+    }
+    // terminal（默认）
+    return React.createElement('svg', shared,
+      React.createElement('path', { d: 'M2.5 3.5h11v9h-11z' }),
+      React.createElement('path', { d: 'M4.6 6.4l2 1.6-2 1.6M8.2 9.6h3.2' }),
+    );
+  }
+
+  function makeSidebarMenuRow(def) {
+    var actionId = def.id;
+    function SidebarMenuRow(props) {
+      var summary = sidebarSummaryOf(props, props.sessionId);
+      var path = summary && typeof summary.cwd === 'string' ? summary.cwd : '';
+      var disabled = def.needsCwd === true && !isAbsolutePath(path);
+      if (actionId === 'copy-title' && !(props && props.displayTitle)) disabled = true;
+      var closeMenu = function () {
+        try {
+          if (props && typeof props.useMenuOpenState === 'function') {
+            var pair = props.useMenuOpenState();
+            if (pair && typeof pair[1] === 'function') pair[1](false);
+          }
+        } catch (ignored) { /* 宿主菜单不可控时忽略 */ }
+      };
+      var activate = function () {
+        if (disabled) return;
+        closeMenu();
+        runSidebarSessionAction(actionId, props && props.ctx, props.sessionId, props && props.displayTitle, summary);
+      };
+      var HostItem = Primitives && Primitives.MenuItemButton;
+      if (typeof HostItem === 'function') {
+        return React.createElement(HostItem, {
+          icon: SidebarActionIcon(actionId, 16),
+          onSelect: activate,
+          separatorBefore: def.groupStart === true,
+          disabled: disabled,
+        }, tt(def.labelKey));
+      }
+      return React.createElement('button', {
+        type: 'button',
+        role: 'menuitem',
+        className: def.groupStart === true ? 'ah-side-action ah-side-action--group' : 'ah-side-action',
+        'aria-disabled': disabled ? 'true' : undefined,
+        onClick: activate,
+        style: {
+          display: 'flex', alignItems: 'center', width: '100%', gap: 8,
+          minHeight: 32, boxSizing: 'border-box',
+          padding: '6px 8px', border: 'none', borderRadius: 6, background: 'transparent',
+          color: 'var(--dsw-alias-label-primary, inherit)',
+          font: 'inherit', fontSize: 'inherit', lineHeight: '20px',
+          textAlign: 'left', whiteSpace: 'nowrap',
+          cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.45 : 1,
+        },
+      }, [
+        SidebarActionIcon(actionId, 16),
+        React.createElement('span', { key: 'label', style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' } }, tt(def.labelKey)),
+      ]);
+    }
+    return SidebarMenuRow;
+  }
+
+  /** 侧栏会话行尾的「在终端中打开」图标按钮。 */
+  function SidebarTerminalRowAction(props) {
+    var summary = sidebarSummaryOf(props, props && props.sessionId);
+    var path = summary && typeof summary.cwd === 'string' ? summary.cwd : '';
+    var disabled = !isAbsolutePath(path);
+    return React.createElement('button', {
+      type: 'button',
+      className: 'ah-side-row-action',
+      'aria-label': tt('menu.openTerminal'),
+      title: tt('menu.openTerminal'),
+      'aria-disabled': disabled ? 'true' : undefined,
+      onClick: function (event) {
+        try { if (event && typeof event.stopPropagation === 'function') event.stopPropagation(); } catch (ignored) {}
+        if (disabled) return;
+        runSidebarSessionAction('terminal', props && props.ctx, props.sessionId, props && props.displayTitle, summary);
+      },
+      style: {
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 24, height: 24, padding: 0, border: 'none', borderRadius: 6,
+        background: 'transparent', color: 'var(--dsw-alias-label-secondary)',
+        cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.4 : 1, flex: 'none',
+      },
+    }, SidebarActionIcon('terminal', 14));
+  }
+
   function capabilitiesOf(uiWorkspace, sessions) {
     var service = uiWorkspace && typeof uiWorkspace === 'object' ? uiWorkspace : {};
     return {
@@ -3134,16 +3755,29 @@ function build(require) {
   function ConfirmArchive(props) {
     if (!props || !props.open) return null;
     var pending = props.pending === true;
+    var stop = props.stop === true;
+    var activity = Array.isArray(props.activity) ? props.activity : [];
     var session = props.session || {};
     var title = session.title || session.id || '';
     return portalLayer(React.createElement('div', {
       role: 'dialog',
       'aria-modal': 'true',
-      'aria-label': tt('dialog.archiveTitle'),
+      'aria-label': tt(stop ? 'dialog.stopArchiveTitle' : 'dialog.archiveTitle'),
       className: AH.dialog,
     }, [
-      React.createElement('div', { key: 'title', className: AH.dialogTitle }, tt('dialog.archiveTitle')),
-      React.createElement('div', { key: 'body', className: AH.dialogText }, tt('dialog.archiveBody', { title: title })),
+      React.createElement('div', { key: 'title', className: AH.dialogTitle },
+        tt(stop ? 'dialog.stopArchiveTitle' : 'dialog.archiveTitle')),
+      React.createElement('div', { key: 'body', className: AH.dialogText },
+        tt(stop ? 'dialog.stopArchiveBody' : 'dialog.archiveBody', { title: title })),
+      activity.length > 0
+        ? React.createElement('div', { key: 'activity', className: AH.dialogText, style: { marginTop: 6 } }, [
+            React.createElement('div', { key: 'label', style: { fontWeight: 600, marginBottom: 4 } }, tt('dialog.activityTitle')),
+            React.createElement('ul', { key: 'list', style: { margin: 0, paddingLeft: 18 } },
+              activity.slice(0, 8).map(function (line, index) {
+                return React.createElement('li', { key: index, style: { lineHeight: '18px' } }, line);
+              })),
+          ])
+        : null,
       props.error ? React.createElement('div', { key: 'error', className: AH.dialogError }, props.error) : null,
       React.createElement('div', { key: 'actions', className: AH.dialogActions }, [
         React.createElement('button', {
@@ -3161,7 +3795,9 @@ function build(require) {
           'data-danger': 'true',
           disabled: pending,
           onClick: props.onConfirm,
-        }, pending ? tt('dialog.archiving') : tt('dialog.archiveConfirm')),
+        }, pending
+          ? tt(stop ? 'dialog.stopping' : 'dialog.archiving')
+          : tt(stop ? 'dialog.stopArchiveConfirm' : 'dialog.archiveConfirm')),
       ]),
     ]));
   }
@@ -3318,6 +3954,19 @@ function build(require) {
     var barTone = heatToneOf(session.level);
 
     var children = [
+      props && props.selectMode
+        ? React.createElement('span', {
+            key: 'sel',
+            'aria-hidden': 'true',
+            style: {
+              flex: 'none', width: 16, height: 16, marginTop: 2, borderRadius: 4,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, lineHeight: '16px', color: '#fff',
+              background: props.selected ? 'var(--color-blue-500, #3b82f6)' : 'transparent',
+              border: '1px solid color-mix(in srgb, var(--color-blue-500, #3b82f6) 55%, transparent)',
+            },
+          }, props.selected ? '✓' : '')
+        : null,
       React.createElement('span', {
         key: 'bar',
         className: AH.heatBar,
@@ -3376,19 +4025,19 @@ function build(require) {
           },
         }, metaRow),
       ),
-      // 三态互斥，优先级：等待回答 > 已完成 > 工作中。
+      // 状态互斥，优先级：等待用户处理（审批/计划/回答） > 已完成 > 工作中。
       // 都落在卡片右侧的留白里（不用标题前的小徽章）。
-      session.awaiting === true
+      session.archived !== true && session.pending
         ? React.createElement('span', {
-            key: 'awaiting',
+            key: 'pending',
             style: statusColumnStyle,
-          }, React.createElement(AwaitingTag, { stacked: true }))
-        : (session.done === true
+          }, React.createElement(PendingTag, { kind: session.pending, stacked: true }))
+        : (session.archived !== true && session.done === true
           ? React.createElement('span', {
               key: 'done',
               style: statusColumnStyle,
             }, React.createElement(DoneTag, { stacked: true }))
-          : (session.running === true
+          : (session.archived !== true && session.running === true
             ? React.createElement('span', {
                 key: 'working',
                 style: statusColumnStyle,
@@ -3441,8 +4090,8 @@ function build(require) {
     ];
 
     var running = session.running === true;
-    // 已完成 / 等待回答的会话不再套运行中外框 / 跑马灯
-    var activeRunning = running && session.done !== true && session.awaiting !== true;
+    // 已完成 / 等待用户处理的会话不再套运行中外框 / 跑马灯
+    var activeRunning = running && session.done !== true && session.pending === undefined;
 
     var buttonStyle = {
       display: 'flex',
@@ -3469,7 +4118,7 @@ function build(require) {
       'button',
       {
         type: 'button',
-        onClick: props.onClick,
+        onClick: props && props.selectMode ? props.onToggleSelect : props.onClick,
         // 用 aria-label 而不是 title：原生 tooltip 会在悬停时长胶囊时浮出来挡住耗时卡
         'aria-label': tt('card.openSessionTitle', { title: session.title || session.id }),
         className: activeRunning ? AH.card + ' ' + AH.cardRunning : AH.card,
@@ -3765,6 +4414,10 @@ function build(require) {
     var useWorkspaces = props && props.useWorkspaces;
     // 首次渲染的视图；宿主不传时默认会话视图（测试可直接从工作区视图进入）
     var initialView = props && props.initialView === 'workspaces' ? 'workspaces' : 'sessions';
+    // 首次渲染的范围；测试可直接进入已归档 / 子代理视图
+    var initialRange = props && (props.initialRange === 'archived' || props.initialRange === 'subagent')
+      ? props.initialRange
+      : 'active';
     // 面板挂载期间才显示在 main slot；快捷键靠这个标记做「进入 / 返回」二次切换。
     React.useEffect(function () {
       panelVisible = true;
@@ -3787,6 +4440,22 @@ function build(require) {
     var filterState = React.useState('all');
     var filter = filterState[0];
     var setFilter = filterState[1];
+    // 范围：常规 / 已归档 / 子代理（仅会话视图生效）
+    var rangeState = React.useState(initialRange);
+    var range = rangeState[0];
+    var setRange = rangeState[1];
+    // 批量选择（仅会话视图）
+    var selectState = React.useState(props && props.initialSelectMode === true);
+    var selectMode = selectState[0];
+    var setSelectMode = selectState[1];
+    var initialSelected = props && Array.isArray(props.initialSelected) ? props.initialSelected : [];
+    var selectedState = React.useState(function () {
+      var map = {};
+      for (var si = 0; si < initialSelected.length; si += 1) map[String(initialSelected[si])] = true;
+      return map;
+    });
+    var selected = selectedState[0];
+    var setSelected = selectedState[1];
 
     // 右键菜单 / 归档确认 / 重命名 / 轻量提示：面板级单例，卡片只负责触发
     var menuState = React.useState(null);
@@ -3845,8 +4514,18 @@ function build(require) {
 
     var sessionState = useSessions(function (state) { return state; });
     var workspaceState = useWorkspaces(function (state) { return state; });
+    // 客户端状态域：能拿到就用 pendingInteraction 区分审批 / 计划审阅 / 提问
+    var useSessionStatus = props && props.useSessionStatus;
+    var statusMap = useSessionStatus ? useSessionStatus(function (state) { return state; }) : null;
+    var statusOf = statusMap && typeof statusMap.get === 'function'
+      ? function (statusId) { return statusMap.get(statusId); }
+      : undefined;
+    var effectiveRange = view === 'sessions' ? range : 'active';
     // 一次性构建全量，两个视图按需切片，避免切换时重算两遍
-    var model = buildModel(sessionState, workspaceState, now, topCount, groupCount);
+    var model = buildModel(sessionState, workspaceState, now, topCount, groupCount, {
+      range: effectiveRange,
+      statusOf: statusOf,
+    });
     var uiWorkspace = props && props.ctx ? props.ctx.get('uiWorkspace') : undefined;
 
     function openSession(sessionId) {
@@ -4028,6 +4707,32 @@ function build(require) {
       return /active|running|busy|activity/i.test(message) ? tt('error.running') : tt('error.archive');
     }
 
+    /** 把宿主 WorkspaceActiveSessionError.activity 归一成可读的一行行文字。 */
+    function activityLinesOf(reason) {
+      var raw = reason && reason.activity;
+      var out = [];
+      function push(item) {
+        if (item === undefined || item === null) return;
+        if (typeof item === 'string') { if (item) out.push(item); return; }
+        if (typeof item !== 'object') { out.push(String(item)); return; }
+        if (Array.isArray(item.items)) { item.items.forEach(push); return; }
+        if (Array.isArray(item.entries)) { item.entries.forEach(push); return; }
+        var label = item.title || item.label || item.name || item.kind || item.id;
+        if (label) out.push(String(label) + (typeof item.count === 'number' ? ' ×' + item.count : ''));
+      }
+      try {
+        if (Array.isArray(raw)) raw.forEach(push);
+        else if (raw && typeof raw === 'object') {
+          Object.keys(raw).forEach(function (key) {
+            var value = raw[key];
+            if (Array.isArray(value)) value.forEach(push);
+            else push(value);
+          });
+        }
+      } catch (ignored) { /* 结构未知时返回已收集部分 */ }
+      return out;
+    }
+
     function restoreArchived(sessionId) {
       if (!uiWorkspace || typeof uiWorkspace.unarchiveSession !== 'function') return;
       try {
@@ -4093,29 +4798,43 @@ function build(require) {
     function confirmArchive() {
       if (!dialog || dialog.kind !== 'archive') return;
       var target = dialog.session;
+      var stop = dialog.stop === true;
+      var previousActivity = Array.isArray(dialog.activity) ? dialog.activity : [];
       if (!uiWorkspace || typeof uiWorkspace.archiveSession !== 'function') {
-        setDialog({ kind: 'archive', session: target, pending: false, error: tt('menu.unavailable') });
+        setDialog({ kind: 'archive', session: target, pending: false, error: tt('menu.unavailable'), stop: stop, activity: previousActivity });
         return;
       }
-      setDialog({ kind: 'archive', session: target, pending: true, error: '' });
+      setDialog({ kind: 'archive', session: target, pending: true, error: '', stop: stop, activity: previousActivity });
       try {
-        Promise.resolve(uiWorkspace.archiveSession(target.id)).then(function () {
+        // 运行中的会话走宿主的「停止并归档」；先不停止地试一次时，
+        // 宿主会拒绝并在 reason.activity 里列出仍在跑的工作，据此升级为停止确认。
+        var job = stop
+          ? uiWorkspace.archiveSession(target.id, { stopActivity: true })
+          : uiWorkspace.archiveSession(target.id);
+        Promise.resolve(job).then(function () {
           setDialog(null);
-          notify(tt('toast.archived'), 'info', tt('toast.undo'), function () {
+          notify(tt(stop ? 'toast.archivedStopped' : 'toast.archived'), 'info', tt('toast.undo'), function () {
             restoreArchived(target.id);
           });
         }, function (reason) {
           ahWarn('[activity-heat] archive failed:', reason && reason.message);
+          var lines = activityLinesOf(reason);
+          if (!stop && lines.length > 0) {
+            setDialog({ kind: 'archive', session: target, pending: false, error: '', stop: true, activity: lines });
+            return;
+          }
           setDialog({
             kind: 'archive',
             session: target,
             pending: false,
             error: archiveErrorText(reason),
+            stop: stop,
+            activity: lines,
           });
         });
       } catch (error) {
         ahWarn('[activity-heat] archive failed:', error && error.message);
-        setDialog({ kind: 'archive', session: target, pending: false, error: tt('error.archive') });
+        setDialog({ kind: 'archive', session: target, pending: false, error: tt('error.archive'), stop: stop, activity: previousActivity });
       }
     }
 
@@ -4136,6 +4855,83 @@ function build(require) {
         ahWarn('[activity-heat] startSession failed:', error && error.message);
         notify(tt('error.start'), 'error');
       }
+    }
+
+    /* ---------------- 批量操作 ---------------- */
+
+    function toggleSelect(sessionId) {
+      setSelected(function (prev) {
+        var next = Object.assign({}, prev);
+        var key = String(sessionId);
+        if (next[key]) delete next[key];
+        else next[key] = true;
+        return next;
+      });
+    }
+
+    function selectedSessions() {
+      return model.allSessions.filter(function (s) { return selected[String(s.id)] === true; });
+    }
+
+    function batchArchive() {
+      if (!uiWorkspace || typeof uiWorkspace.archiveSession !== 'function') {
+        notify(tt('menu.unavailable'), 'error');
+        return;
+      }
+      var list = selectedSessions();
+      if (list.length === 0) return;
+      for (var i = 0; i < list.length; i += 1) {
+        (function (session) {
+          try {
+            // 运行中的会话走「停止并归档」，与宿主行菜单一致
+            var job = session.running === true
+              ? uiWorkspace.archiveSession(session.id, { stopActivity: true })
+              : uiWorkspace.archiveSession(session.id);
+            if (job && typeof job.then === 'function') {
+              job.then(function () {}, function (reason) {
+                ahWarn('[activity-heat] batch archive failed:', reason && reason.message);
+              });
+            }
+          } catch (error) {
+            ahWarn('[activity-heat] batch archive failed:', error && error.message);
+          }
+        })(list[i]);
+      }
+      setSelectMode(false);
+      setSelected({});
+      notify(tt('batch.archived', { count: list.length }));
+    }
+
+    function batchPin() {
+      if (!uiWorkspace || typeof uiWorkspace.pinSession !== 'function') {
+        notify(tt('menu.unavailable'), 'error');
+        return;
+      }
+      var list = selectedSessions();
+      if (list.length === 0) return;
+      for (var i = 0; i < list.length; i += 1) {
+        (function (session) {
+          try {
+            var job = uiWorkspace.pinSession(session.id);
+            if (job && typeof job.then === 'function') {
+              job.then(function () {}, function (reason) {
+                ahWarn('[activity-heat] batch pin failed:', reason && reason.message);
+              });
+            }
+          } catch (error) {
+            ahWarn('[activity-heat] batch pin failed:', error && error.message);
+          }
+        })(list[i]);
+      }
+      setSelectMode(false);
+      setSelected({});
+      notify(tt('batch.pinned', { count: list.length }));
+    }
+
+    function batchCopyIds() {
+      var list = selectedSessions();
+      if (list.length === 0) return;
+      copyWithToast(list.map(function (s) { return s.id; }).join('\n'));
     }
 
     /** 「打开方式」子菜单：终端固定第一项；其余按文件管理器 → 编辑器 → 终端 → 其他排序，组间加分隔。 */
@@ -4222,6 +5018,7 @@ function build(require) {
 
     function runSessionAction(actionId, session) {
       if (!session) return;
+      if (actionId === 'restore') { closeMenu(); restoreArchived(session.id); return; }
       if (actionId === 'open') { closeMenu(); markSeen(session.id, session.at); openSession(session.id); return; }
       if (actionId === 'copy-id') { closeMenu(); copyWithToast(session.id); return; }
       if (actionId === 'copy-title') { closeMenu(); copyWithToast(session.title); return; }
@@ -4237,7 +5034,12 @@ function build(require) {
       if (actionId === 'download') { closeMenu(); downloadLog(session); return; }
       if (actionId === 'archive') {
         closeMenu();
-        setDialog({ kind: 'archive', session: session, pending: false, error: '' });
+        setDialog({ kind: 'archive', session: session, pending: false, error: '', stop: false, activity: [] });
+        return;
+      }
+      if (actionId === 'stop-archive') {
+        closeMenu();
+        setDialog({ kind: 'archive', session: session, pending: false, error: '', stop: true, activity: [] });
       }
     }
 
@@ -4255,12 +5057,13 @@ function build(require) {
     function buildSessionItems(session) {
       var pinned = pinnedIds.indexOf(session.id) !== -1;
       var pinDisabled = pinned ? !caps.unpin : !caps.pin;
+      var archivedRow = session.archived === true;
       var items = [];
       items.push({
         id: 'open',
         label: tt('menu.openSession'),
-        disabled: !caps.open,
-        hint: caps.open ? undefined : tt('menu.unavailable'),
+        disabled: !caps.open || archivedRow,
+        hint: archivedRow ? tt('menu.archivedOpenHint') : (caps.open ? undefined : tt('menu.unavailable')),
         onSelect: function () { runSessionAction('open', session); },
       });
       items.push({
@@ -4330,18 +5133,30 @@ function build(require) {
         onSelect: function () { runSessionAction('download', session); },
       });
       var running = session.running === true;
-      var archiveDisabled = running || !caps.archive;
+      var archiveDisabled = !caps.archive || archivedRow;
       items.push({
         id: 'archive',
-        label: tt('menu.archive'),
+        label: tt(running ? 'menu.stopArchive' : 'menu.archive'),
         separatorBefore: true,
         danger: true,
         disabled: archiveDisabled,
-        hint: running
-          ? tt('menu.archiveRunningHint')
-          : (!caps.archive ? tt('menu.unavailable') : undefined),
-        onSelect: function () { runSessionAction('archive', session); },
+        hint: archivedRow
+          ? tt('menu.archivedOpenHint')
+          : (!caps.archive
+            ? tt('menu.unavailable')
+            : (running ? tt('menu.stopArchiveHint') : undefined)),
+        onSelect: function () { runSessionAction(running ? 'stop-archive' : 'archive', session); },
       });
+      if (archivedRow) {
+        items.push({
+          id: 'restore',
+          label: tt('menu.unarchive'),
+          separatorBefore: true,
+          disabled: !caps.unarchive,
+          hint: caps.unarchive ? undefined : tt('menu.unavailable'),
+          onSelect: function () { runSessionAction('restore', session); },
+        });
+      }
       return items;
     }
 
@@ -4434,6 +5249,18 @@ function build(require) {
         value: view,
         onChange: setView,
       }),
+      view === 'sessions'
+        ? React.createElement(Segmented, {
+            variant: 'text',
+            options: [
+              { value: 'active', label: tt('range.active') },
+              { value: 'archived', label: tt('range.archived') },
+              { value: 'subagent', label: tt('range.subagent') },
+            ],
+            value: range,
+            onChange: setRange,
+          })
+        : null,
       React.createElement('span', { style: { flex: '1 1 auto' } }),
       // 数量：最次要的工具，改成无边框文字，避免和上面的视图/下面的筛选撞脸
       React.createElement('span', {
@@ -4450,6 +5277,22 @@ function build(require) {
           else setGroupCount(value);
         },
       }),
+      view === 'sessions'
+        ? React.createElement('button', {
+            type: 'button',
+            className: 'ah-select-toggle',
+            'data-active': selectMode ? 'true' : 'false',
+            onClick: function () {
+              if (selectMode) setSelected({});
+              setSelectMode(!selectMode);
+            },
+            style: {
+              flex: 'none', border: 'none', background: 'transparent', cursor: 'pointer',
+              font: 'inherit', fontSize: '0.76em', padding: '2px 4px', borderRadius: 0,
+              color: selectMode ? 'var(--color-blue-500, #3b82f6)' : UI.textTertiary,
+            },
+          }, tt(selectMode ? 'batch.exit' : 'batch.select'))
+        : null,
     );
 
     /* ---------- 热度筛选 ---------- */
@@ -4460,6 +5303,40 @@ function build(require) {
       onPick: setFilter,
     });
 
+    /* ---------- 批量操作条 ---------- */
+    var batchBar = null;
+    if (view === 'sessions' && selectMode) {
+      var selectedCount = 0;
+      for (var sk in selected) {
+        if (Object.prototype.hasOwnProperty.call(selected, sk) && selected[sk]) selectedCount += 1;
+      }
+      var batchButton = function (label, onClick, danger) {
+        return React.createElement('button', {
+          type: 'button',
+          onClick: onClick,
+          style: {
+            flex: 'none', padding: '2px 8px', borderRadius: 6, cursor: 'pointer',
+            font: 'inherit', fontSize: '0.76em', lineHeight: '18px',
+            border: '1px solid color-mix(in srgb, ' + (danger ? 'var(--color-red-500, #ef4444)' : 'var(--color-blue-500, #3b82f6)') + ' 30%, transparent)',
+            background: 'transparent',
+            color: danger ? 'var(--color-red-500, #ef4444)' : 'var(--color-blue-500, #3b82f6)',
+          },
+        }, label);
+      };
+      batchBar = React.createElement('div', {
+        key: 'batch',
+        className: 'ah-batch',
+        style: { display: 'flex', alignItems: 'center', gap: 6, padding: '4px ' + UI.padX + 'px 8px' },
+      },
+        React.createElement('span', { style: { fontSize: '0.76em', color: UI.textSecondary, flex: 'none' } },
+          tt('batch.count', { count: selectedCount })),
+        React.createElement('span', { style: { flex: '1 1 auto' } }),
+        batchButton(tt('batch.archive'), batchArchive, true),
+        batchButton(tt('batch.pin'), batchPin, false),
+        batchButton(tt('batch.copy'), batchCopyIds, false),
+      );
+    }
+
     /* ---------- 列表 ---------- */
     var cards = [];
     if (view === 'sessions') {
@@ -4469,7 +5346,12 @@ function build(require) {
           session: session,
           now: now,
           index: index,
+          selectMode: selectMode,
+          selected: selected[session.id] === true,
+          onToggleSelect: function () { toggleSelect(session.id); },
           onClick: function () {
+            // 归档视图里点击不是「打开」，而是恢复（宿主对已归档会话不提供直接打开）
+            if (session.archived === true) { restoreArchived(session.id); return; }
             // 点击打开即视为已读，立刻清掉「已完成」
             markSeen(session.id, session.at);
             openSession(session.id);
@@ -4583,6 +5465,8 @@ function build(require) {
       session: dialog ? dialog.session : undefined,
       pending: Boolean(dialog && dialog.pending),
       error: dialog ? dialog.error : undefined,
+      stop: Boolean(dialog && dialog.stop === true),
+      activity: dialog && Array.isArray(dialog.activity) ? dialog.activity : [],
       onCancel: function () { setDialog(null); },
       onConfirm: confirmArchive,
     });
@@ -4600,7 +5484,7 @@ function build(require) {
     return React.createElement('div', {
       className: AH.shell,
       style: { display: 'flex', flexDirection: 'column', paddingBottom: 16 },
-    }, [header, filterBar, list, footer, archiveNode, renameNode, toastNode]);
+    }, [header, filterBar, batchBar, list, footer, archiveNode, renameNode, toastNode]);
   }
 
   function SessionRowHeat(props) {
@@ -4678,7 +5562,18 @@ function build(require) {
     var facts = sessionState && sessionState.projectionsBySession
       ? factsFromProjection(sessionState.projectionsBySession[sessionId])
       : {};
-    var awaiting = facts.awaiting === true;
+    // 优先读客户端状态域的 pendingInteraction（审批 / 计划审阅 / 提问），
+    // 没有该 hook 时退回 userQuestions 投影。
+    var useSessionStatus = props && props.useSessionStatus;
+    var statusRecord;
+    try {
+      statusRecord = useSessionStatus
+        ? useSessionStatus(function (state) {
+            return state && typeof state.get === 'function' ? state.get(sessionId) : undefined;
+          })
+        : undefined;
+    } catch (ignored) { statusRecord = undefined; }
+    var pending = pendingKindOf(statusRecord) || (facts.awaiting === true ? 'question' : undefined);
     var isOpen = isSelectedRow(sessionId, summary && summary.retainedBy && summary.retainedBy.mainView > 0);
     var done = doneUnseenOf(sessionId, at, running, isOpen, now);
     // 与面板卡片同一口径：运行中按最高热度显示
@@ -4701,9 +5596,11 @@ function build(require) {
     // 状态行：状态标签自带文字与颜色；没有状态时才显示档位名。
     // 等待回答由宿主 hover 卡底部自带的那行表达，这里不再重复。
     var stateTag = null;
-    if (done) {
+    if (pending) {
+      stateTag = React.createElement(PendingTag, { kind: pending, compact: true });
+    } else if (done) {
       stateTag = React.createElement(DoneTag, { compact: true });
-    } else if (running && !awaiting) {
+    } else if (running) {
       stateTag = React.createElement(WorkingTag, { compact: true });
     }
 
@@ -4850,6 +5747,118 @@ function build(require) {
    * 结论：用 Ctrl+Alt+H，只声明 windows/macos 四个 profile。
    * 诊断：先用 ctx.get 探测，拿不到再 ctx.inject 等待；每步都打日志。
    */
+  /** 打开/关闭最近活跃面板的统一入口（命令、角落按钮共用）。 */
+  function openActivityPanel(ctx, visible) {
+    try {
+      var layout = ctx && typeof ctx.get === 'function' ? ctx.get('layout') : undefined;
+      if (!layout || typeof layout.selectPanel !== 'function') {
+        ahWarn('[activity-heat] layout.selectPanel unavailable');
+        return;
+      }
+      layout.selectPanel(visible ? null : 'activity-heat');
+    } catch (error) {
+      ahWarn('[activity-heat] openActivityPanel failed:', error && error.message);
+    }
+  }
+
+  /**
+   * 注册 `/heat` 斜杠命令（ctx.commandUi）。命令属于会话作用域，
+   * 触发后进入面板；宿主未挂载命令服务时静默跳过。
+   */
+  /**
+   * 注册右侧栏 tab 类型（ctx.sidebarRightTabs）。正文由 `sidebar.right.pane.tab`
+   * 同 key 的 seat 提供；用户从右侧栏引导页选择「最近活跃会话」打开。
+   */
+  function registerRightbar(ctx) {
+    var done = false;
+
+    function attempt(tabs, source) {
+      if (done || !tabs || typeof tabs.register !== 'function') return false;
+      try {
+        tabs.register({
+          id: RIGHTBAR_ID,
+          kind: RIGHTBAR_KIND,
+          priority: 'extension',
+          title: function () { return tt('rightbar.title'); },
+          guide: [{
+            id: 'activity-heat-open',
+            order: 20,
+            title: function () { return tt('rightbar.guideTitle'); },
+            description: function () { return tt('rightbar.guideDesc'); },
+          }],
+        });
+        done = true;
+        ahLog('[activity-heat] rightbar tab registered via ' + source);
+        return true;
+      } catch (error) {
+        ahWarn('[activity-heat] rightbar tab register failed via ' + source + ': ' + (error && error.message));
+        return false;
+      }
+    }
+
+    try {
+      var direct = typeof ctx.get === 'function' ? ctx.get('sidebarRightTabs') : undefined;
+      if (attempt(direct, 'ctx.get')) return;
+    } catch (error) {
+      ahWarn('[activity-heat] rightbar probe threw:', error && error.message);
+    }
+    // 可选服务：只做 ctx.get 轮询，避免 inject 依赖把插件挂起。
+    var tries = 0;
+    function poll() {
+      if (done || tries >= 20) return;
+      tries += 1;
+      try {
+        if (attempt(typeof ctx.get === 'function' ? ctx.get('sidebarRightTabs') : undefined, 'ctx.get#' + tries)) return;
+      } catch (ignored) { /* 服务未就绪 */ }
+      try { setTimeout(poll, 300); } catch (ignored) { /* 无定时器 */ }
+    }
+    poll();
+  }
+
+  function registerCommands(ctx) {
+    var done = false;
+
+    function attempt(commandUi, source) {
+      if (done || !commandUi || typeof commandUi.register !== 'function') return false;
+      try {
+        commandUi.register({
+          name: 'heat',
+          available: function () { return true; },
+          label: function () { return tt('command.openLabel'); },
+          description: function () { return tt('command.openDesc'); },
+          ui: {
+            kind: 'action',
+            run: function () { openActivityPanel(ctx, false); },
+          },
+        });
+        done = true;
+        ahLog('[activity-heat] command /heat registered via ' + source);
+        return true;
+      } catch (error) {
+        ahWarn('[activity-heat] command register failed via ' + source + ': ' + (error && error.message));
+        return false;
+      }
+    }
+
+    try {
+      var direct = typeof ctx.get === 'function' ? ctx.get('commandUi') : undefined;
+      if (attempt(direct, 'ctx.get')) return;
+    } catch (error) {
+      ahWarn('[activity-heat] command probe threw:', error && error.message);
+    }
+    // 可选服务：只做 ctx.get 轮询，绝不为它建立 inject 依赖（避免服务缺失时把插件挂起）。
+    var tries = 0;
+    function poll() {
+      if (done || tries >= 20) return;
+      tries += 1;
+      try {
+        if (attempt(typeof ctx.get === 'function' ? ctx.get('commandUi') : undefined, 'ctx.get#' + tries)) return;
+      } catch (ignored) { /* 服务未就绪 */ }
+      try { setTimeout(poll, 300); } catch (ignored) { /* 无定时器 */ }
+    }
+    poll();
+  }
+
   function registerShortcut(ctx) {
     var done = false;
 
@@ -5011,7 +6020,26 @@ function build(require) {
               return;
             }
 
-            slots.inject('sidebar.session.row.leading', function () {
+            /**
+             * 单席位注册隔离：任何一个 slot 名不存在 / 与宿主冲突，只跳过这一项，
+             * 不能连累其余席位（尤其不能连累 main 面板）。
+             */
+            var injectProps = function () { return { ctx: ctx }; };
+
+            function safeRegister(slotName, factory) {
+              try {
+                slots.inject(slotName, function () {
+                  try { return factory(); } catch (error) {
+                    try { console.error('[activity-heat] seat "' + slotName + '" failed:', error && (error.stack || error.message)); } catch (ignored) {}
+                    return undefined;
+                  }
+                });
+              } catch (error) {
+                try { console.error('[activity-heat] slots.inject("' + slotName + '") failed:', error && (error.stack || error.message)); } catch (ignored) {}
+              }
+            }
+
+            safeRegister('sidebar.session.row.leading', function () {
               return slots.register(
                 {
                   name: 'sidebar.session.row.leading',
@@ -5024,7 +6052,7 @@ function build(require) {
               );
             });
 
-            slots.inject('sidebar.session.row.hover', function () {
+            safeRegister('sidebar.session.row.hover', function () {
               return slots.register(
                 {
                   name: 'sidebar.session.row.hover',
@@ -5037,9 +6065,56 @@ function build(require) {
               );
             });
 
-            var injectProps = function () { return { ctx: ctx }; };
+            // 折叠态徽章：只做状态提示（需要你关注的会话数）
+            safeRegister('sidebar.toggle.badge', function () {
+              return slots.register(
+                {
+                  name: 'sidebar.toggle.badge',
+                  id: 'heat-badge',
+                  order: 20,
+                  locale: NS,
+                  label: function () { return tt('nav'); },
+                  inject: injectProps,
+                },
+                ToggleBadge,
+              );
+            });
 
-            slots.inject('sidebar.panellist', function () {
+            // 「更多」菜单里的一行入口
+            safeRegister('sidebar.panellist.actions', function () {
+              return slots.register(
+                {
+                  name: 'sidebar.panellist.actions',
+                  id: 'heat-more',
+                  order: 30,
+                  locale: NS,
+                  label: function () { return tt('nav'); },
+                  inject: injectProps,
+                },
+                PanellistAction,
+              );
+            });
+
+            // 注意：`conversation.session.header.corner` 已被 ui-sidebar-right 的
+            // 右侧栏展开按钮占用（single slot，同优先级重复注册会抛错），这里不再抢。
+            // 会话内的入口改由侧栏「更多」菜单与折叠徽章承担。
+
+            // 底部活动条：只在有运行中/等待处理会话时出现
+            safeRegister('shell.bottom', function () {
+              return slots.register(
+                {
+                  name: 'shell.bottom',
+                  id: 'heat-bottom',
+                  order: 20,
+                  locale: NS,
+                  label: function () { return tt('bottom.title', { count: 0 }); },
+                  inject: injectProps,
+                },
+                BottomActivityBar,
+              );
+            });
+
+            safeRegister('sidebar.panellist', function () {
               return slots.register(
                 {
                   name: 'sidebar.panellist',
@@ -5053,19 +6128,59 @@ function build(require) {
               );
             });
 
-            slots.inject('main', function () {
+            safeRegister('main', function () {
               return slots.register({ name: 'main', key: 'activity-heat', inject: injectProps }, ActivityPanel);
             });
 
-            ahLog('[activity-heat] seats registered: row.leading + row.hover + panellist + main');
+            // 右侧栏 tab 正文：key 与 registerRightbar 的类型 id 一致
+            safeRegister('sidebar.right.pane.tab', function () {
+              return slots.register(
+                { name: 'sidebar.right.pane.tab', key: RIGHTBAR_ID, inject: injectProps },
+                RightbarActivityPanel,
+              );
+            });
+
+            // 侧栏原生会话行菜单：只挂宿主内置菜单没有的插件动作
+            var sidebarMenuDefs = [];
+            for (var _sm = 0; _sm < SESSION_ACTION_DEFS.length; _sm += 1) {
+              if (SESSION_ACTION_DEFS[_sm].sidebarMenu === true) sidebarMenuDefs.push(SESSION_ACTION_DEFS[_sm]);
+            }
+            sidebarMenuDefs.forEach(function (def) {
+              safeRegister('sidebar.workspaces.session.menu.item', function () {
+                return slots.register({
+                  name: 'sidebar.workspaces.session.menu.item',
+                  id: 'ah-' + def.id,
+                  order: 500 + def.order,
+                  locale: NS,
+                  label: function () { return tt(def.labelKey); },
+                  inject: injectProps,
+                }, makeSidebarMenuRow(def));
+              });
+            });
+
+            // 侧栏行尾悬停按钮：在终端中打开（宿主内置 row action 不含它）
+            safeRegister('sidebar.workspaces.session.row.action', function () {
+              return slots.register({
+                name: 'sidebar.workspaces.session.row.action',
+                id: 'ah-terminal-row',
+                order: 500,
+                locale: NS,
+                label: function () { return tt('menu.openTerminal'); },
+                inject: injectProps,
+              }, SidebarTerminalRowAction);
+            });
+
+            ahLog('[activity-heat] seats registered: row.leading + row.hover + badge + more + bottom + panellist + main + rightbar.tab + sidebar.session.actions');
           } catch (error) {
             ahWarn('[activity-heat] seat registration failed:', error && error.message);
           }
         });
 
         registerShortcut(ctx);
+        registerCommands(ctx);
+        registerRightbar(ctx);
       } catch (error) {
-        ahWarn('[activity-heat] apply failed:', error && error.message);
+        try { console.error('[activity-heat] apply failed:', error && (error.stack || error.message)); } catch (ignored) {}
       }
     },
   };

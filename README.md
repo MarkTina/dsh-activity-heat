@@ -87,6 +87,18 @@ A session the agent has finished, which you have not opened yet, shows a **green
 
 > `prefers-reduced-motion` is respected: with reduced motion enabled, all animation stops.
 
+## New in 0.4–0.5 — more than one panel
+
+- **Five states**: Waiting for approval / plan review / your answer (`pendingInteraction.kind`), all the same amber whale tail and ranked above Done / Working.
+- **Range views**: the session view switches between Active / Archived / Subagents; archived rows can be restored in place.
+- **Two lightweight entries**: collapsed badge (attention count) and the sidebar “More” menu — reach the panel without opening it. The session-header corner seat belongs to ui-sidebar-right’s panel button, so this plugin no longer contends for it.
+- **Bottom activity bar**: appears only when sessions are running or waiting, click to open.
+- **Batch actions**: Select mode → Archive selected / Pin selected / Copy IDs; running sessions use stop-and-archive.
+- **Native sidebar row actions**: the row “…” menu gains Open in terminal / Copy title / Copy working directory / Download log, and the row hover gets a terminal button. Both read the same action catalog (`SESSION_ACTION_DEFS`) as the panel.
+- **Stop and archive**: running sessions are no longer just disabled; the dialog lists the running turn / subagents / jobs / schedules and confirms with `stopActivity` (stopping is irreversible).
+- **Right-sidebar dock**: pick “Recent Activity” in the right sidebar guide to dock the list.
+- **`/heat` command**: type `/heat` to open the panel.
+
 ## Look and motion
 
 Every surface is built from host theme tokens plus `color-mix` — **no hard-coded colors** — so light and dark themes work automatically:
@@ -129,10 +141,10 @@ This plugin is installed as a local directory or a GitHub repository; it is **no
 ```bash
 # inside your DSH profile directory
 cd ~/.dsh/profiles/<your-profile>
-pnpm add github:MarkTina/dsh-activity-heat#v0.3.3
+pnpm add github:MarkTina/dsh-activity-heat#v0.5.3
 ```
 
-Pin a tag (`#v0.3.3`) rather than following `main`, so an unrelated commit cannot change what you run. To upgrade later, bump the tag and restart DSH.
+Pin a tag (`#v0.5.3`) rather than following `main`, so an unrelated commit cannot change what you run. To upgrade later, bump the tag and restart DSH.
 
 The repository must be **public**; a private repo needs a token (`https://<token>@github.com/...` or an SSH remote) before `pnpm add` can fetch it.
 
@@ -160,6 +172,8 @@ Add `@local/activity-heat` to `dsh.profile.bundles` the same way.
 Default **`Ctrl + Alt + H`** (`Cmd + Alt + H` on macOS) switches to the Recent Activity panel. Pressing it again while the panel is open returns you to the conversation you came from — the panel never replaces the session, so the toggle is a round trip.
 
 Change it under **Settings → Shortcuts**, searching for “Recent Activity”.
+
+You can also type **`/heat`** to open the panel (when the host mounts the command service).
 
 > **Why not `Ctrl+H`?** The host treats `Ctrl` + `C/V/X/Z/Y/Q/H` as reserved system keys (browser history etc.), so a bare `Ctrl+H` default is rejected as `reserved`. Adding `alt` uses the web whitelist branch. For the same reason the plugin deliberately declares **no Linux profile** — on Linux `alt+control` is treated as reserved and would fail the whole registration. Linux users can bind a key in Settings.
 
@@ -255,13 +269,17 @@ node test/assets.cjs       # inlined running badge matches assets/active.png
 - Turns, tokens, cache hit rate and context usage read `sessionStats`, `tokenUsage` and `contextPressure` — the same projections as the composer status bar, so the numbers match it exactly. Profiles that only expose `contextTimeline` fall back to its values; in that case the figures can differ from the status bar.
 - No Linux default shortcut is declared; Linux users bind one in Settings.
 - The right-click menu does **not** delete sessions: the host only supports archiving, and archived sessions can be restored from the sidebar's archived view.
-- Running sessions cannot be archived (the item is disabled with an explanation); after archiving, the panel re-sorts by heat.
+- Running sessions' archive item becomes “Stop and archive…”: the dialog lists the running turn / subagents / jobs / schedules and stops them (irreversible) before archiving; the panel re-sorts by heat afterwards.
 - "Download session log" requires the host to mount `dsh-session-log-export`; without it the item reports unavailability instead of opening a 404 page.
-- The host's native sidebar rows expose no right-click extension point, so the menu is offered on the central panel's cards only.
+- The host's native sidebar rows expose no right-click event, but they do expose `sidebar.workspaces.session.menu.item` / `.row.action` seats; the plugin's terminal / copy / download actions live there, while pin / rename / fork / archive use the host's own items and the central panel keeps the full menu.
 - `updatedAt` is the host's last-activity snapshot and does not refresh with tool steps or streaming output; the panel treats running sessions as maximum heat, which does not mean they just received a message.
 - "Open in…" requires the host to mount `dsh-host-open-in-app` (`/open-in-app/apps` and `/open-in-app/open`); without it, over SSH, or when the directory is gone, the item is disabled or reports a failure. The host probes installed apps once at startup, so newly installed apps appear after a DSH restart.
 - Terminals list terminal emulators only (Windows Terminal / Terminal / iTerm2 / Warp…); Git Bash is a shell, not a terminal emulator, so it is not shown.
 - "Open in terminal" is implemented by the plugin's own Host route `POST /activity-heat/open-terminal`, independent of the host open-in-app catalog; Windows tries Windows Terminal → PowerShell 7 → Windows PowerShell, and reports a failure when none is available.
+
+- Waiting-for-approval / plan-review rely on the host `pendingInteraction`; older hosts expose only `userQuestions`, so both fall back to “Waiting”.
+- The right-sidebar dock and `/heat` require the host to mount `sidebarRightTabs` / `commandUi`; otherwise the entry is simply absent.
+- Batch-archiving a running session uses `stopActivity`; stopping is not reversible.
 
 ## License
 
