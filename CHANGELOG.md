@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 — 2026-10-29
+
+- **Terminal stays visible in the picker.** The "Open in…" submenu now pins "Open in terminal" as its first row, so it is available even when the host `open-in-app` catalog cannot resolve Windows Terminal. It calls the plugin's own `POST /activity-heat/open-terminal` (Windows Terminal → PowerShell 7 → Windows PowerShell).
+
 ## 0.3.0 — 2026-10-28
 
 - **Running sessions rank first.** The host's `updatedAt` only advances at turn boundaries, so a long-running session could sit behind an idle one touched minutes ago. Running sessions now count as heat 5/5 and sort ahead of idle sessions; the card keeps the real "last active" time and the hover card labels the heat "working".

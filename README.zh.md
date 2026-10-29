@@ -128,10 +128,10 @@ DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话�
 ```bash
 # 在 DSH profile 目录下
 cd ~/.dsh/profiles/<你的 profile>
-pnpm add github:MarkTina/dsh-activity-heat#v0.3.0
+pnpm add github:MarkTina/dsh-activity-heat#v0.3.1
 ```
 
-建议**锁定 tag**（`#v0.3.0`）而不是跟随 `main`，这样仓库上后续的无关提交不会改变你实际运行的代码。升级时换 tag 再重启即可。
+建议**锁定 tag**（`#v0.3.1`）而不是跟随 `main`，这样仓库上后续的无关提交不会改变你实际运行的代码。升级时换 tag 再重启即可。
 
 仓库必须是**公开**的；私有仓库需要先配好 token（`https://<token>@github.com/...`）或 SSH remote，`pnpm add` 才能拉取。
 

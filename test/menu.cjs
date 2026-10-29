@@ -681,10 +681,14 @@ function reset() {
   const picker = menuOf(view);
   check(Boolean(picker), '「打开方式」浮层出现');
   const pickerLabels = picker ? itemsOf(picker).map((item) => item.label) : [];
-  check(pickerLabels[0] === '在文件资源管理器中打开', '文件管理器排在最前', pickerLabels[0]);
+  check(pickerLabels[0] === '在终端中打开', '终端固定在第一项', pickerLabels[0]);
+  check(pickerLabels[1] === '在文件资源管理器中打开', '文件管理器排在其后', pickerLabels[1]);
   check(pickerLabels.indexOf('在VS Code中打开') !== -1, '编辑器在列表中');
   check(pickerLabels.indexOf('在Windows Terminal中打开') !== -1, '终端在列表中');
   check(pickerLabels.indexOf('在Git Bash中打开') === -1, 'Git Bash 不作为终端显示');
+  itemsOf(picker).find((item) => item.label === '在终端中打开').onSelect();
+  await flush();
+  check(terminalCalls.some((call) => call.path === 'D:/p/alpha'), '二级列表的终端项可用');
   itemsOf(picker).find((item) => item.label === '在VS Code中打开').onSelect();
   await flush();
   check(

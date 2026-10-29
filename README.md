@@ -128,10 +128,10 @@ This plugin is installed as a local directory or a GitHub repository; it is **no
 ```bash
 # inside your DSH profile directory
 cd ~/.dsh/profiles/<your-profile>
-pnpm add github:MarkTina/dsh-activity-heat#v0.3.0
+pnpm add github:MarkTina/dsh-activity-heat#v0.3.1
 ```
 
-Pin a tag (`#v0.3.0`) rather than following `main`, so an unrelated commit cannot change what you run. To upgrade later, bump the tag and restart DSH.
+Pin a tag (`#v0.3.1`) rather than following `main`, so an unrelated commit cannot change what you run. To upgrade later, bump the tag and restart DSH.
 
 The repository must be **public**; a private repo needs a token (`https://<token>@github.com/...` or an SSH remote) before `pnpm add` can fetch it.
 

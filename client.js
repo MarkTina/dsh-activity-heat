@@ -4062,9 +4062,17 @@ function build(require) {
       setOpenWith({ path: path, label: label, x: anchor.x, y: anchor.y });
     }
 
-    /** 「打开方式」列表：按文件管理器 → 编辑器 → 终端 → 其他排序，组间加分隔。 */
+    /** 「打开方式」列表：终端固定第一项；其余按文件管理器 → 编辑器 → 终端 → 其他排序，组间加分隔。 */
     function buildOpenWithItems(target) {
       var path = target && target.path;
+      // 宿主 catalog 可能解析不到 windowsterminal，不能因此让列表里没有终端
+      var items = [{
+        id: 'terminal',
+        label: tt('menu.openTerminal'),
+        disabled: !isAbsolutePath(path),
+        hint: !isAbsolutePath(path) ? tt('menu.openWithNoPath') : undefined,
+        onSelect: function () { closeOpenWith(); openTerminal(path); },
+      }];
       var ordered = apps.filter(function (id) {
         // Git Bash 是 shell，不是终端模拟器；「终端」只列 Windows Terminal / Terminal 这一类
         return id !== 'gitbash';
@@ -4072,18 +4080,18 @@ function build(require) {
         return openWithGroupRank(a) - openWithGroupRank(b);
       });
       var lastGroup = -1;
-      return ordered.map(function (id) {
+      ordered.forEach(function (id) {
         var group = openWithGroupRank(id);
-        var item = {
+        items.push({
           id: 'app-' + id,
           label: tt('openWith.item', { app: appLabelOf(id) }),
           separatorBefore: lastGroup !== -1 && group !== lastGroup,
           disabled: !isAbsolutePath(path),
           onSelect: function () { openInApp(id, path); },
-        };
+        });
         lastGroup = group;
-        return item;
       });
+      return items;
     }
 
     function openTerminal(path) {
