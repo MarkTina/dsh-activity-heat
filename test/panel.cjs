@@ -260,7 +260,7 @@ function collect(tree) {
   const all = c.texts.join(' | ');
   const titled = c.buttons.filter((x) => x.props['aria-label']);
 
-  check(all.indexOf('最近活跃会话') !== -1, '面板标题正确');
+  check(all.indexOf('最近活跃会话') === -1, '面板不再渲染标题（视图切换直接打头）');
   check(all.indexOf('会话 6') !== -1, '显示会话总数 6（排除归档/子代理/空白）');
   check(all.indexOf('工作区 3') !== -1, '显示工作区总数');
   check(all.indexOf('子代理') === -1, '排除子代理会话');
@@ -278,6 +278,24 @@ function collect(tree) {
 
   const segLabels = c.buttons.map((x) => String((x.children && x.children[0]) || ''));
   check(['10', '20', '30', '50'].every((v) => segLabels.indexOf(v) !== -1), '会话数量选项 10/20/30/50');
+
+  /* 顶部三级排布：数量为淡文字、筛选为下划线 tab */
+  check(all.indexOf('条数') !== -1, '数量选择带「条数」标签');
+  const activeFilter = chips.find((x) => String((x.children && x.children[0]) || '') === '全部');
+  check(
+    activeFilter && String(activeFilter.props.className || '').indexOf('ah-tab') !== -1,
+    '筛选 tab 走 ah-tab 类（下划线由 ::after 渐变绘制）',
+  );
+  check(
+    activeFilter && activeFilter.props['data-active'] === 'true',
+    '选中的筛选 tab 标记 data-active',
+  );
+  check(activeFilter && activeFilter.props.style.borderRadius === 0, '筛选不再是胶囊');
+  const countPill = c.buttons.find((x) => String((x.children && x.children[0]) || '') === '10');
+  check(countPill && countPill.props.style.background === 'transparent', '数量选择为无底色文字');
+  check(countPill && String(countPill.props.style.border).indexOf('transparent') !== -1, '数量选择无边框');
+  check(countPill && String(countPill.props.className || '').indexOf('ah-count') !== -1, '数量选择带 ah-count 类（选中玻璃底由 ::before 画）');
+  check(countPill && countPill.props['data-active'] === 'true', '选中的数量标记 data-active');
 
   check(all.indexOf('14 轮') !== -1, '轮次取宿主 sessionStats（与状态栏一致）');
   check(all.indexOf('40 步') !== -1, '步数取宿主 sessionStats.steps');
@@ -355,16 +373,18 @@ function collect(tree) {
   const rules = flowCss.split('}').filter(Boolean);
   const hotRule = rules.filter((r) => r.indexOf('session:hot') !== -1).join('');
   const recentRule = rules.filter((r) => r.indexOf('session:recent') !== -1).join('');
-  check(Boolean(flowStyle), '为会话生成标题下划线规则');
-  check(hotRule.indexOf('_title') !== -1, '下划线作用在标题元素上');
-  check(hotRule.indexOf('background-image:linear-gradient') !== -1, '下划线常驻（背景线）');
-  check(hotRule.indexOf('padding-bottom:5px') !== -1 && hotRule.indexOf('padding-top:5px') !== -1, '上下对称 padding 留出间距且不位移');
-  check(hotRule.indexOf('background-size:200% 2px') !== -1, '活跃会话用宽渐变线扫动');
-  check(hotRule.indexOf('--color-blue-500') !== -1, '下划线用蓝色令牌');
-  check(hotRule.indexOf('animation:ah-title-flow') !== -1, '活跃会话带闪动');
-  check(recentRule !== '' && recentRule.indexOf('animation:') === -1, '非活跃会话只有静态下划线');
-  check(recentRule.indexOf('background-size:100% 2px') !== -1, '非活跃会话线不扫动');
-  check(String(b.env.styles.map((s) => s.textContent || '').join('')).indexOf('session:run') === -1, '运行中不生成热度下划线');
+  check(Boolean(flowStyle), '为会话生成标题前圆点规则');
+  check(hotRule.indexOf('_title"]::before') !== -1, '圆点画在标题的 ::before 上（不占行首格）');
+  check(hotRule.indexOf('border-radius:50%') !== -1, '圆点形状');
+  check(hotRule.indexOf('top:-2px') !== -1, '圆点上移对齐字形中轴');
+  check(hotRule.indexOf('background:var(--color-blue-500') !== -1, '最热圆点是纯蓝');
+  check(recentRule.indexOf('--dsw-alias-label') !== -1, '低热度圆点走中性灰阶（不再全蓝）');
+  check(hotRule.indexOf('border:none') !== -1, '高热为实心无描边');
+  check(hotRule.indexOf('--color-blue-500') !== -1, '圆点用蓝色令牌');
+  check(hotRule.indexOf('animation:ah-dot-pulse') !== -1, '活跃会话圆点脉冲');
+  check(recentRule !== '' && recentRule.indexOf('border:1.5px solid') !== -1, '低热度为空心描边');
+  check(recentRule.indexOf('animation:') === -1, '非活跃会话圆点不脉冲');
+  check(String(b.env.styles.map((s) => s.textContent || '').join('')).indexOf('session:run') === -1, '运行中不生成热度圆点');
 
   /* 悬停卡 */
   const hoverReg = b.regs.find((r) => r.o.name === 'sidebar.session.row.hover');
@@ -416,8 +436,30 @@ function collect(tree) {
   check(css.indexOf('ah-orbit') !== -1, '含跑马灯 keyframes');
   check(css.indexOf('ah-breathe') !== -1, '含呼吸 keyframes');
   check(css.indexOf('ah-pulse') !== -1, '含脉冲 keyframes');
-  check(css.indexOf('ah-title-flow') !== -1, '含标题下划线流动 keyframes');
+  check(css.indexOf('ah-dot-pulse') !== -1, '含标题前圆点脉冲 keyframes');
   check(css.indexOf('prefers-reduced-motion') !== -1, '尊重减少动态偏好');
+
+  /* 视觉层：半透明 + 磨砂 + 渐变 */
+  check(css.indexOf('.ah-shell') !== -1, '含面板外壳');
+  check(css.indexOf('.ah-shell::before') === -1, '面板不再铺背景渐变层');
+  check(css.indexOf('--color-violet') === -1 && css.indexOf('--color-teal') === -1, 'CSS 里没有紫 / 青杂色');
+  check(css.indexOf('backdrop-filter') !== -1, '含背景磨砂');
+  check(css.indexOf('--dsw-menu-backdrop-filter') !== -1, '磨砂优先用宿主令牌');
+  check(css.indexOf('--dsw-specific-menu') !== -1, '玻璃底色用宿主半透明表面令牌');
+  check(css.indexOf('linear-gradient') !== -1, '含渐变表面');
+  check(css.indexOf('body[data-ds-dark-theme]') !== -1, '深色主题单独调高光与阴影');
+  check(css.indexOf('@media (hover: hover)') !== -1, '悬停特效只在支持悬停的设备上生效');
+  check(css.indexOf('ah-card-in') !== -1, '含卡片入场 keyframes');
+  check(css.indexOf('ah-sheen') === -1, '悬停扫光已移除（不再一闪而过）');
+  check(css.indexOf('ah-pop-in') !== -1, '含浮层入场 keyframes');
+  check(css.indexOf('ah-pop-out') !== -1, '含浮层退场 keyframes');
+  check(css.indexOf('.ah-popover') !== -1, '浮层有玻璃表面');
+  check(css.indexOf('.ah-tab::after') !== -1, '筛选下划线由 ::after 绘制');
+
+  const reduced = css.slice(css.indexOf('prefers-reduced-motion'));
+  check(reduced.indexOf('ah-pop-in') === -1, '减少动态时关掉浮层进场');
+  check(reduced.indexOf('.ah-tab::after') !== -1, '减少动态时关掉下划线过渡');
+  check(reduced.indexOf('.ah-card') !== -1, '减少动态时关掉卡片过渡');
 }
 
 /* ================= 8. locale 服务 ================= */
@@ -446,9 +488,10 @@ function collect(tree) {
   const all = c.texts.join(' | ');
 
   check(registered['@local/activity-heat'] !== undefined, 'locale: 注册了插件命名空间');
-  check(all.indexOf('Recent Activity') !== -1, 'locale: 面板标题走英文');
+  check(all.indexOf('Recent Activity') === -1, 'locale: 面板不渲染标题（英文）');
   check(all.indexOf('Sessions 6') !== -1, 'locale: 会话计数走英文');
   check(all.indexOf('Workspaces 3') !== -1, 'locale: 工作区计数走英文');
+  check(all.indexOf('Count') !== -1, 'locale: 数量标签走英文');
   check(all.indexOf('Blazing') !== -1, 'locale: 热度档位走英文');
 
   const hoverReg = b.regs.find((r) => r.o.name === 'sidebar.session.row.hover');
@@ -602,6 +645,179 @@ function collect(tree) {
     '右侧列三行：工作区名 / 热度 / 时间',
     rightCol && rightCol.children ? rightCol.children.length : 'none',
   );
+}
+
+/* ================= 12. 玻璃 / 磨砂 / 渐变视觉层 ================= */
+{
+  const b = boot(false);
+  const reg = b.regs.find((r) => r.o.name === 'main');
+  const injected = typeof reg.o.inject === 'function' ? reg.o.inject() : {};
+  const sessionsView = collect(reg.C({ ...injected, ...panelProps }));
+
+  const root = sessionsView.nodes.find(
+    (n) => String(n.props.className || '').indexOf('ah-shell') !== -1,
+  );
+  check(Boolean(root), '面板根节点带 ah-shell 类（背景光斑 + 淡入）');
+
+  const sessionCards = sessionsView.buttons.filter(
+    (x) => String(x.props.className || '').indexOf('ah-card') !== -1,
+  );
+  check(sessionCards.length === 6, '六张会话卡片都带 ah-card 类', sessionCards.length);
+  check(
+    sessionCards.every((x) => typeof x.props.style.animationDelay === 'string'),
+    '卡片带错峰入场延迟',
+  );
+  check(
+    sessionCards.every((x) => Number(String(x.props.style.animationDelay).replace('ms', '')) <= 160),
+    '错峰延迟封顶 160ms',
+  );
+  const runningCard = sessionCards.find(
+    (x) => String(x.props.className).indexOf('ah-card--running') !== -1,
+  );
+  check(Boolean(runningCard), '运行中卡片带 ah-card--running（保持实底遮住光带）');
+  check(
+    runningCard && String(runningCard.props.style.background || '') === '',
+    '运行中卡片的底色不再写死在行内（交给主题令牌）',
+  );
+
+  const workspacesView = collect(reg.C({ ...injected, initialView: 'workspaces', ...panelProps }));
+  const groupCards = workspacesView.buttons.filter(
+    (x) => String(x.props.className || '').indexOf('ah-card--group') !== -1,
+  );
+  check(groupCards.length === 3, '三张工作区卡片带 ah-card--group', groupCards.length);
+  check(
+    groupCards.every((x) => x.props['data-openable'] === 'true' || x.props['data-openable'] === 'false'),
+    '工作区卡片用 data-openable 表达可点击',
+  );
+
+  const inner = sessionsView.nodes.find(
+    (n) => String(n.props.className || '') === 'ah-list-inner',
+  );
+  check(Boolean(inner), '列表内容包一层 ah-list-inner（切换时重播淡入）');
+  check(
+    inner && String(inner.props.key || '').indexOf('sessions|all|10') === 0,
+    '淡入层的 key 绑定视图 / 筛选 / 数量',
+    inner && inner.props.key,
+  );
+
+  const meters = sessionsView.components.filter((x) => x.name === 'HeatMeter');
+  check(meters.length > 0, '热度计仍走组件（视觉由 ah-meter-* 类接管）', meters.length);
+  const bars = sessionsView.nodes.filter((n) => String(n.props.className || '').indexOf('ah-heat-bar') !== -1);
+  check(bars.length === 6, '每张卡片都有热度竖条', bars.length);
+  // 竖条现在是「档位色 → 白尖」的竖向渐变，颜色落在 backgroundImage 里
+  const barColors = new Set(bars.map((n) => String(n.props.style.backgroundImage)));
+  check(barColors.size >= 4, '竖条按档位呈现多种颜色（灰白 → 灰黑 → 蓝）', barColors.size);
+  check(
+    bars.every((n) => {
+      const color = String(n.props.style.backgroundImage);
+      return color.indexOf('color-mix') !== -1 || color.indexOf('--color-blue-500') !== -1;
+    }),
+    '竖条颜色只走主题令牌',
+  );
+}
+
+/* ================= 13. 已完成（未查看）状态 ================= */
+{
+  const b = boot(false);
+  const reg = b.regs.find((r) => r.o.name === 'main');
+  const injected = typeof reg.o.inject === 'function' ? reg.o.inject() : {};
+  const future = Date.now() + 5000;
+  const emptyWorkspaces = { archivedSessionIds: [], items: [] };
+  const state = {
+    ids: ['done', 'old'],
+    byId: {
+      done: { id: 'done', title: '刚跑完的会话', updatedAt: future },
+      old: { id: 'old', title: '旧会话', updatedAt: Date.now() - 3 * 3600000 },
+    },
+    projectionsBySession: {},
+  };
+  const render = (sessionState, workspaceState) => collect(reg.C({
+    ...injected,
+    useSessions: (sel) => sel(sessionState),
+    useWorkspaces: (sel) => sel(workspaceState || emptyWorkspaces),
+  }));
+
+  const first = render(state);
+  check(first.texts.join(' | ').indexOf('已完成') !== -1, '已结束且未查看的会话显示「已完成」');
+  const tags = first.components.filter((x) => x.name === 'DoneTag');
+  check(tags.length === 1, '只有未查看的那一个带 DoneTag', tags.length);
+  const glyph = first.nodes.find((n) => String(n.props.className || '') === 'ah-done-glyph');
+  check(Boolean(glyph), '已完成用勾形图标（ah-done-glyph）');
+  check(
+    first.buttons.some((x) => String(x.props['aria-label'] || '').indexOf('刚跑完的会话') !== -1),
+    '已完成会话仍是可点击的卡片',
+  );
+  check(
+    String(b.env.styles[0] && b.env.styles[0].textContent).indexOf('--dsw-alias-state-success-primary') !== -1,
+    '已完成用宿主 success 绿色，与蓝色区分',
+  );
+
+  const second = render(state);
+  check(second.texts.join(' ').indexOf('已完成') !== -1, '未打开前保持「已完成」');
+
+  const opened = render({
+    ids: ['done'],
+    byId: { done: { id: 'done', title: '刚跑完的会话', updatedAt: future, retainedBy: { mainView: 1 } } },
+    projectionsBySession: {},
+  });
+  check(opened.texts.join(' ').indexOf('已完成') === -1, '打开会话后「已完成」立即消失');
+}
+
+/* ================= 14. 等待回答状态 ================= */
+{
+  const b = boot(false);
+  const reg = b.regs.find((r) => r.o.name === 'main');
+  const injected = typeof reg.o.inject === 'function' ? reg.o.inject() : {};
+  const state = {
+    ids: ['waiting'],
+    byId: { waiting: { id: 'waiting', title: '等待回答的会话', updatedAt: Date.now() - 3600000 } },
+    projectionsBySession: {
+      waiting: {
+        values: {
+          userQuestions: {
+            active: [{ callId: 'c1', questions: [{ id: 'q1', question: '继续吗' }], state: 'open' }],
+            settled: [],
+          },
+        },
+      },
+    },
+  };
+  const view = collect(reg.C({
+    ...injected,
+    useSessions: (sel) => sel(state),
+    useWorkspaces: (sel) => sel({ archivedSessionIds: [], items: [] }),
+  }));
+  const all = view.texts.join(' | ');
+  check(all.indexOf('等待回答') !== -1, '未回答的提问显示「等待回答」');
+  const tags = view.components.filter((x) => x.name === 'AwaitingTag');
+  check(tags.length === 1, '等待回答用 AwaitingTag', tags.length);
+  const css = b.env.styles[0] ? b.env.styles[0].textContent : '';
+  check(css.indexOf('--dsw-alias-state-warn-primary') !== -1, '等待回答用宿主 warn 琥珀色');
+  check(css.indexOf('ah-awaiting-breathe') !== -1 || css.indexOf('ah-done-breathe 3.2s') !== -1, '等待回答有轻微呼吸');
+
+  /* 有未回答提问时，优先级高于已完成 */
+  const both = {
+    ids: ['both'],
+    byId: { both: { id: 'both', title: '又完成又在等回答', updatedAt: Date.now() + 5000 } },
+    projectionsBySession: {
+      both: {
+        values: {
+          userQuestions: {
+            active: [{ callId: 'c2', questions: [{ id: 'q2', question: '下一步？' }], state: 'open' }],
+            settled: [],
+          },
+        },
+      },
+    },
+  };
+  const bothView = collect(reg.C({
+    ...injected,
+    useSessions: (sel) => sel(both),
+    useWorkspaces: (sel) => sel({ archivedSessionIds: [], items: [] }),
+  }));
+  const bothText = bothView.texts.join(' ');
+  check(bothText.indexOf('等待回答') !== -1, '等待回答优先于已完成');
+  check(bothText.indexOf('已完成') === -1, '等待回答时不显示已完成');
 }
 
 console.log(failed === 0 ? '\nHARNESS PASSED' : '\nHARNESS FAILED (' + failed + ')');

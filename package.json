@@ -1,8 +1,8 @@
 {
   "name": "@local/activity-heat",
-  "version": "0.1.1",
+  "version": "0.3.0",
   "private": true,
-  "description": "Heat marks that make the sessions and workspaces with the most recent conversations obvious: a sidebar entry, a persistent heat underline beneath each session title and a hover-card heat section. | 会话热度：用热度标识最近发生过对话的会话与工作区。",
+  "description": "Heat marks that make the sessions and workspaces with the most recent conversations obvious: a sidebar entry, a heat dot before each session title and a hover-card heat section. | 会话热度：用热度标识最近发生过对话的会话与工作区。",
   "icon": "icon.svg",
   "type": "module",
   "author": "MarkTina",
@@ -57,7 +57,7 @@
   ],
   "scripts": {
     "check": "node --check index.js && node --check client.js",
-    "test": "node test/panel.cjs && node test/shortcut.cjs && node test/boot-timing.cjs && node test/locale.cjs && node test/assets.cjs"
+    "test": "node test/panel.cjs && node test/menu.cjs && node test/shortcut.cjs && node test/boot-timing.cjs && node test/locale.cjs && node test/assets.cjs"
   },
   "dsh": {
     "bundle": {

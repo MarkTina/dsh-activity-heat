@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Recent Activity",
-    "description": "Heat marks that make the sessions and workspaces with the most recent conversations obvious: a sidebar entry, a persistent heat underline beneath each session title, and a hover-card heat section."
+    "description": "Heat marks that make the sessions and workspaces with the most recent conversations obvious: a sidebar entry, a heat dot before each session title, and a hover-card heat section."
   },
   "nav": "Recent Activity",
   "panel": {
-    "title": "Recent Activity",
     "sessionsCount": "Sessions {count}",
     "workspacesCount": "Workspaces {count}",
+    "countLabel": "Count",
     "empty": "No recent activity.",
     "emptyFilteredSessions": "No sessions in this heat band.",
     "emptyFilteredWorkspaces": "No workspaces in this heat band.",
@@ -26,10 +26,18 @@
   },
   "hover": {
     "heat": "Heat {level}/5 · {name}",
+    "heatLevel": "Heat {level}/5",
+    "heatRunning": "Heat {level}/5 · working",
     "lastActive": "Last active: {time}",
     "workspaceRank": "Workspace “{name}” ranks #{rank}",
     "workspaceHot": "Workspace “{name}” is hot",
     "noData": "No activity recorded"
+  },
+  "field": {
+    "turns": "Turns",
+    "tokens": "Tokens",
+    "cache": "Cache",
+    "context": "Context"
   },
   "dot": { "tooltip": "Heat {level}/5 · {time}" },
   "running": {
@@ -37,6 +45,12 @@
     "title": "This session is running",
     "short": "Running",
     "working": "Working"
+  },
+  "status": {
+    "done": "Done",
+    "doneTitle": "Finished, not viewed yet",
+    "awaiting": "Waiting",
+    "awaitingTitle": "This session is waiting for your answer"
   },
   "fact": {
     "turns": "{n} turns",
@@ -88,5 +102,105 @@
     "weeks": "{n} w ago",
     "longAgo": "a long time ago",
     "unknown": "unknown"
+  },
+  "menu": {
+    "openSession": "Open session",
+    "openWorkspace": "Open workspace",
+    "newSessionInWorkspace": "New session in workspace",
+    "copyId": "Copy session ID",
+    "copyTitle": "Copy title",
+    "copyPrompt": "Copy latest prompt",
+    "copyCwd": "Copy working directory",
+    "copyWorkspaceName": "Copy workspace name",
+    "copyWorkspacePath": "Copy workspace path",
+    "pin": "Pin session",
+    "unpin": "Unpin session",
+    "rename": "Rename…",
+    "fork": "Fork session",
+    "downloadLog": "Download session log",
+    "archive": "Archive session",
+    "archiveRunningHint": "Running — stop it first",
+    "unavailable": "Not supported by this host",
+    "openTerminal": "Open in terminal",
+    "openWith": "Open in…",
+    "openWithUnavailable": "No compatible app detected",
+    "openWithNoPath": "This session has no directory to open"
+  },
+  "toast": {
+    "copied": "Copied",
+    "pin": "Pinned in the sidebar",
+    "unpin": "Unpinned",
+    "renamed": "Renamed",
+    "forked": "Branch created",
+    "archived": "Archived",
+    "unarchived": "Restored",
+    "undo": "Undo",
+    "openedWith": "Opened in {app}",
+    "terminalOpened": "Terminal opened"
+  },
+  "dialog": {
+    "archiveTitle": "Archive this session?",
+    "archiveBody": "“{title}” leaves the recent list and can be restored from archived sessions in the sidebar.",
+    "archiveConfirm": "Archive",
+    "archiving": "Archiving…",
+    "renameTitle": "Rename session",
+    "renamePlaceholder": "Session title",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "emptyTitle": "Title cannot be empty"
+  },
+  "error": {
+    "copy": "Copy failed",
+    "pin": "Pin failed",
+    "unpin": "Unpin failed",
+    "rename": "Rename failed",
+    "fork": "Fork failed",
+    "archive": "Archive failed",
+    "unarchive": "Restore failed",
+    "export": "Export is not available in this installation",
+    "running": "The session is still running and cannot be archived",
+    "start": "New session failed",
+    "openWith": "Open failed",
+    "openTerminal": "Failed to open a terminal"
+  },
+  "openWith": {
+    "title": "Open with",
+    "item": "Open in {app}"
+  },
+  "app": {
+    "explorer": "File Explorer",
+    "finder": "Finder",
+    "filemanager": "File manager",
+    "vscode": "VS Code",
+    "vscodeinsiders": "VS Code Insiders",
+    "cursor": "Cursor",
+    "windsurf": "Windsurf",
+    "zed": "Zed",
+    "sublimetext": "Sublime Text",
+    "xcode": "Xcode",
+    "androidstudio": "Android Studio",
+    "intellijidea": "IntelliJ IDEA",
+    "pycharm": "PyCharm",
+    "webstorm": "WebStorm",
+    "phpstorm": "PhpStorm",
+    "goland": "GoLand",
+    "rider": "Rider",
+    "rustrover": "RustRover",
+    "terminal": "Terminal",
+    "windowsterminal": "Windows Terminal",
+    "iterm": "iTerm2",
+    "warp": "Warp",
+    "ghostty": "Ghostty",
+    "kitty": "kitty",
+    "gnometerminal": "GNOME Terminal",
+    "konsole": "Konsole",
+    "fork": "Fork",
+    "sourcetree": "Sourcetree",
+    "github": "GitHub Desktop",
+    "tower": "Tower",
+    "gitkraken": "GitKraken",
+    "smartgit": "SmartGit",
+    "sublimemerge": "Sublime Merge"
   }
 }

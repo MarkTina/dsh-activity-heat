@@ -20,16 +20,16 @@
  * 这里读 meta.title / meta.description）。浏览器侧不能直接 require JSON，所以在
  * 这里内联同一份字典，并由 `node test/locale.cjs` 强制两份内容保持一致。
  *
- * 键在运行时被扁平化：`panel.title`、`relative.minutes` 等，与
+ * 键在运行时被扁平化：`panel.sessionsCount`、`relative.minutes` 等，与
  * `ctx.locale.bind(ns)` 的插值语法 `{name}` 一致。
  */
 var AH_I18N = /* AH_I18N_START */ {
   zh: {
     nav: '最近活跃会话',
     panel: {
-      title: '最近活跃会话',
       sessionsCount: '会话 {count}',
       workspacesCount: '工作区 {count}',
+      countLabel: '条数',
       empty: '暂无最近活动。',
       emptyFilteredSessions: '该热度档位下暂无会话。',
       emptyFilteredWorkspaces: '该热度档位下暂无工作区。',
@@ -48,10 +48,18 @@ var AH_I18N = /* AH_I18N_START */ {
     },
     hover: {
       heat: '热度 {level}/5 · {name}',
+      heatLevel: '热度 {level}/5',
+      heatRunning: '热度 {level}/5 · 工作中',
       lastActive: '最后活动：{time}',
       workspaceRank: '工作区「{name}」排第 {rank}',
       workspaceHot: '工作区「{name}」正热',
       noData: '暂无活动记录',
+    },
+    field: {
+      turns: '轮次',
+      tokens: 'Tokens',
+      cache: '缓存命中',
+      context: '上下文',
     },
     dot: { tooltip: '热度 {level}/5 · {time}' },
     running: {
@@ -59,6 +67,12 @@ var AH_I18N = /* AH_I18N_START */ {
       title: '该会话正在运行',
       short: '正在运行',
       working: '工作中',
+    },
+    status: {
+      done: '已完成',
+      doneTitle: '该会话已完成，尚未查看',
+      awaiting: '等待回答',
+      awaitingTitle: '该会话在等待你的回答',
     },
     fact: {
       turns: '{n} 轮',
@@ -111,13 +125,113 @@ var AH_I18N = /* AH_I18N_START */ {
       longAgo: '很久以前',
       unknown: '未知',
     },
+    menu: {
+      openSession: '打开会话',
+      openWorkspace: '打开工作区',
+      newSessionInWorkspace: '在工作区中新开会话',
+      copyId: '复制会话 ID',
+      copyTitle: '复制标题',
+      copyPrompt: '复制最近提示词',
+      copyCwd: '复制工作目录',
+      copyWorkspaceName: '复制工作区名称',
+      copyWorkspacePath: '复制工作区路径',
+      pin: '置顶会话',
+      unpin: '取消置顶',
+      rename: '重命名…',
+      fork: '分叉会话',
+      downloadLog: '下载会话日志',
+      archive: '归档会话',
+      archiveRunningHint: '正在运行，请先停止',
+      unavailable: '当前宿主不支持',
+      openTerminal: '在终端中打开',
+      openWith: '在其他应用中打开…',
+      openWithUnavailable: '未检测到可用的应用',
+      openWithNoPath: '该会话没有可打开的目录',
+    },
+    toast: {
+      copied: '已复制',
+      pin: '已在侧栏置顶',
+      unpin: '已取消置顶',
+      renamed: '已重命名',
+      forked: '已创建分支',
+      archived: '已归档',
+      unarchived: '已恢复',
+      undo: '撤销',
+      openedWith: '已在 {app} 中打开',
+      terminalOpened: '已打开终端',
+    },
+    dialog: {
+      archiveTitle: '归档会话？',
+      archiveBody: '「{title}」会从最近活跃列表移除，可在侧栏的已归档会话中恢复。',
+      archiveConfirm: '归档',
+      archiving: '归档中…',
+      renameTitle: '重命名会话',
+      renamePlaceholder: '会话标题',
+      save: '保存',
+      cancel: '取消',
+      saving: '保存中…',
+      emptyTitle: '标题不能为空',
+    },
+    error: {
+      copy: '复制失败',
+      pin: '置顶失败',
+      unpin: '取消置顶失败',
+      rename: '重命名失败',
+      fork: '分叉失败',
+      archive: '归档失败',
+      unarchive: '恢复失败',
+      export: '当前安装不支持导出',
+      running: '会话仍在运行，无法归档',
+      start: '新建会话失败',
+      openWith: '打开失败',
+      openTerminal: '打开终端失败',
+    },
+    openWith: {
+      title: '打开方式',
+      item: '在{app}中打开',
+    },
+    app: {
+      explorer: '文件资源管理器',
+      finder: '访达',
+      filemanager: '文件管理器',
+      vscode: 'VS Code',
+      vscodeinsiders: 'VS Code Insiders',
+      cursor: 'Cursor',
+      windsurf: 'Windsurf',
+      zed: 'Zed',
+      sublimetext: 'Sublime Text',
+      xcode: 'Xcode',
+      androidstudio: 'Android Studio',
+      intellijidea: 'IntelliJ IDEA',
+      pycharm: 'PyCharm',
+      webstorm: 'WebStorm',
+      phpstorm: 'PhpStorm',
+      goland: 'GoLand',
+      rider: 'Rider',
+      rustrover: 'RustRover',
+      terminal: '终端',
+      windowsterminal: 'Windows Terminal',
+      iterm: 'iTerm2',
+      warp: 'Warp',
+      ghostty: 'Ghostty',
+      kitty: 'kitty',
+      gnometerminal: 'GNOME Terminal',
+      konsole: 'Konsole',
+      fork: 'Fork',
+      sourcetree: 'Sourcetree',
+      github: 'GitHub Desktop',
+      tower: 'Tower',
+      gitkraken: 'GitKraken',
+      smartgit: 'SmartGit',
+      sublimemerge: 'Sublime Merge',
+    },
   },
   en: {
     nav: 'Recent Activity',
     panel: {
-      title: 'Recent Activity',
       sessionsCount: 'Sessions {count}',
       workspacesCount: 'Workspaces {count}',
+      countLabel: 'Count',
       empty: 'No recent activity.',
       emptyFilteredSessions: 'No sessions in this heat band.',
       emptyFilteredWorkspaces: 'No workspaces in this heat band.',
@@ -136,10 +250,18 @@ var AH_I18N = /* AH_I18N_START */ {
     },
     hover: {
       heat: 'Heat {level}/5 · {name}',
+      heatLevel: 'Heat {level}/5',
+      heatRunning: 'Heat {level}/5 · working',
       lastActive: 'Last active: {time}',
       workspaceRank: 'Workspace “{name}” ranks #{rank}',
       workspaceHot: 'Workspace “{name}” is hot',
       noData: 'No activity recorded',
+    },
+    field: {
+      turns: 'Turns',
+      tokens: 'Tokens',
+      cache: 'Cache',
+      context: 'Context',
     },
     dot: { tooltip: 'Heat {level}/5 · {time}' },
     running: {
@@ -147,6 +269,12 @@ var AH_I18N = /* AH_I18N_START */ {
       title: 'This session is running',
       short: 'Running',
       working: 'Working',
+    },
+    status: {
+      done: 'Done',
+      doneTitle: 'Finished, not viewed yet',
+      awaiting: 'Waiting',
+      awaitingTitle: 'This session is waiting for your answer',
     },
     fact: {
       turns: '{n} turns',
@@ -198,6 +326,106 @@ var AH_I18N = /* AH_I18N_START */ {
       weeks: '{n} w ago',
       longAgo: 'a long time ago',
       unknown: 'unknown',
+    },
+    menu: {
+      openSession: 'Open session',
+      openWorkspace: 'Open workspace',
+      newSessionInWorkspace: 'New session in workspace',
+      copyId: 'Copy session ID',
+      copyTitle: 'Copy title',
+      copyPrompt: 'Copy latest prompt',
+      copyCwd: 'Copy working directory',
+      copyWorkspaceName: 'Copy workspace name',
+      copyWorkspacePath: 'Copy workspace path',
+      pin: 'Pin session',
+      unpin: 'Unpin session',
+      rename: 'Rename…',
+      fork: 'Fork session',
+      downloadLog: 'Download session log',
+      archive: 'Archive session',
+      archiveRunningHint: 'Running — stop it first',
+      unavailable: 'Not supported by this host',
+      openTerminal: 'Open in terminal',
+      openWith: 'Open in…',
+      openWithUnavailable: 'No compatible app detected',
+      openWithNoPath: 'This session has no directory to open',
+    },
+    toast: {
+      copied: 'Copied',
+      pin: 'Pinned in the sidebar',
+      unpin: 'Unpinned',
+      renamed: 'Renamed',
+      forked: 'Branch created',
+      archived: 'Archived',
+      unarchived: 'Restored',
+      undo: 'Undo',
+      openedWith: 'Opened in {app}',
+      terminalOpened: 'Terminal opened',
+    },
+    dialog: {
+      archiveTitle: 'Archive this session?',
+      archiveBody: '“{title}” leaves the recent list and can be restored from archived sessions in the sidebar.',
+      archiveConfirm: 'Archive',
+      archiving: 'Archiving…',
+      renameTitle: 'Rename session',
+      renamePlaceholder: 'Session title',
+      save: 'Save',
+      cancel: 'Cancel',
+      saving: 'Saving…',
+      emptyTitle: 'Title cannot be empty',
+    },
+    error: {
+      copy: 'Copy failed',
+      pin: 'Pin failed',
+      unpin: 'Unpin failed',
+      rename: 'Rename failed',
+      fork: 'Fork failed',
+      archive: 'Archive failed',
+      unarchive: 'Restore failed',
+      export: 'Export is not available in this installation',
+      running: 'The session is still running and cannot be archived',
+      start: 'New session failed',
+      openWith: 'Open failed',
+      openTerminal: 'Failed to open a terminal',
+    },
+    openWith: {
+      title: 'Open with',
+      item: 'Open in {app}',
+    },
+    app: {
+      explorer: 'File Explorer',
+      finder: 'Finder',
+      filemanager: 'File manager',
+      vscode: 'VS Code',
+      vscodeinsiders: 'VS Code Insiders',
+      cursor: 'Cursor',
+      windsurf: 'Windsurf',
+      zed: 'Zed',
+      sublimetext: 'Sublime Text',
+      xcode: 'Xcode',
+      androidstudio: 'Android Studio',
+      intellijidea: 'IntelliJ IDEA',
+      pycharm: 'PyCharm',
+      webstorm: 'WebStorm',
+      phpstorm: 'PhpStorm',
+      goland: 'GoLand',
+      rider: 'Rider',
+      rustrover: 'RustRover',
+      terminal: 'Terminal',
+      windowsterminal: 'Windows Terminal',
+      iterm: 'iTerm2',
+      warp: 'Warp',
+      ghostty: 'Ghostty',
+      kitty: 'kitty',
+      gnometerminal: 'GNOME Terminal',
+      konsole: 'Konsole',
+      fork: 'Fork',
+      sourcetree: 'Sourcetree',
+      github: 'GitHub Desktop',
+      tower: 'Tower',
+      gitkraken: 'GitKraken',
+      smartgit: 'SmartGit',
+      sublimemerge: 'Sublime Merge',
     },
   },
 } /* AH_I18N_END */;
@@ -323,6 +551,46 @@ function build(require) {
   // 最后才退回 brand。
   var HEAT_INK = 'var(--color-blue-500, #3b82f6)';
 
+  /**
+   * 热度色阶（低 → 高）：灰 → 深灰 → 灰蓝 → 蓝 → 亮蓝。
+   *
+   * 低档刻意不用蓝色：中性的 label 令牌在浅色主题下是浅灰、在深色主题下是暗灰，
+   * 同一个公式在两种主题里分别读作"浅灰"和"灰黑"，不需要按主题写两套。
+   * 高档再用蓝色，让"热"在列表里一眼可辨。
+   *
+   * 低档的透明度不要压太低：竖条是靠"整条都有颜色"撑质感的，30% 的灰在
+   * 白底上几乎看不见，看起来就像一根没渲染完的条。
+   */
+  var HEAT_TONES = [
+    'color-mix(in srgb, var(--dsw-alias-label-tertiary, #7f8287) 42%, transparent)',
+    'color-mix(in srgb, var(--dsw-alias-label-tertiary, #7f8287) 64%, transparent)',
+    'color-mix(in srgb, var(--dsw-alias-label-secondary, #545557) 84%, transparent)',
+    'color-mix(in srgb, var(--color-blue-500, #3b82f6) 52%, var(--dsw-alias-label-tertiary, #7f8287))',
+    'color-mix(in srgb, var(--color-blue-500, #3b82f6) 82%, var(--color-blue-400, #60a5fa))',
+    'var(--color-blue-500, #3b82f6)',
+  ];
+
+  /**
+   * 竖条表面：整条保持档位色，只有顶部用同色 + 白提亮，像一根被光打到的玻璃条。
+   *
+   * 之前试过"主色 → 纯白"，结果下半截和白底融在一起、整条只剩顶端一点颜色。
+   * 现在改成"顶部提亮 → 62% 处回到主色 → 底部保持主色"，不再掺白到消失。
+   */
+  function heatBarSurface(tone) {
+    return 'linear-gradient(180deg, color-mix(in srgb, ' + tone + ' 74%, #fff) 0%, '
+      + tone + ' 62%, ' + tone + ' 100%)';
+  }
+
+  /** 竖条的光影：顶部 1px 高光 + 发丝玻璃边缘，高温档再加外发光。 */
+  function heatBarShadow(tone, level) {
+    return 'inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 0 0.5px rgba(255,255,255,.18)'
+      + (level >= 4 ? ', 0 0 10px ' + tone : '');
+  }
+
+  function heatToneOf(level) {
+    return HEAT_TONES[Math.max(0, Math.min(5, level || 0))];
+  }
+
   var LEVELS = [
     { max: 10 * MINUTE, level: 5 },
     { max: HOUR, level: 4 },
@@ -334,13 +602,365 @@ function build(require) {
   var UI = {
     padX: 18,
     radius: 10,
-    cardBg: 'var(--dsw-alias-bg-layer-1, rgba(127,127,127,0.06))',
-    cardBgHover: 'var(--dsw-alias-bg-layer-2, rgba(127,127,127,0.12))',
-    border: '1px solid var(--dsw-alias-border-l1, rgba(127,127,127,0.18))',
     textPrimary: 'var(--dsw-alias-label-primary)',
     textSecondary: 'var(--dsw-alias-label-secondary)',
     textTertiary: 'var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary))',
   };
+
+  /**
+   * ===== 视觉类名 =====
+   *
+   * 表面质感（半透明、磨砂、渐变、过渡、悬停）全部写在注入的 CSS 里，
+   * 内联 style 只负责布局尺寸。原因：
+   * 1. 伪元素（::-before/::-after）无法内联，而玻璃高光与扫光都靠它；
+   * 2. `:hover`/`:focus-visible`/`prefers-reduced-motion` 只能在样式表里表达；
+   * 3. 悬停效果交给 CSS 后，卡片不再为 hover 触发 React 重渲染。
+   *
+   * 类名集中在这里声明，避免各组件里散落拼写错误。
+   */
+  var AH = {
+    shell: 'ah-shell',
+    card: 'ah-card',
+    cardRunning: 'ah-card--running',
+    cardGroup: 'ah-card--group',
+    chip: 'ah-chip',
+    meterTrack: 'ah-meter-track',
+    meterFill: 'ah-meter-fill',
+    meterTick: 'ah-meter-tick',
+    miniTrack: 'ah-mini-track',
+    miniFill: 'ah-mini-fill',
+    tab: 'ah-tab',
+    seg: 'ah-seg',
+    count: 'ah-count',
+    badge: 'ah-current-badge',
+    doneTag: 'ah-done-tag',
+    doneGlyph: 'ah-done-glyph',
+    awaitingTag: 'ah-awaiting-tag',
+    awaitingGlyph: 'ah-awaiting-glyph',
+    popover: 'ah-popover',
+    popoverInner: 'ah-popover-inner',
+    ring: 'ah-ring',
+    stripSeg: 'ah-strip-seg',
+    heatRing: 'ah-heat-ring',
+    heatRingArc: 'ah-heat-ring-arc',
+    heatRingCore: 'ah-heat-ring-core',
+    scrollHint: 'ah-scroll-hint',
+    empty: 'ah-empty',
+    listInner: 'ah-list-inner',
+    listMaskTop: 'ah-list-mask ah-list-mask--top',
+    listMaskBottom: 'ah-list-mask ah-list-mask--bottom',
+    filterBar: 'ah-filterbar',
+    heatBar: 'ah-heat-bar',
+    menu: 'ah-menu',
+    menuItem: 'ah-menu-item',
+    menuLabel: 'ah-menu-label',
+    menuHint: 'ah-menu-hint',
+    menuSep: 'ah-menu-sep',
+    toast: 'ah-toast',
+    toastAction: 'ah-toast-action',
+    dialog: 'ah-dialog',
+    dialogTitle: 'ah-dialog-title',
+    dialogText: 'ah-dialog-text',
+    dialogInput: 'ah-dialog-input',
+    dialogError: 'ah-dialog-error',
+    dialogActions: 'ah-dialog-actions',
+    dialogButton: 'ah-dialog-button',
+  };
+
+  /**
+   * ===== 注入样式 =====
+   *
+   * 配色只走宿主令牌 + color-mix，明暗主题自动适配；每个 var() 都带回退值，
+   * 宿主换主题或删令牌时仍能画出一个可用的灰度玻璃。
+   *
+   * 关键取舍：
+   * - 卡片静态不做 backdrop-filter（50 张卡同时模糊会掉帧），只在 ::before 里
+   *   淡入磨砂层，悬停时才真正消耗 GPU；
+   * - 运行中卡片（ah-card--running）保持不透明底，否则跑马灯光带会从卡片里透出来；
+   * - 入场动画只动 opacity，不动 transform，避免盖掉悬停的 translateY。
+   */
+  var AH_CSS = [
+    /* ---------- 局部令牌 ---------- */
+    '.ah-shell{',
+    '--ah-hi:rgba(255,255,255,.10);',
+    '--ah-blur:blur(16px) saturate(130%);',
+    '--ah-ease:var(--ds-ease-in-out, cubic-bezier(.4,0,.2,1));',
+    'position:relative;isolation:isolate;',
+    'animation:ah-shell-in 200ms ease both;',
+    '}',
+    'body[data-ds-dark-theme] .ah-shell{--ah-hi:rgba(255,255,255,.06);}',
+
+    /* ---------- 面板外壳：不加背景渐变，直接叠在宿主底色上 ---------- */
+    '@keyframes ah-shell-in{from{opacity:0}to{opacity:1}}',
+
+    /* ---------- 卡片：玻璃表面 ---------- */
+    '.ah-card{',
+    'position:relative;z-index:1;overflow:hidden;',
+    'border:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.18)) 72%, transparent);',
+    'background-color:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.10)) 70%, var(--dsw-alias-bg-base, #fff));',
+    'background-image:linear-gradient(180deg, var(--ah-hi, rgba(255,255,255,.10)), transparent 46%);',
+    'box-shadow:0 1px 2px rgba(0,0,0,.03);',
+    'transition:border-color 200ms var(--ah-ease), box-shadow 240ms var(--ah-ease),',
+    'background-color 200ms var(--ah-ease), transform 180ms var(--ah-ease);',
+    'animation:ah-card-in 240ms ease both;',
+    '}',
+    '.ah-card>*{position:relative;z-index:1;}',
+    /* 磨砂层：悬停时淡入，静态零开销 */
+    '.ah-card::before{',
+    'content:"";position:absolute;inset:0;border-radius:inherit;z-index:0;pointer-events:none;',
+    'background-image:linear-gradient(180deg, var(--ah-hi, rgba(255,255,255,.10)), transparent 60%);',
+    'backdrop-filter:var(--ah-blur);-webkit-backdrop-filter:var(--ah-blur);',
+    'opacity:0;transition:opacity 220ms var(--ah-ease);',
+    '}',
+    /* 斜向扫光已移除：悬停只保留轻微上浮、外发光与磨砂淡入 */
+    '@media (hover: hover){',
+    '.ah-card:hover{border-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 28%, var(--dsw-alias-border-l1, rgba(127,127,127,.18)));',
+    'box-shadow:0 8px 20px -10px color-mix(in srgb, var(--color-blue-500, #3b82f6) 34%, transparent), inset 0 1px 0 var(--ah-hi, rgba(255,255,255,.10));',
+    'transform:translateY(-1px);}',
+    '.ah-card:hover::before{opacity:1;}',
+    '.ah-card:active{transform:translateY(0) scale(.995);}',
+    '}',
+    '.ah-card:focus-visible{outline:2px solid var(--dsw-focus-ring-color, var(--color-blue-500, #3b82f6));outline-offset:1px;}',
+    '@keyframes ah-card-in{from{opacity:0}to{opacity:1}}',
+
+    /* 运行中卡片：实底遮住跑马灯，取消玻璃 */
+    '.ah-card--running{',
+    'background-color:var(--dsw-alias-bg-base, #fff);',
+    'background-image:none;border:none;box-shadow:none;',
+    'animation:none;transition:none;transform:none;',
+    '}',
+    '.ah-card--running::before{display:none;}',
+    '.ah-card--running:hover{transform:none;box-shadow:none;}',
+    'body[data-ds-dark-theme] .ah-card{background-image:linear-gradient(180deg, rgba(255,255,255,.06), transparent 46%);}',
+
+    /* ---------- 热度条（主色由内联按档位给，再渐变到纯白） ---------- */
+    '.ah-heat-bar{',
+    'flex:none;align-self:stretch;border-radius:4px;',
+    'transition:filter 220ms var(--ah-ease), box-shadow 220ms var(--ah-ease);',
+    '}',
+    '.ah-card:hover .ah-heat-bar{filter:brightness(1.12) saturate(1.05);}',
+
+    /* ---------- 热度计 / 迷你条 ---------- */
+    '.ah-meter-track{position:relative;display:block;border-radius:999px;overflow:hidden;flex:none;',
+    'background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 66%, transparent);',
+    'box-shadow:inset 0 1px 2px rgba(0,0,0,.10);}',
+    '.ah-meter-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;',
+    'background-image:linear-gradient(90deg, transparent, rgba(255,255,255,.16));',
+    'transition:width 200ms var(--ah-ease), opacity 200ms var(--ah-ease), background-color 260ms var(--ah-ease), filter 220ms var(--ah-ease);}',
+    '.ah-meter-tick{position:absolute;top:0;bottom:0;width:1px;background:var(--dsw-alias-bg-layer-1, rgba(0,0,0,.35));opacity:.45;}',
+    '.ah-mini-track{position:relative;display:inline-block;border-radius:999px;overflow:hidden;flex:none;vertical-align:middle;',
+    'background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 66%, transparent);',
+    'box-shadow:inset 0 1px 1px rgba(0,0,0,.08);}',
+    '.ah-mini-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;opacity:.92;',
+    'background-image:linear-gradient(90deg, transparent, rgba(255,255,255,.22));}',
+    '.ah-card:hover .ah-meter-fill{box-shadow:0 0 9px color-mix(in srgb, var(--color-blue-500, #3b82f6) 55%, transparent);}',
+
+    /* ---------- 顶部：筛选 tab / 分段 / 数量 ---------- */
+    '.ah-filterbar{position:relative;border-bottom:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.18)) 65%, transparent);}',
+    '.ah-filterbar::after{content:"";position:absolute;left:18px;right:18px;bottom:-1px;height:1px;pointer-events:none;',
+    'background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-blue-500, #3b82f6) 26%, transparent) 30%, color-mix(in srgb, var(--color-blue-500, #3b82f6) 26%, transparent) 70%, transparent);}',
+    '.ah-tab{position:relative;border:none;background:transparent;font:inherit;cursor:pointer;',
+    'color:var(--dsw-alias-label-secondary);transition:color 180ms var(--ah-ease);}',
+    '.ah-tab::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:1px;',
+    'background:linear-gradient(90deg, transparent, var(--color-blue-500, #3b82f6) 26%, var(--color-blue-500, #3b82f6) 74%, transparent);',
+    'transform:scaleX(0);transform-origin:left center;opacity:0;',
+    'transition:transform 220ms var(--ah-ease), opacity 220ms var(--ah-ease);}',
+    '.ah-tab[data-active="true"]{color:var(--color-blue-500, #3b82f6);font-weight:600;}',
+    '.ah-tab[data-active="true"]::after{transform:scaleX(1);opacity:1;}',
+    '@media (hover: hover){',
+    '.ah-tab:hover{color:var(--dsw-alias-label-primary);}',
+    '.ah-tab:hover::after{transform:scaleX(.42);opacity:.45;}',
+    '.ah-tab[data-active="true"]:hover::after{transform:scaleX(1);opacity:1;}',
+    '}',
+    '.ah-seg{border:1px solid transparent;border-radius:7px;background-color:transparent;font:inherit;cursor:pointer;font-weight:400;',
+    'color:var(--dsw-alias-label-secondary);',
+    'transition:background-color 180ms var(--ah-ease), color 180ms var(--ah-ease), border-color 180ms var(--ah-ease), box-shadow 180ms var(--ah-ease);}',
+    '.ah-seg[data-active="false"]{border-color:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 55%, transparent);}',
+    '.ah-seg[data-active="true"]{color:#fff;font-weight:600;',
+    'background-color:var(--color-blue-500, #3b82f6);',
+    'background-image:linear-gradient(135deg, color-mix(in srgb, var(--color-blue-600, #2563eb) 86%, #000), var(--color-blue-500, #3b82f6) 55%, color-mix(in srgb, var(--color-blue-400, #60a5fa) 72%, var(--color-blue-500, #3b82f6)));',
+    'box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 2px 8px -2px color-mix(in srgb, var(--color-blue-500, #3b82f6) 48%, transparent);}',
+    '@media (hover: hover){',
+    '.ah-seg:hover{background-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 7%, transparent);}',
+    '.ah-seg[data-active="true"]:hover{background-color:var(--color-blue-500, #3b82f6);}',
+    '}',
+    '.ah-count{position:relative;isolation:isolate;border:1px solid transparent;border-radius:6px;background:transparent;font:inherit;cursor:pointer;',
+    'color:var(--dsw-alias-label-tertiary);transition:color 160ms var(--ah-ease);}',
+    '.ah-count::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;opacity:0;',
+    'border:1px solid color-mix(in srgb, var(--color-blue-500, #3b82f6) 20%, transparent);',
+    'background-image:linear-gradient(135deg, color-mix(in srgb, var(--color-blue-500, #3b82f6) 16%, transparent), transparent 72%);',
+    'transition:opacity 180ms var(--ah-ease);}',
+    '.ah-count[data-active="true"]{color:var(--color-blue-500, #3b82f6);font-weight:600;}',
+    '.ah-count[data-active="true"]::before{opacity:1;}',
+    '@media (hover: hover){.ah-count:hover{color:var(--dsw-alias-label-secondary);}}',
+
+    /* ---------- 徽章 / 芯片 ---------- */
+    '.ah-current-badge{border:1px solid color-mix(in srgb, var(--color-blue-500, #3b82f6) 40%, transparent);',
+    'background-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 10%, transparent);',
+    'background-image:linear-gradient(135deg, rgba(255,255,255,.18), transparent 62%);',
+    'box-shadow:inset 0 1px 0 rgba(255,255,255,.22);color:var(--color-blue-500, #3b82f6);}',
+    /* 已完成（未查看）：绿色系；等待回答：琥珀色。两者与蓝色的热度 / 运行中明确区分 */
+    '.ah-done-tag{color:var(--dsw-alias-state-success-primary, #22c55e);}',
+    '.ah-done-glyph{filter:drop-shadow(0 0 4px color-mix(in srgb, var(--dsw-alias-state-success-primary, #22c55e) 42%, transparent));',
+    'animation:ah-done-breathe 3.2s ease-in-out infinite;}',
+    '.ah-awaiting-tag{color:var(--dsw-alias-state-warn-primary, #f59e0b);}',
+    '.ah-awaiting-glyph{filter:drop-shadow(0 0 4px color-mix(in srgb, var(--dsw-alias-state-warn-primary, #f59e0b) 42%, transparent));',
+    'animation:ah-done-breathe 3.2s ease-in-out infinite;}',
+    '@keyframes ah-done-breathe{0%,100%{opacity:.72;transform:scale(.96)}50%{opacity:1;transform:scale(1.05)}}',
+    '.ah-chip{border:1px solid transparent;border-radius:6px;padding:1px 5px;margin:-1px -1px;',
+    'color:var(--dsw-alias-label-secondary);',
+    'transition:background-color 160ms var(--ah-ease), border-color 160ms var(--ah-ease), color 160ms var(--ah-ease);}',
+    '@media (hover: hover){',
+    '.ah-chip:hover{background-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 8%, transparent);',
+    'border-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 16%, transparent);color:var(--dsw-alias-label-primary);}',
+    '}',
+
+    /* ---------- 悬浮浮层 ---------- */
+    '.ah-popover{',
+    'border:.5px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 80%, transparent);',
+    'border-radius:var(--dsw-radius-lg, 14px);',
+    'background-color:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.12)) 88%, var(--dsw-alias-bg-base, #fff));',
+    'backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
+    '-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
+    'box-shadow:var(--dsw-shadow-lv3, 0 12px 32px rgba(0,0,0,.16)), inset 0 1px 0 rgba(255,255,255,.20);',
+    '}',
+    '.ah-popover-inner{display:flex;flex-direction:column;--ah-pop-y:4px;',
+    'animation:ah-pop-in 170ms cubic-bezier(.22,1,.36,1) both;}',
+    '.ah-popover[data-closing="true"] .ah-popover-inner{animation:ah-pop-out 130ms ease-in both;}',
+    '@keyframes ah-pop-in{from{opacity:0;transform:translateY(var(--ah-pop-y, 4px)) scale(.985)}to{opacity:1;transform:none}}',
+    '@keyframes ah-pop-out{from{opacity:1;transform:none}to{opacity:0;transform:translateY(calc(var(--ah-pop-y, 4px) * -.6)) scale(.99)}}',
+    '@keyframes ah-ring-in{from{opacity:.35;transform:rotate(-90deg) scale(.92)}to{opacity:1;transform:rotate(0) scale(1)}}',
+    '@keyframes ah-strip-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}',
+    '.ah-ring{animation:ah-ring-in 300ms cubic-bezier(.22,1,.36,1) both;}',
+    '.ah-strip-seg{transform-origin:left center;animation:ah-strip-grow 280ms cubic-bezier(.22,1,.36,1) both;}',
+    'body[data-ds-dark-theme] .ah-popover{box-shadow:0 16px 40px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08);}',
+
+    /* ---------- 右键菜单 / 确认框 / 提示 ---------- */
+    '.ah-menu{',
+    'border:.5px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 80%, transparent);',
+    'border-radius:12px;padding:6px;',
+    'background-color:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.12)) 92%, var(--dsw-alias-bg-base, #fff));',
+    'backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
+    '-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
+    'box-shadow:var(--dsw-shadow-lv3, 0 12px 32px rgba(0,0,0,.16)), inset 0 1px 0 rgba(255,255,255,.20);',
+    'animation:ah-menu-in 120ms var(--ah-ease) both;',
+    '}',
+    '@keyframes ah-menu-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}',
+    '.ah-menu-item{display:flex;align-items:center;gap:8px;width:100%;min-height:30px;padding:5px 9px;',
+    'border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-primary);',
+    'font:inherit;text-align:left;cursor:pointer;',
+    'transition:background-color 120ms var(--ah-ease),color 120ms var(--ah-ease);}',
+    '.ah-menu-item[data-active="true"]{background-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 10%, transparent);}',
+    '.ah-menu-item[aria-disabled="true"]{opacity:.42;cursor:default;}',
+    '.ah-menu-item[data-danger="true"]{color:color-mix(in srgb, var(--color-red-500, #ef4444) 78%, var(--dsw-alias-label-primary));}',
+    '.ah-menu-item[data-danger="true"][data-active="true"]{background-color:color-mix(in srgb, var(--color-red-500, #ef4444) 12%, transparent);}',
+    '.ah-menu-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82em;line-height:20px;}',
+    '.ah-menu-hint{flex:none;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;',
+    'color:var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));font-size:.7em;}',
+    '.ah-menu-sep{height:1px;margin:5px 7px;background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 80%, transparent);}',
+    '.ah-dialog{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:2200;',
+    'width:min(320px, calc(100vw - 32px));padding:14px 16px;',
+    'border:.5px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 80%, transparent);',
+    'border-radius:14px;',
+    'background-color:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.12)) 92%, var(--dsw-alias-bg-base, #fff));',
+    'backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
+    '-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
+    'box-shadow:var(--dsw-shadow-lv3, 0 16px 40px rgba(0,0,0,.22)), inset 0 1px 0 rgba(255,255,255,.20);',
+    'animation:ah-menu-in 140ms var(--ah-ease) both;}',
+    '.ah-dialog-title{font-size:.9em;font-weight:650;color:var(--dsw-alias-label-primary);}',
+    '.ah-dialog-text{margin-top:6px;font-size:.78em;line-height:19px;color:var(--dsw-alias-label-secondary);}',
+    '.ah-dialog-input{margin-top:10px;width:100%;box-sizing:border-box;padding:6px 8px;border-radius:8px;',
+    'border:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 80%, transparent);',
+    'background-color:color-mix(in srgb, var(--dsw-alias-bg-base, #fff) 72%, transparent);',
+    'color:var(--dsw-alias-label-primary);font:inherit;font-size:.82em;outline:none;}',
+    '.ah-dialog-input:focus{border-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 55%, transparent);}',
+    '.ah-dialog-error{margin-top:8px;font-size:.74em;color:color-mix(in srgb, var(--color-red-500, #ef4444) 80%, var(--dsw-alias-label-primary));}',
+    '.ah-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}',
+    '.ah-dialog-button{padding:4px 10px;border-radius:8px;',
+    'border:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 80%, transparent);',
+    'background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:.78em;cursor:pointer;}',
+    '.ah-dialog-button[data-primary="true"]{border-color:transparent;background-color:var(--color-blue-500, #3b82f6);color:#fff;font-weight:600;}',
+    '.ah-dialog-button[data-primary="true"][data-danger="true"]{background-color:color-mix(in srgb, var(--color-red-500, #ef4444) 88%, #000);}',
+    '.ah-dialog-button:disabled{opacity:.5;cursor:default;}',
+    '.ah-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:2200;',
+    'display:flex;align-items:center;gap:10px;max-width:min(420px, calc(100vw - 32px));padding:7px 12px;border-radius:10px;',
+    'border:.5px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 80%, transparent);',
+    'background-color:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.12)) 92%, var(--dsw-alias-bg-base, #fff));',
+    'backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
+    '-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
+    'box-shadow:var(--dsw-shadow-lv3, 0 12px 32px rgba(0,0,0,.18)), inset 0 1px 0 rgba(255,255,255,.20);',
+    'color:var(--dsw-alias-label-primary);font-size:.78em;',
+    'animation:ah-toast-in 160ms var(--ah-ease) both;}',
+    '@keyframes ah-toast-in{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}',
+    '.ah-toast[data-tone="error"]{color:color-mix(in srgb, var(--color-red-500, #ef4444) 78%, var(--dsw-alias-label-primary));}',
+    '.ah-toast-action{border:0;background:transparent;color:var(--color-blue-500, #3b82f6);font:inherit;font-size:.95em;font-weight:600;cursor:pointer;padding:0;}',
+
+    /* ---------- 侧栏入口环 ---------- */
+    '.ah-heat-ring{transition:filter 200ms var(--ah-ease);}',
+    '.ah-heat-ring-arc{background:conic-gradient(from -90deg,',
+    'color-mix(in srgb, var(--color-blue-500, #3b82f6) 14%, transparent) 0deg,',
+    'color-mix(in srgb, var(--color-blue-500, #3b82f6) 55%, transparent) 250deg,',
+    'var(--color-blue-500, #3b82f6) 360deg);',
+    'mask:radial-gradient(farthest-side, transparent calc(100% - 1.8px), #000 calc(100% - 1.6px));',
+    '-webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 1.8px), #000 calc(100% - 1.6px));}',
+    '.ah-heat-ring-core{background-image:radial-gradient(circle at 34% 30%, color-mix(in srgb, #fff 32%, var(--color-blue-500, #3b82f6)), var(--color-blue-500, #3b82f6));',
+    'box-shadow:0 0 6px color-mix(in srgb, var(--color-blue-500, #3b82f6) 45%, transparent);}',
+    '@media (hover: hover){.ah-heat-ring:hover{filter:brightness(1.14) saturate(1.08);}}',
+
+    /* ---------- 宿主行悬停卡：从固定深色改为跟随主题 ----------
+     * 宿主的 HoverCard 硬编码 --dsw-hovercard-bg:#2C2C2E，并用 #fff/#cfd3d6 写死标题/时间/
+     * 状态的文字色（类名 wnFoaW_hoverTitle 等）。插件内容用的是主题 token，在深色卡上
+     * 反而变成深字低对比。这里用 :has(.ah-hover-content) 精确定位"装了本插件内容的卡"，
+     * 把底色与宿主那几行文字一起改回主题色。宿主升级若改了 local 名，需要同步这些选择器。
+     */
+    '[class*="_card_"]:has(.ah-hover-content){--dsw-hovercard-bg:var(--dsw-alias-bg-base, #fff);',
+    'color:var(--dsw-alias-label-primary);}',
+    '[class*="_card_"]:has(.ah-hover-content) [class*="_hoverTitle"]{color:var(--dsw-alias-label-primary);}',
+    '[class*="_card_"]:has(.ah-hover-content) [class*="_hoverPath"],',
+    '[class*="_card_"]:has(.ah-hover-content) [class*="_hoverTime"],',
+    '[class*="_card_"]:has(.ah-hover-content) [class*="_hoverStatus"]{color:var(--dsw-alias-label-secondary);}',
+
+    /* ---------- 列表与空态 ---------- */
+    '.ah-list-inner{animation:ah-fade-in 220ms ease both;}',
+    '.ah-empty{animation:ah-fade-in 260ms ease both;}',
+    '@keyframes ah-fade-in{from{opacity:0}to{opacity:1}}',
+    '.ah-list-mask{position:absolute;left:0;right:0;height:14px;z-index:2;pointer-events:none;}',
+    '.ah-list-mask--top{top:0;background:linear-gradient(to bottom, color-mix(in srgb, var(--dsw-alias-bg-base, #fff) 90%, transparent), transparent);}',
+    '.ah-list-mask--bottom{bottom:0;background:linear-gradient(to top, color-mix(in srgb, var(--dsw-alias-bg-base, #fff) 90%, transparent), transparent);}',
+    '.ah-scroll-hint{position:absolute;z-index:3;background-color:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.12)) 72%, transparent);',
+    'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);',
+    'border:.5px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.2)) 70%, transparent);}',
+
+    /* ---------- 运行中：跑马灯与呼吸 ---------- */
+    '@keyframes ah-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.82)}}',
+    '@keyframes ah-orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}',
+    '@keyframes ah-breathe{',
+    '0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--color-blue-500, #3b82f6) 0%, transparent)}',
+    '50%{box-shadow:0 0 14px 2px color-mix(in srgb, var(--color-blue-500, #3b82f6) 45%, transparent)}',
+    '}',
+    '@keyframes ah-dot-pulse{',
+    '0%,100%{opacity:.55;transform:scale(.85);box-shadow:0 0 0 0 color-mix(in srgb, var(--color-blue-500, #3b82f6) 0%, transparent)}',
+    '50%{opacity:1;transform:scale(1.15);box-shadow:0 0 6px 1px color-mix(in srgb, var(--color-blue-500, #3b82f6) 32%, transparent)}',
+    '}',
+
+    /* ---------- 列表滚动条 ---------- */
+    '.ah-list{scrollbar-width:none;-ms-overflow-style:none;}',
+    '.ah-list::-webkit-scrollbar{width:0;height:0;display:none;}',
+
+    /* ---------- 减少动态 ---------- */
+    '@media (prefers-reduced-motion: reduce){',
+    '@keyframes ah-orbit{from{transform:rotate(0deg)}to{transform:rotate(0deg)}}',
+    '@keyframes ah-breathe{0%,100%{box-shadow:none}50%{box-shadow:none}}',
+    '@keyframes ah-dot-pulse{0%,100%{opacity:.8;transform:none;box-shadow:none}50%{opacity:1;transform:none;box-shadow:none}}',
+    '@keyframes ah-done-breathe{0%,100%{opacity:1;transform:none}50%{opacity:1;transform:none}}',
+    '.ah-shell,.ah-card,.ah-card::before,.ah-list-inner,.ah-empty,',
+    '.ah-tab::after,.ah-seg,.ah-count::before,.ah-popover-inner,.ah-ring,.ah-strip-seg,.ah-heat-ring,.ah-done-glyph,.ah-awaiting-glyph,',
+    '.ah-menu,.ah-dialog,.ah-toast{',
+    'animation:none!important;transition:none!important;}',
+    '.ah-card:hover{transform:none;box-shadow:none;}',
+    '[data-row-key^="session:"] [class*="_title"]::before{animation:none!important}',
+    '}',
+  ].join('');
 
   var FILTERS = [
     { id: 'all', labelKey: 'filter.all', level: null },
@@ -350,6 +970,183 @@ function build(require) {
     { id: 'recent', labelKey: 'level.recent', level: 2 },
     { id: 'stale', labelKey: 'level.stale', level: 1 },
   ];
+
+  /* ---------------- 查看水位（已完成 · 未查看） ---------------- */
+
+  /**
+   * 宿主的 `SessionSummary` 只有 updatedAt / running / blank 等字段，**没有未读标记**，
+   * 所以「agent 跑完但还没看」由插件自己记：
+   *
+   * - 第一次运行插件时记下 `bootAt`；
+   * - 早于 `bootAt` 的历史会话视为已读（不会一装插件就满屏「已完成」）；
+   * - `updatedAt` 晚于 `bootAt`、且晚于本地查看水位的会话 → 已完成未查看；
+   * - 会话被打开（`retainedBy.mainView > 0`）或用户尚未打开过它时，水位推进到 `updatedAt`。
+   *
+   * 状态存 localStorage，刷新/重启后仍然有效；拿不到 storage（隐私模式、测试沙箱）
+   * 时退回内存，功能不受影响，只是重启后丢失。
+   */
+  var SEEN_KEY = 'activity-heat.seen.v1';
+  var seenState = null;
+
+  /**
+   * `running === true` 但多久没有新活动就视为"已经结束"。
+   *
+   * 宿主在部分场景下会把 `running` 留到会话被打开或空闲回收之前，单纯等
+   * `running === false` 会让「已完成」永远不出现。60 s 内没有任何活动更新，
+   * 基本可以认为这一轮已经结束；一旦有新活动，`updatedAt` 变新就会自动
+   * 切回「工作中」。
+   */
+  var DONE_IDLE_MS = 60 * 1000;
+
+  /**
+   * 没有本地水位时（首次运行、或 Web 版端口变化导致 localStorage 换 origin），
+   * 只把最近 30 分钟内结束的会话当作「刚完成」。超过这个窗口的会话默认算已读，
+   * 避免一装插件就满屏「已完成」。
+   */
+  var DONE_RECENT_MS = 30 * 60 * 1000;
+
+  /**
+   * 宿主侧栏里"真正被选中"的会话集合。
+   *
+   * 不能用 `retainedBy.mainView > 0`：它是引用计数，主视图可能同时保留多个
+   * 会话的引用（截图里「当前」标在非当前会话上就是这个原因）。宿主给选中行
+   * 加的类是 CSS Module 的 `xxx_selected`，这里一次性把 `[data-row-key]` 读出来。
+   *
+   * @returns 选中 id 集合；无 DOM 或不支持查询时返回 null（调用方退回旧信号）。
+   */
+  function selectedSessionIds() {
+    try {
+      if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return null;
+      var rows = document.querySelectorAll('[data-row-key^="session:"]');
+      var out = {};
+      for (var i = 0; i < rows.length; i += 1) {
+        var row = rows[i];
+        if (!/(^|\s)\S*_selected(\s|$)/.test(' ' + String(row.className || '') + ' ')) continue;
+        var key = String(row.getAttribute('data-row-key') || '').slice('session:'.length);
+        if (key) out[key] = true;
+      }
+      return out;
+    } catch (ignored) {
+      return null;
+    }
+  }
+
+  /**
+   * 单个会话是否"真正在侧栏被选中"（当前正在看的那一个）。
+   * 没有 DOM（测试、降级）时退回 `retainedBy.mainView`，保持旧行为。
+   */
+  function isSelectedRow(sessionId, fallback) {
+    try {
+      if (typeof document === 'undefined' || typeof document.querySelector !== 'function') {
+        return Boolean(fallback);
+      }
+      var row = document.querySelector('[data-row-key="session:' + cssString(sessionId) + '"]');
+      if (!row) return false;
+      return /(^|\s)\S*_selected(\s|$)/.test(' ' + String(row.className || '') + ' ');
+    } catch (ignored) {
+      return Boolean(fallback);
+    }
+  }
+
+  function seenStorage() {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) return window.localStorage;
+    } catch (ignored) { /* 隐私模式访问即抛 */ }
+    return null;
+  }
+
+  function loadSeenState() {
+    if (seenState) return seenState;
+    var state = { bootAt: Date.now(), seen: {} };
+    var store = seenStorage();
+    try {
+      var raw = store ? store.getItem(SEEN_KEY) : null;
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          if (typeof parsed.bootAt === 'number' && isFinite(parsed.bootAt)) state.bootAt = parsed.bootAt;
+          if (parsed.seen && typeof parsed.seen === 'object') state.seen = parsed.seen;
+        }
+      } else if (store) {
+        store.setItem(SEEN_KEY, JSON.stringify(state));
+      }
+    } catch (ignored) { /* 坏数据直接重建 */ }
+    seenState = state;
+    return state;
+  }
+
+  function persistSeen() {
+    var store = seenStorage();
+    try {
+      if (store && seenState) store.setItem(SEEN_KEY, JSON.stringify(seenState));
+    } catch (ignored) { /* 配额满/禁用：内存态继续工作 */ }
+  }
+
+  /** 该会话最后一次被查看时的 updatedAt；从未记录返回 undefined。 */
+  function seenAtOf(sessionId) {
+    var state = loadSeenState();
+    var value = state.seen[String(sessionId)];
+    return typeof value === 'number' && isFinite(value) ? value : undefined;
+  }
+
+  /** 记录查看水位（只前进，不回退）。返回是否真的写入了新值。 */
+  function markSeen(sessionId, at, deferPersist) {
+    if (typeof at !== 'number' || !isFinite(at)) return false;
+    var state = loadSeenState();
+    var key = String(sessionId);
+    var current = state.seen[key];
+    if (typeof current === 'number' && current >= at) return false;
+    state.seen[key] = at;
+    if (deferPersist !== true) persistSeen();
+    return true;
+  }
+
+  /**
+   * 会话是否「已完成但没看过」。
+   * @param running - 宿主 summary.running
+   * @param open - 是否真的是当前选中的会话（见 selectedSessionIds）
+   * @param now - 当前时间，用于判断"运行中但已静止"
+   */
+  function doneUnseenOf(sessionId, at, running, open, now) {
+    if (open === true) return false;
+    if (typeof at !== 'number' || !isFinite(at)) return false;
+    // 运行中但 60s 没有任何新活动，视为这一轮已经结束
+    if (running === true && (typeof now !== 'number' || now - at < DONE_IDLE_MS)) return false;
+    var state = loadSeenState();
+    var seen = state.seen[String(sessionId)];
+    if (typeof seen === 'number') return at > seen;
+    if (at > state.bootAt) return true;
+    // 水位丢了（Web 版端口变化 = 换 origin）：最近 30 分钟内结束的仍算「刚完成」
+    return typeof now === 'number' && now - at <= DONE_RECENT_MS;
+  }
+
+  /**
+   * 批量推进水位：
+   * - 历史会话（活动早于插件首次运行）标记为已读；
+   * - 当前打开的会话，水位跟到最新活动。
+   * 只写有变化的条目，避免每次渲染都碰 localStorage。
+   */
+  function syncSeenForSessions(sessions) {
+    try {
+      var state = loadSeenState();
+      var dirty = false;
+      for (var i = 0; i < sessions.length; i += 1) {
+        var item = sessions[i];
+        if (!item || typeof item.at !== 'number') continue;
+        var seen = state.seen[String(item.id)];
+        if (typeof seen === 'number') {
+          if (item.open === true && item.at > seen && markSeen(item.id, item.at, true)) dirty = true;
+          continue;
+        }
+        // 只把"早于首次运行且已过 recent 窗口"的会话记为已读；
+        // 最近 30 分钟内结束的留给「已完成」提示，避免重启后全被吞掉。
+        var age = Date.now() - item.at;
+        if (item.at <= state.bootAt && age > DONE_RECENT_MS && markSeen(item.id, item.at, true)) dirty = true;
+      }
+      // 一次批量落盘，避免首次启动时为几十个历史会话各写一遍 localStorage
+      if (dirty) persistSeen();
+    } catch (ignored) { /* 水位失败不影响面板 */ }
+  }
 
   /* ---------------- 纯函数 ---------------- */
 
@@ -564,6 +1361,12 @@ function build(require) {
       var values = projections && projections.values;
       if (!values || typeof values !== 'object') return out;
 
+      // 「等待回答」：宿主 userQuestions 投影的 active 非空 = 有未回答的问题
+      var userQuestions = values.userQuestions;
+      if (userQuestions && Array.isArray(userQuestions.active) && userQuestions.active.length > 0) {
+        out.awaiting = true;
+      }
+
       var timeline = values.contextTimeline;
       if (timeline && typeof timeline === 'object') {
         var prompt = snippetOf(timeline.initialPrompt, 60)
@@ -692,6 +1495,9 @@ function build(require) {
     }
 
     var sessions = [];
+    // 一次查询拿到"真正被选中"的会话；没有 DOM 时退回 retainedBy（测试/降级）
+    var selected = selectedSessionIds();
+    var hasSelection = selected !== null;
     for (var i = 0; i < ids.length; i += 1) {
       var id = ids[i];
       if (archivedOf[String(id)]) continue;
@@ -699,16 +1505,31 @@ function build(require) {
       if (!summary || summary.origin === 'subagent') continue;
       var at = lastActiveOf(summary);
       var facts = factsFromProjection(projections[id]);
+      var open = hasSelection
+        ? selected[String(id)] === true
+        : Boolean(summary.retainedBy && summary.retainedBy.mainView > 0);
+      var running = summary.running === true;
+      // 宿主的 updatedAt 只在一轮开始/结束刷新，长任务运行中不会更新；
+      // 因此"正在工作"不能只按时间算，否则会被 10 分钟前的空闲会话压下去。
+      // 运行中的会话按最高热度计（level 5），真实时间仍留给右侧的"最后活动"。
+      var age = at === undefined ? undefined : now - at;
+      var level = running ? 5 : (age === undefined ? 0 : heatLevelOf(age));
+      var ratio = running
+        ? Math.max(0.92, age === undefined ? 0 : heatRatioOf(age))
+        : (age === undefined ? 0 : heatRatioOf(age));
       sessions.push({
         id: id,
         title: titleOf(summary, id),
         blank: summary.blank === true,
         at: at,
-        level: at === undefined ? 0 : heatLevelOf(now - at),
-        ratio: at === undefined ? 0 : heatRatioOf(now - at),
+        level: level,
+        ratio: ratio,
         workspace: workspaceOf[String(id)] || null,
-        open: Boolean(summary.retainedBy && summary.retainedBy.mainView > 0),
-        running: summary.running === true,
+        cwd: typeof summary.cwd === 'string' ? summary.cwd : '',
+        open: open,
+        running: running,
+        done: doneUnseenOf(id, at, running, open, now),
+        awaiting: facts.awaiting === true,
         turns: facts.turns,
         steps: facts.steps,
         tokens: facts.tokens,
@@ -719,7 +1540,11 @@ function build(require) {
         timing: facts.timing,
       });
     }
-    sessions.sort(compareByRecency);
+    sessions.sort(function (x, y) {
+      // 正在工作的会话优先；同为运行时再按最近活动时间
+      if (x.running !== y.running) return x.running ? -1 : 1;
+      return compareByRecency(x, y);
+    });
 
     var groups = {};
     var groupList = [];
@@ -775,7 +1600,15 @@ function build(require) {
       }
     }
 
+    // 有会话在跑的工作区同样提到最前，并让热度计与成员的最高热度一致
+    for (var gr = 0; gr < groupList.length; gr += 1) {
+      if (groupList[gr].running) {
+        groupList[gr].level = 5;
+        groupList[gr].ratio = Math.max(groupList[gr].ratio, 0.92);
+      }
+    }
     groupList.sort(function (x, y) {
+      if (x.running !== y.running) return x.running ? -1 : 1;
       if (y.level !== x.level) return y.level - x.level;
       return (y.at || 0) - (x.at || 0);
     });
@@ -793,6 +1626,10 @@ function build(require) {
       if (groupList[c].level <= 1) cold += 1;
     }
 
+    // 幂等推进查看水位：历史会话记为已读、当前打开的会话跟到最新活动。
+    // 放在这里是为了让"只开面板、侧栏行没渲染"的场景也能正常清零「已完成」。
+    syncSeenForSessions(withTime);
+
     return {
       total: withTime.length,
       allSessions: withTime,
@@ -809,15 +1646,15 @@ function build(require) {
   /* ---------------- 标题下划线（热度） ---------------- */
 
   /**
-   * 热度改用「会话标题下方一条来回流动的光线」表达，不再占用行首 16px 格。
+   * 热度改用「会话标题文字前一个小圆点」表达，不再占用行首 16px 格。
    *
    * 为什么彻底离开行首格：这一格除了宿主的原生状态点（非 idle 行由宿主绘制），
    * 还会被「定时任务」插件用来画时钟标记（它同样占用 `sidebar.session.row.leading`）。
    * 插件在这里再放任何可见元素，都会和状态点或时钟并排拥挤。
    *
    * 做法：行首 slot 仍然注册，但组件只借这个 seat 读到本行 sessionId 与热度，
-   * 把规则写进一个 `<style id="activity-heat-title-flow">`，然后 `return null`——
-   * 行首不渲染任何可见节点；标题下方叠一层背景光带，不新增 DOM、不占布局。
+   * 把规则写进一个 `<style id="activity-heat-title-dot">`，然后 `return null`——
+   * 行首不渲染任何可见节点；圆点画在标题元素的 `::before` 上，不新增 DOM、不占布局。
    */
   var titleFlowLevels = {};
   var titleFlowStyle = null;
@@ -830,40 +1667,55 @@ function build(require) {
   var ACTIVE_MIN_LEVEL = 3; // ≥「活跃」档（近 6 小时内）才加闪动
 
   /**
-   * 单个会话的热度下划线规则。
+   * 单个会话的热度标记规则：在**标题文字前面**画一个小圆点。
    *
-   * 线常驻整条，**颜色深浅随热度**：越热越深、越接近纯蓝，越冷越淡。
-   * 用「背景线 + 上下对称 padding」而不是 `text-decoration`：标题元素带
-   * `overflow:hidden`，下划线一旦低于行盒底就会被裁掉（这就是"看不见"的原因）；
-   * 背景绘制在 padding 盒内，padding-bottom 又天然制造了与文字的间距。
-   * 上下 padding 相等，标题文字在 32px 行里仍然垂直居中，不会位移。
-   * 动效只给活跃会话（level ≥ 3）：渐变线用 200% 背景宽度，靠 background-position
-   * 往返扫动，形成"闪动"；冷门会话只有静态线。
+   * 位置：用标题元素自身的 `::before`，所以圆点紧贴标题文字，属于标题盒内，
+   * **不占用行首 16px 格**，也就不会和原生状态点、定时任务时钟挤在一起。
+   * 热度表达：
+   * - 颜色深浅：透明度 35%→100%，越热越深、越接近纯蓝；
+   * - 实心/空心：level ≥ 4（温热/炽热）实心，低档空心描边；
+   * - 动效只给活跃会话（level ≥ 3）：圆点做轻微的呼吸脉冲。
    */
   function titleFlowRule(id, level) {
-    var baseAlpha = Math.round(20 + level * 14); // 34% .. 90%
-    var hotAlpha = Math.min(100, baseAlpha + 30);
-    var base = 'color-mix(in srgb, var(--color-blue-500, #3b82f6) ' + baseAlpha + '%, transparent)';
-    var hot = 'color-mix(in srgb, var(--color-blue-500, #3b82f6) ' + hotAlpha + '%, transparent)';
-    var active = level >= ACTIVE_MIN_LEVEL;
-    var image = active
-      ? 'linear-gradient(90deg,' + base + ' 0%,' + hot + ' 50%,' + base + ' 100%)'
-      : 'linear-gradient(90deg,' + base + ' 0%,' + base + ' 100%)';
-    var size = active ? '200% 2px' : '100% 2px';
-    var motion = '';
-    if (active) {
-      var duration = (3.0 - level * 0.16).toFixed(2);
-      motion = 'animation:ah-title-flow ' + duration + 's ease-in-out infinite alternate;';
-    }
-    return '[data-row-key="session:' + cssString(id) + '"] [class*="_title"]{'
-      + 'padding-top:5px;'
-      + 'padding-bottom:5px;'
-      + 'background-image:' + image + ';'
-      + 'background-repeat:no-repeat;'
-      + 'background-size:' + size + ';'
-      + 'background-position:0 100%;'
-      + motion
+    var solid = level >= 4;
+    // 圆点也走同一套热度色阶：冷会话是灰点，越热越蓝
+    var ink = heatToneOf(level);
+    var halo = 'color-mix(in srgb, ' + ink + ' 55%, transparent)';
+    var rowKey = '[data-row-key="session:' + cssString(id) + '"]';
+    var selector = rowKey + ' [class*="_title"]::before';
+    var css = selector + '{'
+      + 'content:"";'
+      + 'display:inline-block;'
+      + 'box-sizing:border-box;'
+      + 'width:7px;'
+      + 'height:7px;'
+      + 'border-radius:50%;'
+      + 'margin-right:6px;'
+      + 'vertical-align:middle;'
+      // 视觉微调：vertical-align:middle 对中文字形会偏低约 2px，
+      // 用 position:relative 上移对齐字形中轴（不用 transform，避免与脉冲动画冲突）
+      + 'position:relative;'
+      + 'top:-2px;'
+      // 实心点在高光方向上再叠一层径向渐变，让它是"有厚度的玻璃珠"而不是纯色块
+      + (solid
+        ? 'background:' + ink + ';'
+          + 'background-image:radial-gradient(circle at 34% 30%, color-mix(in srgb, #fff 36%, transparent), transparent 62%);'
+          + 'border:none;'
+          + 'box-shadow:0 0 6px ' + ink + ';'
+        : 'background:transparent;border:1.5px solid ' + ink + ';'
+          + 'box-shadow:inset 0 0 4px ' + halo + ';')
       + '}';
+    if (level >= ACTIVE_MIN_LEVEL) {
+      var duration = (2.6 - level * 0.16).toFixed(2);
+      css += selector + '{animation:ah-dot-pulse ' + duration + 's ease-in-out infinite;}';
+    }
+    // 行悬浮：圆点外扩一圈柔光。用 box-shadow 而不是 transform，
+    // 因为活跃会话的脉冲动画已经占用了 transform，改它会打架。
+    css += rowKey + ':hover [class*="_title"]::before{'
+      + 'box-shadow:0 0 0 3px ' + halo + ', 0 0 8px ' + ink + ';'
+      + 'filter:brightness(1.12);'
+      + '}';
+    return css;
   }
 
   /** 把所有已登记会话的热度规则拼成一个 style 标签（增量更新）。 */
@@ -881,10 +1733,10 @@ function build(require) {
         titleFlowStyle = null;
         return;
       }
-      if (!titleFlowStyle) titleFlowStyle = document.getElementById('activity-heat-title-flow');
+      if (!titleFlowStyle) titleFlowStyle = document.getElementById('activity-heat-title-dot');
       if (!titleFlowStyle) {
         titleFlowStyle = document.createElement('style');
-        titleFlowStyle.id = 'activity-heat-title-flow';
+        titleFlowStyle.id = 'activity-heat-title-dot';
         document.head.appendChild(titleFlowStyle);
       }
       titleFlowStyle.textContent = css;
@@ -919,49 +1771,34 @@ function build(require) {
     var showLabel = props && props.showLabel === true;
     var width = props && typeof props.width === 'number' ? props.width : 76;
     var height = props && typeof props.height === 'number' ? props.height : 10;
-    // 色深：同一主题蓝，用 opacity 表达冷热（0.28 → 1）
-    var fillOpacity = 0.3 + ratio * 0.7;
+    // 色深：颜色本身已按档位从灰过渡到蓝，透明度只做轻微衰减
+    var tone = heatToneOf(level);
+    var fillOpacity = 0.62 + ratio * 0.38;
     var ticks = [];
     // 5 个刻度分隔线，帮助读出"填充到第几格"
     for (var t = 1; t <= 4; t += 1) {
       ticks.push(React.createElement('span', {
         key: 'tick' + t,
-        style: {
-          position: 'absolute',
-          left: (t * 20) + '%',
-          top: 0,
-          bottom: 0,
-          width: 1,
-          background: 'var(--dsw-alias-bg-layer-1, rgba(0,0,0,0.35))',
-          opacity: 0.5,
-        },
+        className: AH.meterTick,
+        style: { left: (t * 20) + '%' },
       }));
     }
     var track = React.createElement(
       'span',
       {
+        className: AH.meterTrack,
         style: {
-          position: 'relative',
-          display: 'block',
           width: width,
           height: height,
-          borderRadius: 999,
-          background: 'var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
-          overflow: 'hidden',
-          flex: 'none',
         },
       },
       React.createElement('span', {
+        className: AH.meterFill,
         style: {
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
           width: Math.round(ratio * 100) + '%',
-          background: HEAT_INK,
           opacity: fillOpacity,
-          borderRadius: 999,
-          transition: 'width 200ms ease, opacity 200ms ease',
+          backgroundColor: tone,
+          boxShadow: level >= 4 ? '0 0 6px ' + tone : 'none',
         },
       }),
       ticks,
@@ -1028,8 +1865,10 @@ function build(require) {
           width: barWidth,
           height: barHeight,
           borderRadius: 999,
-          background: HEAT_INK,
-          opacity: heatAlphaOf(level),
+          // 竖直温度条：整条保持档位色，只在顶部提亮
+          backgroundImage: heatBarSurface(heatToneOf(level)),
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 0 0.5px rgba(255,255,255,.18)'
+            + (level >= 4 ? ', 0 0 6px ' + heatToneOf(level) : ''),
           flex: 'none',
           transition: 'height 200ms ease, opacity 200ms ease',
         },
@@ -1041,10 +1880,10 @@ function build(require) {
     var size = props && typeof props.size === 'number' && props.size > 0 ? props.size : 18;
     var level = Math.max(1, Math.min(5, (props && props.level) || 1));
     var active = props && props.active === true;
-    var alpha = heatAlphaOf(level);
     return React.createElement(
       'span',
       {
+        className: AH.heatRing,
         'aria-hidden': 'true',
         style: {
           display: 'inline-flex',
@@ -1057,24 +1896,25 @@ function build(require) {
         },
       },
       React.createElement('span', {
+        className: AH.heatRingArc,
         style: {
           position: 'absolute',
           width: Math.round(size * 0.92),
           height: Math.round(size * 0.92),
           borderRadius: '50%',
-          border: '1.5px solid ' + HEAT_INK,
-          opacity: active ? Math.min(1, alpha * 0.7 + 0.2) : alpha * 0.45,
+          // 环本身用 conic-gradient 画（见 AH_CSS），这里只保留尺寸与轻重
+          opacity: active ? 0.95 : 0.62,
           boxSizing: 'border-box',
         },
       }),
       React.createElement('span', {
+        className: AH.heatRingCore,
         style: {
           display: 'block',
           width: Math.max(4, Math.round(size * (0.26 + level * 0.06))),
           height: Math.max(4, Math.round(size * (0.26 + level * 0.06))),
           borderRadius: '50%',
-          background: HEAT_INK,
-          opacity: active ? 1 : alpha,
+          opacity: active ? 1 : 0.9,
         },
       }),
     );
@@ -1093,29 +1933,19 @@ function build(require) {
       'span',
       {
         'aria-hidden': 'true',
+        className: AH.miniTrack,
         style: {
-          position: 'relative',
-          display: 'inline-block',
           width: width,
           height: 4,
           marginLeft: 2,
-          borderRadius: 999,
-          background: 'var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
-          overflow: 'hidden',
-          flex: 'none',
-          verticalAlign: 'middle',
         },
       },
       React.createElement('span', {
+        className: AH.miniFill,
         style: {
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
           width: Math.round(ratio * 100) + '%',
-          background: props.color || HEAT_INK,
-          opacity: 0.9,
-          borderRadius: 999,
+          // 用 backgroundColor 而不是 background，避免简写把 CSS 里的高光渐变重置掉
+          backgroundColor: props.color || HEAT_INK,
         },
       }),
     );
@@ -1300,14 +2130,22 @@ function build(require) {
     var strip = React.createElement('div', {
       'aria-hidden': 'true',
       style: { display: 'flex', gap: 1, height: 6, borderRadius: 999, overflow: 'hidden', marginTop: 10 },
-    }, segments.map(function (row) {
+    }, segments.map(function (row, index) {
       return React.createElement('span', {
         key: row.key,
-        style: { flexGrow: row.ms, flexBasis: 0, background: row.color },
+        className: AH.stripSeg,
+        style: {
+          flexGrow: row.ms,
+          flexBasis: 0,
+          backgroundColor: row.color,
+          animationDelay: (index * 40) + 'ms',
+        },
       });
     }));
 
     return React.createElement('div', {
+      className: AH.popover,
+      'data-closing': props.closing ? 'true' : 'false',
       style: {
         position: 'fixed',
         left: left,
@@ -1316,14 +2154,14 @@ function build(require) {
         width: 300,
         zIndex: 2000,
         padding: '12px 14px',
-        borderRadius: 10,
-        background: 'var(--dsw-alias-bg-base, #ffffff)',
-        border: '1px solid var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
-        boxShadow: '0 8px 28px rgba(0,0,0,0.16)',
         color: UI.textPrimary,
         pointerEvents: 'none',
+        // 入场方向跟着浮层翻上去/翻下去走
+        '--ah-pop-y': above ? '-4px' : '4px',
       },
     },
+      // 外层负责定位 transform，入场动画放在内层，避免 translateY(-100%) 被覆盖
+      React.createElement('div', { className: AH.popoverInner },
       React.createElement('div', { style: { display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 } },
         React.createElement('span', { style: { fontSize: '0.8em', fontWeight: 600 } }, tt('timing.title')),
         React.createElement('span', { style: { color: UI.textTertiary, fontSize: '0.72em' } }, tt('timing.total')),
@@ -1337,6 +2175,7 @@ function build(require) {
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12 } },
         React.createElement('span', {
           'aria-hidden': 'true',
+          className: AH.ring,
           style: {
             position: 'relative',
             flex: 'none',
@@ -1360,6 +2199,7 @@ function build(require) {
         }, rows),
       ),
       strip,
+      ),
     );
   }
 
@@ -1373,21 +2213,50 @@ function build(require) {
    * 通用悬浮容器：读锚点坐标 → portal 到 body → 由 render(anchor) 产出浮层。
    * 浮层统一脱离滚动容器，避免被列表裁掉。
    */
+  /** 浮层退场时长（与 AH_CSS 里的 ah-pop-out 保持一致）。 */
+  var HOVER_EXIT_MS = 130;
+
   function HoverCard(props) {
     var state = React.useState(null);
     var anchor = state[0];
     var setAnchor = state[1];
+    var closingState = React.useState(false);
+    var closing = closingState[0];
+    var setClosing = closingState[1];
     var ref = React.useRef ? React.useRef(null) : { current: null };
+    var timerRef = React.useRef ? React.useRef(null) : { current: null };
+
+    var clearTimer = function () {
+      if (!timerRef.current) return;
+      try { clearTimeout(timerRef.current); } catch (ignored) { /* ignore */ }
+      timerRef.current = null;
+    };
+
+    // 卸载时清掉待执行的关闭定时器，避免对已卸载的组件 setState
+    React.useEffect(function () {
+      return function () { clearTimer(); };
+    }, []);
 
     var show = function () {
+      clearTimer();
+      setClosing(false);
       var el = ref.current;
       if (!el || typeof el.getBoundingClientRect !== 'function') return;
       var box = el.getBoundingClientRect();
       setAnchor({ left: box.left, top: box.top, bottom: box.bottom });
     };
-    var hide = function () { setAnchor(null); };
+    // 先让浮层播放 130ms 退场动画，再真正卸载；期间再悬浮会取消关闭
+    var hide = function () {
+      clearTimer();
+      setClosing(true);
+      timerRef.current = setTimeout(function () {
+        timerRef.current = null;
+        setAnchor(null);
+        setClosing(false);
+      }, HOVER_EXIT_MS);
+    };
 
-    var card = anchor && props.render ? props.render(anchor) : null;
+    var card = anchor && props.render ? props.render(anchor, closing) : null;
     if (card && ReactDOM && typeof ReactDOM.createPortal === 'function'
       && typeof document !== 'undefined' && document.body) {
       card = ReactDOM.createPortal(card, document.body);
@@ -1418,6 +2287,8 @@ function build(require) {
     });
 
     return React.createElement('div', {
+      className: AH.popover,
+      'data-closing': props.closing ? 'true' : 'false',
       style: {
         position: 'fixed',
         left: pos.left,
@@ -1426,14 +2297,12 @@ function build(require) {
         width: 260,
         zIndex: 2000,
         padding: '12px 14px',
-        borderRadius: 10,
-        background: 'var(--dsw-alias-bg-base, #ffffff)',
-        border: '1px solid var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
-        boxShadow: '0 8px 28px rgba(0,0,0,0.16)',
         color: UI.textPrimary,
         pointerEvents: 'none',
+        '--ah-pop-y': pos.transform !== 'none' ? '-4px' : '4px',
       },
     },
+      React.createElement('div', { className: AH.popoverInner },
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
         React.createElement(MetricIcon, { name: 'tokens' }),
         React.createElement('span', { style: { fontSize: '0.8em', fontWeight: 600 } }, tt('tokens.title')),
@@ -1445,7 +2314,7 @@ function build(require) {
         'aria-hidden': 'true',
         style: {
           height: 1,
-          background: 'var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
+          background: 'linear-gradient(90deg, transparent, var(--dsw-alias-border-l1, rgba(127,127,127,0.22)) 22%, var(--dsw-alias-border-l1, rgba(127,127,127,0.22)) 78%, transparent)',
           margin: '8px 0 6px',
         },
       }),
@@ -1465,14 +2334,15 @@ function build(require) {
           React.createElement('span', { style: { fontVariantNumeric: 'tabular-nums' } }, row.value),
         );
       }),
+      ),
     );
   }
 
   /** 累计对话时长胶囊：悬浮时展开耗时分布卡。 */
   function DurationChip(props) {
     return React.createElement(HoverCard, {
-      render: function (anchor) {
-        return React.createElement(TimingCard, { timing: props.timing, anchor: anchor });
+      render: function (anchor, closing) {
+        return React.createElement(TimingCard, { timing: props.timing, anchor: anchor, closing: closing });
       },
     },
       React.createElement(MetricIcon, { name: 'duration' }),
@@ -1484,8 +2354,8 @@ function build(require) {
   function TokensChip(props) {
     var parts = props.parts;
     return React.createElement(HoverCard, {
-      render: function (anchor) {
-        return React.createElement(TokensCard, { parts: parts, anchor: anchor });
+      render: function (anchor, closing) {
+        return React.createElement(TokensCard, { parts: parts, anchor: anchor, closing: closing });
       },
     },
       React.createElement(MetricIcon, { name: 'tokens' }),
@@ -1496,16 +2366,14 @@ function build(require) {
   /** 「当前」徽章：挂在会话标题前，不占底部信息行。 */
   function CurrentBadge() {
     return React.createElement('span', {
+      className: AH.badge,
       style: {
         flex: 'none',
         display: 'inline-flex',
         alignItems: 'center',
         gap: 3,
         padding: '0 6px',
-        borderRadius: 4,
-        border: '1px solid rgba(59,130,246,0.45)',
-        background: 'rgba(59,130,246,0.10)',
-        color: HEAT_INK,
+        borderRadius: 5,
         fontSize: '0.68em',
         lineHeight: '16px',
         fontWeight: 600,
@@ -1521,14 +2389,11 @@ function build(require) {
     return React.createElement(
       'span',
       {
+        className: AH.chip,
         style: {
           display: 'inline-flex',
           alignItems: 'center',
           gap: 4,
-          padding: 0,
-          color: UI.textSecondary,
-          background: 'transparent',
-          border: 'none',
           flex: 'none',
         },
       },
@@ -1541,10 +2406,15 @@ function build(require) {
    * 「工作中」标识：官方鲸尾动图 + 文字，替代原来的描边小徽章。
    * 动画是 GIF 自己的帧序列，这里不加任何 transform，避免整张图被"晃"。
    */
+  /** 工作中 / 已完成两个状态图标的统一尺寸，避免两边大小再次漂移。 */
+  function statusIconSize(compact) {
+    return compact ? 22 : 28;
+  }
+
   function WorkingTag(props) {
     var stacked = props && props.stacked === true;
     var compact = props && props.compact === true;
-    var size = compact ? 22 : 28;
+    var size = statusIconSize(compact);
     return React.createElement(
       'span',
       {
@@ -1556,6 +2426,7 @@ function build(require) {
           justifyContent: 'center',
           gap: stacked ? 3 : 6,
           color: HEAT_INK,
+          textShadow: '0 0 10px color-mix(in srgb, var(--color-blue-500, #3b82f6) 42%, transparent)',
           fontSize: stacked ? '0.78em' : '0.8em',
           fontWeight: 700,
           lineHeight: '16px',
@@ -1580,13 +2451,99 @@ function build(require) {
     );
   }
 
+  /**
+   * 「已完成」标识：agent 已经跑完、但用户还没看过结果的会话。
+   *
+   * 颜色刻意用宿主的 success 绿色，与蓝色的热度 / 运行中区分开；
+   * 只做一个 3.2s 的轻微呼吸，`prefers-reduced-motion` 下静止。
+   * 用 aria-label 而不是 title，避免原生 tooltip 盖住悬停卡。
+   */
+  /** 已完成状态的鲸尾：与「工作中」的鲸鱼同源，取官方姿态的静止版。 */
+  var DONE_TAIL_PATH = 'M 97 60 L 102 61 L 107 63 L 110 66 L 114 69 L 118 71 L 122 73 L 127 75 L 132 76 L 136 78 L 142 79 L 147 80 L 152 82 L 157 83 L 161 85 L 165 88 L 169 90 L 173 93 L 177 95 L 180 98 L 183 102 L 186 105 L 189 108 L 191 113 L 193 117 L 197 118 L 202 117 L 208 117 L 215 117 L 221 117 L 226 118 L 232 119 L 236 121 L 241 123 L 246 124 L 250 126 L 255 128 L 259 130 L 265 131 L 270 132 L 275 133 L 282 133 L 287 132 L 291 134 L 295 137 L 297 141 L 297 148 L 295 152 L 292 155 L 289 159 L 287 163 L 283 166 L 281 170 L 278 173 L 274 176 L 270 178 L 267 181 L 263 184 L 258 185 L 253 187 L 249 189 L 244 190 L 238 191 L 233 192 L 226 192 L 221 193 L 215 193 L 208 193 L 202 193 L 197 194 L 193 197 L 192 202 L 192 207 L 192 213 L 193 218 L 194 224 L 195 229 L 196 234 L 196 241 L 197 246 L 198 252 L 198 258 L 198 264 L 197 270 L 191 270 L 184 270 L 181 267 L 182 262 L 181 256 L 181 250 L 180 245 L 180 238 L 179 233 L 178 227 L 177 222 L 176 217 L 175 211 L 175 205 L 176 199 L 177 194 L 179 190 L 182 186 L 185 183 L 188 180 L 193 178 L 198 177 L 205 177 L 211 177 L 216 176 L 223 176 L 229 176 L 234 175 L 240 174 L 245 173 L 250 171 L 254 169 L 258 167 L 262 164 L 266 162 L 269 158 L 272 155 L 275 152 L 273 149 L 267 149 L 263 147 L 257 146 L 253 144 L 248 142 L 243 141 L 239 139 L 234 137 L 230 135 L 224 134 L 219 133 L 213 133 L 206 133 L 201 134 L 196 135 L 190 136 L 185 135 L 181 132 L 179 128 L 178 123 L 175 119 L 173 115 L 170 111 L 167 108 L 164 105 L 159 103 L 155 101 L 151 99 L 146 97 L 142 95 L 136 94 L 131 93 L 126 92 L 121 90 L 117 88 L 113 86 L 108 84 L 104 82 L 101 82 L 100 87 L 100 93 L 101 99 L 103 103 L 105 108 L 107 112 L 110 115 L 113 119 L 116 122 L 118 126 L 122 129 L 125 132 L 129 135 L 132 138 L 136 140 L 140 143 L 143 146 L 147 149 L 150 152 L 153 155 L 156 159 L 158 163 L 160 167 L 162 172 L 162 178 L 160 183 L 159 188 L 157 192 L 155 197 L 153 201 L 151 206 L 149 210 L 147 214 L 145 219 L 144 224 L 142 228 L 141 234 L 140 239 L 138 244 L 137 249 L 137 255 L 136 261 L 135 266 L 134 271 L 128 270 L 122 270 L 119 266 L 120 261 L 120 255 L 121 249 L 122 244 L 123 238 L 124 233 L 125 228 L 127 223 L 128 218 L 130 214 L 132 209 L 134 205 L 136 200 L 138 196 L 140 192 L 142 187 L 144 183 L 145 177 L 144 172 L 142 168 L 139 164 L 136 161 L 133 158 L 129 155 L 125 153 L 121 150 L 118 147 L 115 144 L 111 141 L 108 138 L 105 135 L 102 131 L 99 128 L 96 124 L 94 120 L 91 117 L 89 112 L 87 108 L 86 102 L 84 98 L 84 92 L 84 85 L 85 80 L 86 75 L 88 70 L 90 66 L 93 62 Z';
+
+  /**
+   * 静态状态尾标：同一只鲸尾，variant 决定颜色与文案。
+   * - done：绿色「已完成」
+   * - awaiting：琥珀色「等待回答」
+   * 尺寸与「工作中」共用 statusIconSize()，不再各写一套。
+   */
+  function StatusTailTag(props) {
+    var stacked = props && props.stacked === true;
+    var compact = props && props.compact === true;
+    var isDone = (props && props.variant) !== 'awaiting';
+    var size = statusIconSize(compact);
+    return React.createElement(
+      'span',
+      {
+        className: isDone ? AH.doneTag : AH.awaitingTag,
+        role: 'img',
+        'aria-label': tt(isDone ? 'status.doneTitle' : 'status.awaitingTitle'),
+        style: {
+          display: 'inline-flex',
+          flexDirection: stacked ? 'column' : 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: stacked ? 3 : 5,
+          fontSize: stacked ? '0.78em' : '0.8em',
+          fontWeight: 700,
+          lineHeight: '16px',
+          whiteSpace: 'nowrap',
+          flex: 'none',
+        },
+      },
+      React.createElement(
+        'svg',
+        {
+          className: isDone ? AH.doneGlyph : AH.awaitingGlyph,
+          width: size,
+          height: size,
+          viewBox: '84 60 213 211',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 2,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          'aria-hidden': 'true',
+          style: { display: 'block', flex: 'none' },
+        },
+        React.createElement('path', { d: DONE_TAIL_PATH, fill: 'currentColor', stroke: 'none' }),
+      ),
+      tt(isDone ? 'status.done' : 'status.awaiting'),
+    );
+  }
+
+  function DoneTag(props) {
+    return React.createElement(StatusTailTag, {
+      variant: 'done',
+      stacked: props && props.stacked === true,
+      compact: props && props.compact === true,
+    });
+  }
+
+  function AwaitingTag(props) {
+    return React.createElement(StatusTailTag, {
+      variant: 'awaiting',
+      stacked: props && props.stacked === true,
+      compact: props && props.compact === true,
+    });
+  }
+
   function FilterBar(props) {
     var active = props && props.active;
     var counts = (props && props.counts) || {};
     var onPick = props && props.onPick;
     return React.createElement(
       'div',
-      { style: { display: 'flex', flexWrap: 'wrap', gap: 6, padding: '4px ' + UI.padX + 'px 10px' } },
+      {
+        className: AH.filterBar,
+        style: {
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: 16,
+          padding: '2px ' + UI.padX + 'px 8px',
+        },
+      },
       FILTERS.map(function (filter) {
         var picked = active === filter.id;
         var count = counts[filter.id] || 0;
@@ -1596,25 +2553,26 @@ function build(require) {
             key: filter.id,
             type: 'button',
             onClick: function () { if (onPick) onPick(filter.id); },
+            className: AH.tab,
+            'data-active': picked ? 'true' : 'false',
             style: {
               display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-              padding: '3px 10px',
-              borderRadius: 999,
-              border: picked ? '1px solid ' + HEAT_INK : '1px solid var(--dsw-alias-border-l1, rgba(127,127,127,0.22))',
-              background: picked ? 'color-mix(in srgb, var(--color-blue-500, #3b82f6) 12%, transparent)' : 'transparent',
-              color: picked ? HEAT_INK : UI.textSecondary,
+              alignItems: 'baseline',
+              gap: 4,
+              padding: '2px 0',
+              marginBottom: -1,
+              borderRadius: 0,
               fontSize: '0.8em',
               lineHeight: '18px',
               cursor: 'pointer',
               font: 'inherit',
+              // 注意：放在 font 之后，否则会被 font 简写重置成 inherit
               fontWeight: picked ? 600 : 400,
-              opacity: count === 0 && !picked ? 0.5 : 1,
+              opacity: count === 0 && !picked ? 0.45 : 1,
             },
           },
           tt(filter.labelKey),
-          React.createElement('span', { style: { fontSize: '0.92em', opacity: 0.65 } }, String(count)),
+          React.createElement('span', { style: { fontSize: '0.78em', opacity: 0.6 } }, String(count)),
         );
       }),
     );
@@ -1635,11 +2593,13 @@ function build(require) {
           borderRadius: UI.radius,
           overflow: 'hidden',
           background: 'var(--dsw-alias-bg-base, #ffffff)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
           animation: 'ah-breathe 2.4s ease-in-out infinite',
           isolation: 'isolate',
         },
       },
-      // 跑马灯光带：尺寸取 200%，绕中心旋转，只有边缘 2px 会露出来
+      // 跑马灯光带：尺寸取 200%，绕中心旋转，只有边缘 2px 会露出来。
+      // 蓝→青→紫的渐变让光带在旋转时有色温变化，边缘轻微模糊，避免硬边。
       React.createElement('span', {
         'aria-hidden': 'true',
         style: {
@@ -1652,10 +2612,12 @@ function build(require) {
           marginTop: '-110%',
           background:
             'conic-gradient(from 0deg,' +
-            ' transparent 0deg, transparent 250deg,' +
-            ' color-mix(in srgb, var(--color-blue-500, #3b82f6) 72%, transparent) 310deg,' +
-            ' color-mix(in srgb, var(--color-blue-500, #3b82f6) 20%, transparent) 335deg,' +
+            ' transparent 0deg, transparent 238deg,' +
+            ' color-mix(in srgb, var(--color-cyan-400, #22d3ee) 48%, transparent) 282deg,' +
+            ' color-mix(in srgb, var(--color-blue-500, #3b82f6) 86%, transparent) 312deg,' +
+            ' color-mix(in srgb, var(--color-violet-500, #8b5cf6) 24%, transparent) 340deg,' +
             ' transparent 360deg)',
+          filter: 'blur(2px)',
           animation: 'ah-orbit 2.2s linear infinite',
           pointerEvents: 'none',
           zIndex: 0,
@@ -1691,12 +2653,508 @@ function build(require) {
     return row;
   }
 
+  /* ---------------- 右键菜单：纯函数与动作 ---------------- */
+
+  var MENU_WIDTH = 232;
+  var MENU_MAX_HEIGHT = 420;
+  /** 最近一次打开菜单的触发卡片：关闭/执行后把焦点还回去。 */
+  var lastMenuTrigger = null;
+
+  /**
+   * 菜单的视口定位：右下越界时翻转或夹紧。
+   * 右键坐标可能正好在屏幕边缘，键盘触发则用卡片的矩形。
+   */
+  function menuPosition(x, y, width, height) {
+    var viewportWidth = 1280;
+    var viewportHeight = 800;
+    try {
+      if (typeof window !== 'undefined') {
+        if (window.innerWidth) viewportWidth = window.innerWidth;
+        if (window.innerHeight) viewportHeight = window.innerHeight;
+      }
+    } catch (ignored) { /* 测试沙箱没有视口，用默认值 */ }
+    var left = typeof x === 'number' && isFinite(x) ? x : 12;
+    var top = typeof y === 'number' && isFinite(y) ? y : 12;
+    if (left + width > viewportWidth - 8) left = viewportWidth - width - 8;
+    if (left < 8) left = 8;
+    if (top + height > viewportHeight - 8) top = top - height;
+    if (top < 8) top = 8;
+    return { left: left, top: top };
+  }
+
+  function menuHeightOf(items) {
+    var height = 12;
+    for (var i = 0; i < items.length; i += 1) {
+      if (items[i].separatorBefore) height += 9;
+      // 提示文字在右侧同一行，不额外增高
+      height += 30;
+    }
+    return Math.min(height, MENU_MAX_HEIGHT);
+  }
+
+  /** 菜单/对话框挂到 body：列表是 overflow 容器，原地渲染会被裁掉。 */
+  function portalLayer(node) {
+    try {
+      if (ReactDOM && typeof ReactDOM.createPortal === 'function'
+        && typeof document !== 'undefined' && document.body) {
+        return ReactDOM.createPortal(node, document.body);
+      }
+    } catch (ignored) { /* 没有 react-dom 时退回原位渲染 */ }
+    return node;
+  }
+
+  function firstEnabledIndex(items) {
+    for (var i = 0; i < items.length; i += 1) {
+      if (!items[i].disabled) return i;
+    }
+    return 0;
+  }
+
+  function stepEnabledIndex(items, from, delta) {
+    if (!items || items.length === 0) return 0;
+    var index = from;
+    for (var step = 0; step < items.length; step += 1) {
+      index = (index + delta + items.length) % items.length;
+      if (!items[index].disabled) return index;
+    }
+    return from;
+  }
+
+  /**
+   * 复制文本：优先 async clipboard，失败退回旧式 execCommand。
+   * 返回 Promise<boolean>，调用方据此给成功/失败提示。
+   */
+  function copyText(text) {
+    var value = String(text === undefined || text === null ? '' : text);
+    if (value === '') return Promise.resolve(false);
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard
+        && typeof navigator.clipboard.writeText === 'function') {
+        return navigator.clipboard.writeText(value).then(function () {
+          return true;
+        }, function () {
+          return fallbackCopyText(value);
+        });
+      }
+    } catch (ignored) { /* 退回 execCommand */ }
+    return Promise.resolve(fallbackCopyText(value));
+  }
+
+  function fallbackCopyText(value) {
+    try {
+      if (typeof document === 'undefined' || !document.body) return false;
+      var area = document.createElement('textarea');
+      area.value = value;
+      area.setAttribute('readonly', 'readonly');
+      area.style.position = 'fixed';
+      area.style.left = '-9999px';
+      document.body.appendChild(area);
+      if (area.select) area.select();
+      var ok = typeof document.execCommand === 'function' ? document.execCommand('copy') : false;
+      document.body.removeChild(area);
+      return Boolean(ok);
+    } catch (ignored) {
+      return false;
+    }
+  }
+
+  /** 与宿主 Session Header 的「下载 Session 日志」同一条文档相对路由。 */
+  function exportLogUrlOf(sessionId) {
+    return 'api/session.export?sessionId=' + encodeURIComponent(String(sessionId)) + '&includeDescendants=true';
+  }
+
+  /**
+   * 按需探测导出路由：宿主没挂载 session-log-export 时 HEAD 会 404，
+   * 此时不发起下载，只提示不可用（避免浏览器落到一个 404 标签页）。
+   */
+  function downloadSessionLog(sessionId) {
+    var url = exportLogUrlOf(sessionId);
+    var check;
+    try {
+      check = typeof fetch === 'function'
+        ? fetch(url, { method: 'HEAD' }).then(function (response) {
+            return Boolean(response && response.ok);
+          }, function () {
+            return false;
+          })
+        : Promise.resolve(false);
+    } catch (ignored) {
+      check = Promise.resolve(false);
+    }
+    return check.then(function (available) {
+      if (!available) return false;
+      try {
+        if (typeof document === 'undefined') return false;
+        var link = document.createElement('a');
+        link.href = url;
+        link.rel = 'noopener';
+        link.download = '';
+        if (document.body && document.body.appendChild) {
+          document.body.appendChild(link);
+          if (link.click) link.click();
+          document.body.removeChild(link);
+        } else if (link.click) {
+          link.click();
+        }
+        return true;
+      } catch (ignored) {
+        return false;
+      }
+    });
+  }
+
+  /** 宿主公开方法的逐项能力检测：升级后缺哪个就只禁用哪个菜单项。 */
+  function capabilitiesOf(uiWorkspace, sessions) {
+    var service = uiWorkspace && typeof uiWorkspace === 'object' ? uiWorkspace : {};
+    return {
+      open: typeof service.openSession === 'function',
+      openWorkspace: typeof service.openWorkspace === 'function',
+      startSession: typeof service.startSession === 'function',
+      fork: typeof service.forkSession === 'function',
+      pin: typeof service.pinSession === 'function',
+      unpin: typeof service.unpinSession === 'function',
+      archive: typeof service.archiveSession === 'function',
+      unarchive: typeof service.unarchiveSession === 'function',
+      rename: Boolean(sessions && typeof sessions.using === 'function'),
+    };
+  }
+
+  /** 完整提示词只在动作发生时读取，避免把全文塞进每 60 秒重建的模型。 */
+  function promptRawOf(sessionState, sessionId) {
+    try {
+      var projections = sessionState && sessionState.projectionsBySession
+        ? sessionState.projectionsBySession[sessionId]
+        : undefined;
+      var values = projections && projections.values;
+      var timeline = values && values.contextTimeline;
+      if (!timeline || typeof timeline !== 'object') return '';
+      if (typeof timeline.lastUser === 'string' && timeline.lastUser.trim() !== '') return timeline.lastUser;
+      if (typeof timeline.initialPrompt === 'string' && timeline.initialPrompt.trim() !== '') return timeline.initialPrompt;
+    } catch (ignored) { /* 投影结构未知时静默 */ }
+    return '';
+  }
+
+  /* ---------------- 在其他应用中打开 ---------------- */
+
+  /**
+   * 宿主 open-in-app 目录的分组：文件管理器 / 编辑器 / 终端 / 其他。
+   * 只影响菜单排序，不影响可用性——具体有哪些应用由 GET open-in-app/apps 回答。
+   */
+  var OPEN_WITH_FILE_MANAGERS = { explorer: true, finder: true, filemanager: true };
+  var OPEN_WITH_EDITORS = {
+    vscode: true, vscodeinsiders: true, cursor: true, windsurf: true, zed: true,
+    sublimetext: true, xcode: true, androidstudio: true,
+    intellijidea: true, pycharm: true, webstorm: true, phpstorm: true,
+    goland: true, rider: true, rustrover: true,
+  };
+  var OPEN_WITH_TERMINALS = {
+    // 只收终端模拟器；gitbash 是 shell，不算「终端」，由 buildOpenWithItems 过滤掉
+    terminal: true, windowsterminal: true, iterm: true,
+    warp: true, ghostty: true, kitty: true, gnometerminal: true, konsole: true,
+  };
+
+  function openWithGroupRank(id) {
+    if (OPEN_WITH_FILE_MANAGERS[id]) return 0;
+    if (OPEN_WITH_EDITORS[id]) return 1;
+    if (OPEN_WITH_TERMINALS[id]) return 2;
+    return 3;
+  }
+
+  /** 应用名走插件自己的 app.<id> 字典；未知 id 原样显示（宿主目录可能比插件新）。 */
+  function appLabelOf(id) {
+    var key = 'app.' + id;
+    var text = tt(key);
+    return text === key ? String(id) : text;
+  }
+
+  /** open-in-app 只接受存在的绝对目录；相对路径直接禁用菜单项。 */
+  function isAbsolutePath(value) {
+    if (typeof value !== 'string' || value === '') return false;
+    if (/^[a-zA-Z]:[\\/]/.test(value)) return true;
+    if (value.charAt(0) === '/') return true;
+    if (/^\\\\[^\\]+\\/.test(value)) return true;
+    return false;
+  }
+
+  /* ---------------- 右键菜单：组件 ---------------- */
+
+  function ContextMenu(props) {
+    var items = props && Array.isArray(props.items) ? props.items : [];
+    var open = Boolean(props && props.open);
+    var activeState = React.useState(firstEnabledIndex(items));
+    var active = activeState[0];
+    var setActive = activeState[1];
+    var surfaceRef = React.useRef ? React.useRef(null) : { current: null };
+
+    // 外部点击 / 滚动 / 缩放都要关闭；portal 到 body 后这些事件不会冒泡进列表。
+    React.useEffect(function () {
+      if (!open) return undefined;
+      var onPointer = function (event) {
+        var surface = surfaceRef.current;
+        if (surface && surface.contains && event && event.target && surface.contains(event.target)) return;
+        if (props.onClose) props.onClose();
+      };
+      // 菜单自己滚（应用多时）不能把自己关掉；只有外层列表/页面滚动才关闭
+      var onScroll = function (event) {
+        var surface = surfaceRef.current;
+        if (surface && event && event.target && surface.contains && surface.contains(event.target)) return;
+        if (props.onClose) props.onClose();
+      };
+      var onResize = function () { if (props.onClose) props.onClose(); };
+      var cleanups = [];
+      try {
+        if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+          document.addEventListener('pointerdown', onPointer, true);
+          cleanups.push(function () { document.removeEventListener('pointerdown', onPointer, true); });
+        }
+        if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+          window.addEventListener('scroll', onScroll, true);
+          window.addEventListener('resize', onResize);
+          cleanups.push(function () { window.removeEventListener('scroll', onScroll, true); });
+          cleanups.push(function () { window.removeEventListener('resize', onResize); });
+        }
+      } catch (ignored) { /* 沙箱没有事件系统 */ }
+      return function () {
+        for (var i = 0; i < cleanups.length; i += 1) cleanups[i]();
+      };
+    }, [open]);
+
+    React.useEffect(function () {
+      if (!open) return;
+      // 每次打开都从第一个可用项开始，避免沿用上一次的高亮位置
+      setActive(firstEnabledIndex(items));
+      var surface = surfaceRef.current;
+      if (surface && typeof surface.focus === 'function') {
+        try { surface.focus(); } catch (ignored) { /* ignore */ }
+      }
+    }, [open]);
+
+    if (!open || items.length === 0) return null;
+
+    var pos = menuPosition(props.x, props.y, MENU_WIDTH, menuHeightOf(items));
+
+    function onKeyDown(event) {
+      if (!event) return;
+      var key = event.key;
+      if (key === 'Escape') {
+        event.preventDefault();
+        if (props.onClose) props.onClose();
+        return;
+      }
+      if (key === 'ArrowDown') {
+        event.preventDefault();
+        setActive(stepEnabledIndex(items, active, 1));
+        return;
+      }
+      if (key === 'ArrowUp') {
+        event.preventDefault();
+        setActive(stepEnabledIndex(items, active, -1));
+        return;
+      }
+      if (key === 'Home') {
+        event.preventDefault();
+        setActive(firstEnabledIndex(items));
+        return;
+      }
+      if (key === 'End') {
+        event.preventDefault();
+        var last = items.length - 1;
+        for (var i = items.length - 1; i >= 0; i -= 1) {
+          if (!items[i].disabled) { last = i; break; }
+        }
+        setActive(last);
+        return;
+      }
+      if (key === 'Enter' || key === ' ') {
+        event.preventDefault();
+        var item = items[active];
+        if (item && !item.disabled && item.onSelect) item.onSelect();
+        return;
+      }
+      if (key === 'Tab' && props.onClose) props.onClose();
+    }
+
+    var nodes = [];
+    for (var index = 0; index < items.length; index += 1) {
+      var item = items[index];
+      if (item.separatorBefore) {
+        nodes.push(React.createElement('div', {
+          key: 'sep-' + item.id,
+          role: 'separator',
+          className: AH.menuSep,
+        }));
+      }
+      nodes.push(React.createElement('button', {
+        key: item.id,
+        id: index === active ? 'ah-menu-active' : undefined,
+        type: 'button',
+        role: 'menuitem',
+        tabIndex: -1,
+        'aria-disabled': item.disabled ? 'true' : undefined,
+        'data-danger': item.danger ? 'true' : undefined,
+        'data-active': index === active ? 'true' : 'false',
+        className: AH.menuItem,
+        onClick: function (selected) {
+          return function () {
+            if (selected.disabled) return;
+            if (selected.onSelect) selected.onSelect();
+          };
+        }(item),
+        onMouseEnter: function (hovered) {
+          return function () { setActive(hovered); };
+        }(index),
+      }, [
+        React.createElement('span', { key: 'label', className: AH.menuLabel }, item.label),
+        item.hint
+          ? React.createElement('span', { key: 'hint', className: AH.menuHint }, item.hint)
+          : null,
+      ]));
+    }
+
+    var surface = React.createElement('div', {
+      ref: surfaceRef,
+      role: 'menu',
+      tabIndex: -1,
+      'aria-activedescendant': 'ah-menu-active',
+      'aria-label': props.label,
+      className: AH.menu,
+      style: {
+        position: 'fixed',
+        left: pos.left,
+        top: pos.top,
+        width: MENU_WIDTH,
+        maxHeight: 'min(60vh, ' + MENU_MAX_HEIGHT + 'px)',
+        overflowY: 'auto',
+        zIndex: 2100,
+        outline: 'none',
+      },
+      onKeyDown: onKeyDown,
+      onContextMenu: function (event) { event.preventDefault(); },
+    }, nodes);
+
+    return portalLayer(surface);
+  }
+
+  function ConfirmArchive(props) {
+    if (!props || !props.open) return null;
+    var pending = props.pending === true;
+    var session = props.session || {};
+    var title = session.title || session.id || '';
+    return portalLayer(React.createElement('div', {
+      role: 'dialog',
+      'aria-modal': 'true',
+      'aria-label': tt('dialog.archiveTitle'),
+      className: AH.dialog,
+    }, [
+      React.createElement('div', { key: 'title', className: AH.dialogTitle }, tt('dialog.archiveTitle')),
+      React.createElement('div', { key: 'body', className: AH.dialogText }, tt('dialog.archiveBody', { title: title })),
+      props.error ? React.createElement('div', { key: 'error', className: AH.dialogError }, props.error) : null,
+      React.createElement('div', { key: 'actions', className: AH.dialogActions }, [
+        React.createElement('button', {
+          key: 'cancel',
+          type: 'button',
+          className: AH.dialogButton,
+          disabled: pending,
+          onClick: props.onCancel,
+        }, tt('dialog.cancel')),
+        React.createElement('button', {
+          key: 'confirm',
+          type: 'button',
+          className: AH.dialogButton,
+          'data-primary': 'true',
+          'data-danger': 'true',
+          disabled: pending,
+          onClick: props.onConfirm,
+        }, pending ? tt('dialog.archiving') : tt('dialog.archiveConfirm')),
+      ]),
+    ]));
+  }
+
+  function RenameDialog(props) {
+    if (!props || !props.open) return null;
+    var pending = props.pending === true;
+    var value = typeof props.value === 'string' ? props.value : '';
+    var canSave = value.trim() !== '' && !pending;
+
+    function onKeyDown(event) {
+      if (!event) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (props.onCancel) props.onCancel();
+        return;
+      }
+      if (event.key === 'Enter' && canSave && props.onSave) {
+        event.preventDefault();
+        props.onSave();
+      }
+    }
+
+    return portalLayer(React.createElement('div', {
+      role: 'dialog',
+      'aria-modal': 'true',
+      'aria-label': tt('dialog.renameTitle'),
+      className: AH.dialog,
+    }, [
+      React.createElement('div', { key: 'title', className: AH.dialogTitle }, tt('dialog.renameTitle')),
+      React.createElement('input', {
+        key: 'input',
+        className: AH.dialogInput,
+        value: value,
+        placeholder: tt('dialog.renamePlaceholder'),
+        autoFocus: true,
+        disabled: pending,
+        onChange: function (event) {
+          if (props.onChange) props.onChange(event && event.target ? event.target.value : '');
+        },
+        onKeyDown: onKeyDown,
+      }),
+      props.error ? React.createElement('div', { key: 'error', className: AH.dialogError }, props.error) : null,
+      React.createElement('div', { key: 'actions', className: AH.dialogActions }, [
+        React.createElement('button', {
+          key: 'cancel',
+          type: 'button',
+          className: AH.dialogButton,
+          disabled: pending,
+          onClick: props.onCancel,
+        }, tt('dialog.cancel')),
+        React.createElement('button', {
+          key: 'save',
+          type: 'button',
+          className: AH.dialogButton,
+          'data-primary': 'true',
+          disabled: !canSave,
+          onClick: function () { if (canSave && props.onSave) props.onSave(); },
+        }, pending ? tt('dialog.saving') : tt('dialog.save')),
+      ]),
+    ]));
+  }
+
+  function PanelToast(props) {
+    if (!props || !props.open || !props.toast) return null;
+    var toast = props.toast;
+    return portalLayer(React.createElement('div', {
+      role: 'status',
+      'aria-live': 'polite',
+      'data-tone': toast.tone === 'error' ? 'error' : 'info',
+      className: AH.toast,
+    }, [
+      React.createElement('span', { key: 'text' }, toast.text),
+      toast.actionLabel && typeof toast.onAction === 'function'
+        ? React.createElement('button', {
+            key: 'action',
+            type: 'button',
+            className: AH.toastAction,
+            onClick: toast.onAction,
+          }, toast.actionLabel)
+        : null,
+    ]));
+  }
+
   function SessionCard(props) {
-    var hoverState = React.useState(false);
-    var hover = hoverState[0];
-    var setHover = hoverState[1];
     var session = props.session;
     var now = props.now;
+    // 入场错峰：同一批渲染的卡片依次淡入，最多累加到 160ms
+    var enterDelay = (typeof props.index === 'number' ? Math.min(props.index, 8) : 0) * 20;
 
     // 所属工作区移到卡片右侧；左侧 meta 只保留时间与用量
     var workspaceName = session.workspace
@@ -1751,18 +3209,28 @@ function build(require) {
     // 组内用圆点分隔，组间用竖线 + 更大留白，让同类信息聚在一起
     var metaRow = renderMetaGroups(groups);
 
+    // 卡片右侧的状态列：工作中（蓝）/ 已完成（绿），两者互斥
+    var statusColumnStyle = {
+      flex: 'none',
+      width: 66,
+      alignSelf: 'stretch',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    };
+
+    var barTone = heatToneOf(session.level);
+
     var children = [
       React.createElement('span', {
         key: 'bar',
+        className: AH.heatBar,
         style: {
-          flex: 'none',
-          // 加粗的竖向热度条：宽度从 3px 提到 6px，圆角同步
           width: 6,
-          alignSelf: 'stretch',
-          borderRadius: 3,
           marginLeft: 8,
-          background: HEAT_INK,
-          opacity: 0.3 + (typeof session.ratio === 'number' ? session.ratio : heatAlphaOf(session.level)) * 0.7,
+          // 整条保持档位色，只在顶部提亮；见 heatBarSurface 的注释
+          backgroundImage: heatBarSurface(barTone),
+          boxShadow: heatBarShadow(barTone, session.level),
         },
       }),
       React.createElement(
@@ -1812,20 +3280,24 @@ function build(require) {
           },
         }, metaRow),
       ),
-      // 运行中：鲸鱼 + 工作中，落在卡片右侧的留白里（不用标题前的小徽章）
-      session.running === true
+      // 三态互斥，优先级：等待回答 > 已完成 > 工作中。
+      // 都落在卡片右侧的留白里（不用标题前的小徽章）。
+      session.awaiting === true
         ? React.createElement('span', {
-            key: 'working',
-            style: {
-              flex: 'none',
-              width: 66,
-              alignSelf: 'stretch',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            },
-          }, React.createElement(WorkingTag, { stacked: true }))
-        : null,
+            key: 'awaiting',
+            style: statusColumnStyle,
+          }, React.createElement(AwaitingTag, { stacked: true }))
+        : (session.done === true
+          ? React.createElement('span', {
+              key: 'done',
+              style: statusColumnStyle,
+            }, React.createElement(DoneTag, { stacked: true }))
+          : (session.running === true
+            ? React.createElement('span', {
+                key: 'working',
+                style: statusColumnStyle,
+              }, React.createElement(WorkingTag, { stacked: true }))
+            : null)),
       React.createElement(
         'span',
         {
@@ -1873,6 +3345,8 @@ function build(require) {
     ];
 
     var running = session.running === true;
+    // 已完成 / 等待回答的会话不再套运行中外框 / 跑马灯
+    var activeRunning = running && session.done !== true && session.awaiting !== true;
 
     var buttonStyle = {
       display: 'flex',
@@ -1881,56 +3355,69 @@ function build(require) {
       width: '100%',
       padding: '10px 14px 10px 0',
       // 运行中时由外层容器控制间距和边框，按钮自身不再留 margin
-      margin: running ? 0 : '0 0 8px',
-      border: running ? 'none' : UI.border,
-      borderRadius: running ? Math.max(2, UI.radius - 2) : UI.radius,
-      // 运行中的卡片必须是实底；hover 的浅蓝用叠加渐变，不碰底色透明度
-      background: running ? 'var(--dsw-alias-bg-base, #ffffff)' : (hover ? UI.cardBgHover : UI.cardBg),
-      backgroundImage: running && hover
-        ? 'linear-gradient(rgba(59,130,246,0.07), rgba(59,130,246,0.07))'
-        : 'none',
+      margin: activeRunning ? 0 : '0 0 8px',
+      borderRadius: activeRunning ? Math.max(2, UI.radius - 2) : UI.radius,
       cursor: 'pointer',
       textAlign: 'left',
       font: 'inherit',
       color: 'inherit',
       overflow: 'hidden',
-      transition: 'background 120ms ease',
       position: 'relative',
       zIndex: 1,
+      animationDelay: enterDelay + 'ms',
     };
+    // 运行中的卡片由 RunningFrame 提供外框，按钮自身不要边框
+    if (activeRunning) buttonStyle.border = 'none';
 
     var cardButton = React.createElement(
       'button',
       {
         type: 'button',
         onClick: props.onClick,
-        onMouseEnter: function () { setHover(true); },
-        onMouseLeave: function () { setHover(false); },
-        onFocus: function () { setHover(true); },
-        onBlur: function () { setHover(false); },
         // 用 aria-label 而不是 title：原生 tooltip 会在悬停时长胶囊时浮出来挡住耗时卡
         'aria-label': tt('card.openSessionTitle', { title: session.title || session.id }),
+        className: activeRunning ? AH.card + ' ' + AH.cardRunning : AH.card,
         style: buttonStyle,
+        // 右键与 Shift+F10 / 菜单键都能打开同一份菜单；右键菜单由 portal 渲染，不会被列表裁剪
+        onContextMenu: props.onOpenMenu
+          ? function (event) { event.preventDefault(); props.onOpenMenu(event); }
+          : undefined,
+        onKeyDown: props.onOpenMenu
+          ? function (event) {
+              if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+                event.preventDefault();
+                props.onOpenMenu(event);
+              }
+            }
+          : undefined,
       },
       children,
     );
 
-    // 非运行中：保持原样，不引入任何额外 DOM
-    if (!running) return cardButton;
+    var menuNode = props.menuItems && props.menuItems.length
+      ? React.createElement(ContextMenu, {
+          open: props.menuOpen === true,
+          items: props.menuItems,
+          x: props.menuX,
+          y: props.menuY,
+          label: session.title || session.id,
+          onClose: props.onMenuClose,
+        })
+      : null;
 
-    // 运行中：与会话卡片共用同一套外框（跑马灯 + 呼吸发光）
-    return React.createElement(RunningFrame, null, cardButton);
+    // 非运行中：不引入额外 DOM；菜单关闭时 ContextMenu 自己返回 null
+    var frame = activeRunning ? React.createElement(RunningFrame, null, cardButton) : cardButton;
+    if (!menuNode) return frame;
+    return React.createElement(React.Fragment, null, frame, menuNode);
   }
 
   function GroupCard(props) {
-    var hoverState = React.useState(false);
-    var hover = hoverState[0];
-    var setHover = hoverState[1];
     var group = props.group;
     var now = props.now;
     var rank = props.rank;
     var openable = group.workspaceId !== undefined;
     var running = group.running === true;
+    var enterDelay = (typeof props.index === 'number' ? Math.min(props.index, 8) : 0) * 20;
 
     // 工作区是汇总视图：能加总的（缓存/上下文/轮次/步数/tokens/耗时）才展示
     var groups = [];
@@ -1999,11 +3486,23 @@ function build(require) {
         type: 'button',
         disabled: !openable,
         onClick: props.onClick,
-        onMouseEnter: function () { setHover(true); },
-        onMouseLeave: function () { setHover(false); },
-        onFocus: function () { setHover(true); },
-        onBlur: function () { setHover(false); },
         'aria-label': openable ? tt('card.openWorkspaceTitle', { name: group.label }) : tt('workspace.ungroupedTitle'),
+        className: running
+          ? AH.card + ' ' + AH.cardGroup + ' ' + AH.cardRunning
+          : AH.card + ' ' + AH.cardGroup,
+        'data-openable': openable ? 'true' : 'false',
+        // 未分组卡片（openable=false）没有可执行动作，不挂右键
+        onContextMenu: openable && props.onOpenMenu
+          ? function (event) { event.preventDefault(); props.onOpenMenu(event); }
+          : undefined,
+        onKeyDown: openable && props.onOpenMenu
+          ? function (event) {
+              if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+                event.preventDefault();
+                props.onOpenMenu(event);
+              }
+            }
+          : undefined,
         style: {
           display: 'flex',
           alignItems: 'center',
@@ -2012,33 +3511,25 @@ function build(require) {
           padding: '12px 16px',
           // 运行中时由外层容器控制间距和边框，按钮自身不再留 margin
           margin: running ? 0 : '0 0 10px',
-          border: running ? 'none' : UI.border,
           borderRadius: running ? Math.max(2, UI.radius - 2) : UI.radius,
           // 关键：按钮必须在跑马灯之上（定位 + z-index），否则旋转的色带会盖在卡片上。
           position: running ? 'relative' : undefined,
           zIndex: running ? 1 : undefined,
           overflow: 'hidden',
-          // 运行中的卡片必须是实底；hover 的浅蓝用叠加渐变，不碰底色透明度
-          background: running ? 'var(--dsw-alias-bg-base, #ffffff)' : (hover && openable ? UI.cardBgHover : UI.cardBg),
-          backgroundImage: running && hover
-            ? 'linear-gradient(rgba(59,130,246,0.07), rgba(59,130,246,0.07))'
-            : 'none',
           cursor: openable ? 'pointer' : 'default',
           textAlign: 'left',
           font: 'inherit',
           color: 'inherit',
-          transition: 'background 120ms ease',
+          animationDelay: enterDelay + 'ms',
         },
       },
       React.createElement('span', {
         key: 'bar',
+        className: AH.heatBar,
         style: {
-          flex: 'none',
           width: 6,
-          alignSelf: 'stretch',
-          borderRadius: 3,
-          background: HEAT_INK,
-          opacity: 0.3 + (typeof group.ratio === 'number' ? group.ratio : heatAlphaOf(group.level)) * 0.7,
+          backgroundImage: heatBarSurface(heatToneOf(group.level)),
+          boxShadow: heatBarShadow(heatToneOf(group.level), group.level),
         },
       }),
       React.createElement(
@@ -2086,17 +3577,30 @@ function build(require) {
             lineHeight: '20px',
             textAlign: 'center',
             color: UI.textSecondary,
-            background: 'var(--dsw-alias-bg-layer-1, rgba(127,127,127,0.08))',
-            border: '1px solid var(--dsw-alias-border-l1, rgba(127,127,127,0.18))',
+            background: 'color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,0.08)) 62%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,0.18)) 68%, transparent)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)',
             opacity: rank <= 3 ? 1 : 0.6,
           },
         }, '#' + rank),
       ),
     );
 
+    var menuNode = props.menuItems && props.menuItems.length
+      ? React.createElement(ContextMenu, {
+          open: props.menuOpen === true,
+          items: props.menuItems,
+          x: props.menuX,
+          y: props.menuY,
+          label: group.label,
+          onClose: props.onMenuClose,
+        })
+      : null;
+
     // 工作区里有正在跑的会话时，与会话卡片使用同一套运行中动效
-    if (!running) return cardButton;
-    return React.createElement(RunningFrame, null, cardButton);
+    var frame = running ? React.createElement(RunningFrame, null, cardButton) : cardButton;
+    if (!menuNode) return frame;
+    return React.createElement(React.Fragment, null, frame, menuNode);
   }
 
   function useMinuteTick() {
@@ -2108,35 +3612,51 @@ function build(require) {
     return state[0];
   }
 
-  /** 分段切换控件：一组胶囊，选中项实底。 */
+  /** 分段切换控件：一组胶囊，选中项实底（表面与过渡见 AH_CSS）。 */
   function Segmented(props) {
     var options = props && props.options ? props.options : [];
     var value = props && props.value;
     var onChange = props && props.onChange;
     var compact = props && props.compact === true;
+    var text = props && props.variant === 'text';
     return React.createElement(
       'span',
-      { style: { display: 'inline-flex', alignItems: 'center', gap: 2, flex: 'none' } },
+      { style: { display: 'inline-flex', alignItems: 'center', gap: text ? 2 : 2, flex: 'none' } },
       options.map(function (option) {
         var picked = value === option.value;
+        var style = text
+          ? {
+            padding: '2px 5px',
+            borderRadius: 6,
+            // 数量选择保持"无底色、无边框"的语义：选中态的玻璃底由 .ah-count::before 画，
+            // 内联的 transparent 只是为了让这份语义在外部仍然可读（也便于测试断言）。
+            border: '1px solid transparent',
+            background: 'transparent',
+            fontSize: '0.78em',
+            lineHeight: '18px',
+            cursor: 'pointer',
+            font: 'inherit',
+            // 放在 font 之后：font 简写会把字重重置成继承值
+            fontWeight: picked ? 600 : 400,
+          }
+          : {
+            padding: compact ? '1px 7px' : '3px 9px',
+            borderRadius: 7,
+            fontSize: compact ? '0.74em' : '0.78em',
+            lineHeight: compact ? '16px' : '18px',
+            cursor: 'pointer',
+            font: 'inherit',
+            fontWeight: picked ? 600 : 400,
+          };
         return React.createElement(
           'button',
           {
             key: String(option.value),
             type: 'button',
             onClick: function () { if (onChange) onChange(option.value); },
-            style: {
-              padding: compact ? '1px 7px' : '3px 9px',
-              borderRadius: 6,
-              border: '1px solid ' + (picked ? 'transparent' : 'var(--dsw-alias-border-l1, rgba(127,127,127,0.22))'),
-              background: picked ? HEAT_INK : 'transparent',
-              color: picked ? 'var(--dsw-alias-bg-base, #ffffff)' : UI.textSecondary,
-              fontSize: compact ? '0.74em' : '0.78em',
-              lineHeight: compact ? '16px' : '18px',
-              cursor: 'pointer',
-              font: 'inherit',
-              fontWeight: picked ? 600 : 400,
-            },
+            className: text ? AH.count : AH.seg,
+            'data-active': picked ? 'true' : 'false',
+            style: style,
           },
           option.label,
         );
@@ -2171,6 +3691,29 @@ function build(require) {
     var filterState = React.useState('all');
     var filter = filterState[0];
     var setFilter = filterState[1];
+
+    // 右键菜单 / 归档确认 / 重命名 / 轻量提示：面板级单例，卡片只负责触发
+    var menuState = React.useState(null);
+    var menu = menuState[0];
+    var setMenu = menuState[1];
+    var dialogState = React.useState(null);
+    var dialog = dialogState[0];
+    var setDialog = dialogState[1];
+    var renameDraftState = React.useState('');
+    var renameDraft = renameDraftState[0];
+    var setRenameDraft = renameDraftState[1];
+    var toastState = React.useState(null);
+    var toast = toastState[0];
+    var setToast = toastState[1];
+    // 宿主 open-in-app 目录（本机实际安装的应用）与「打开方式」浮层。
+    // initialApps 只给测试注入用（与 initialView 同策略），生产始终从探测开始。
+    var initialApps = props && Array.isArray(props.initialApps) ? props.initialApps : null;
+    var appsState = React.useState(initialApps && initialApps.length > 0 ? initialApps : []);
+    var apps = appsState[0];
+    var setApps = appsState[1];
+    var openWithState = React.useState(null);
+    var openWith = openWithState[0];
+    var setOpenWith = openWithState[1];
 
     // 列表滚动：隐藏原生滚动条，靠右侧的浮动提示告诉用户还能上下滑。
     var listRef = React.useRef ? React.useRef(null) : { current: null };
@@ -2232,6 +3775,546 @@ function build(require) {
       }
     }
 
+    /* ---------------- 右键菜单：服务、动作与菜单项 ---------------- */
+
+    var sessionsService = props && props.ctx ? props.ctx.get('sessions') : undefined;
+    var caps = capabilitiesOf(uiWorkspace, sessionsService);
+    var pinnedIds = workspaceState && Array.isArray(workspaceState.pinnedSessionIds)
+      ? workspaceState.pinnedSessionIds
+      : [];
+
+    function notify(text, tone, actionLabel, onAction) {
+      setToast({
+        key: Date.now() + Math.random(),
+        text: text,
+        tone: tone === 'error' ? 'error' : 'info',
+        actionLabel: actionLabel,
+        onAction: onAction,
+      });
+    }
+
+    // 提示自动消失：错误停留更久，带撤销动作的多留一会儿。
+    React.useEffect(function () {
+      if (!toast) return undefined;
+      var timer = setTimeout(function () {
+        setToast(null);
+      }, toast.tone === 'error' ? 5000 : (toast.actionLabel ? 6000 : 3000));
+      return function () { clearTimeout(timer); };
+    }, [toast]);
+
+    // 宿主挂载 open-in-app 时才有应用目录；失败或空列表时「打开方式」禁用而不是消失。
+    // 页面可能早于 Host 路由就绪，做 3 次退避重试，避免一次 404 就永久空白。
+    React.useEffect(function () {
+      var cancelled = false;
+      var attempts = 0;
+      var timer = null;
+
+      function retry() {
+        if (cancelled || attempts >= 3) return;
+        timer = setTimeout(load, 800 * attempts);
+      }
+
+      function load() {
+        if (cancelled) return;
+        attempts += 1;
+        try {
+          if (typeof fetch !== 'function') return;
+          fetch('open-in-app/apps').then(function (response) {
+            return response && response.ok && typeof response.json === 'function'
+              ? response.json()
+              : null;
+          }).then(function (body) {
+            if (cancelled) return;
+            if (!body || !Array.isArray(body.apps)) {
+              retry();
+              return;
+            }
+            ahLog('[activity-heat] open-in-app apps:', body.apps);
+            setApps(body.apps.filter(function (id) {
+              return typeof id === 'string' && id !== '';
+            }));
+          }, function () {
+            ahWarn('[activity-heat] open-in-app apps request failed (attempt ' + attempts + ')');
+            retry();
+          });
+        } catch (ignored) { /* fetch 不可用 */ }
+      }
+
+      load();
+      return function () {
+        cancelled = true;
+        if (timer) clearTimeout(timer);
+      };
+    }, []);
+
+    function closeMenu() {
+      setMenu(null);
+      try {
+        if (lastMenuTrigger && lastMenuTrigger.isConnected !== false
+          && typeof lastMenuTrigger.focus === 'function') {
+          // preventScroll：焦点回到卡片时不要把列表滚走
+          lastMenuTrigger.focus({ preventScroll: true });
+        }
+      } catch (ignored) { /* 卡片已被移除时忽略 */ }
+      lastMenuTrigger = null;
+    }
+
+    function openMenuFor(kind, payload, event) {
+      lastMenuTrigger = event && event.currentTarget ? event.currentTarget : null;
+      var x = 12;
+      var y = 12;
+      try {
+        if (event && typeof event.clientX === 'number' && (event.clientX !== 0 || event.clientY !== 0)) {
+          x = event.clientX;
+          y = event.clientY;
+        } else if (event && event.currentTarget
+          && typeof event.currentTarget.getBoundingClientRect === 'function') {
+          var rect = event.currentTarget.getBoundingClientRect();
+          x = rect.left + 12;
+          y = rect.bottom - 4;
+        }
+      } catch (ignored) { /* 用默认坐标 */ }
+      setMenu({
+        kind: kind,
+        // 会话用 id，工作区用 workspaceId（Ungrouped 没有 workspaceId，卡片本身不可右键）
+        id: payload ? (payload.id !== undefined ? payload.id : payload.workspaceId) : undefined,
+        payload: payload,
+        x: x,
+        y: y,
+      });
+    }
+
+    function copyWithToast(value) {
+      copyText(value).then(function (ok) {
+        if (ok) notify(tt('toast.copied'));
+        else notify(tt('error.copy'), 'error');
+      });
+    }
+
+    function togglePin(session) {
+      var pinned = pinnedIds.indexOf(session.id) !== -1;
+      var method = pinned ? 'unpinSession' : 'pinSession';
+      if (!uiWorkspace || typeof uiWorkspace[method] !== 'function') {
+        notify(tt('menu.unavailable'), 'error');
+        return;
+      }
+      try {
+        Promise.resolve(uiWorkspace[method](session.id)).then(function () {
+          notify(pinned ? tt('toast.unpin') : tt('toast.pin'));
+        }, function (reason) {
+          ahWarn('[activity-heat] pin failed:', reason && reason.message);
+          notify(tt(pinned ? 'error.unpin' : 'error.pin'), 'error');
+        });
+      } catch (error) {
+        ahWarn('[activity-heat] pin failed:', error && error.message);
+        notify(tt(pinned ? 'error.unpin' : 'error.pin'), 'error');
+      }
+    }
+
+    function forkSession(session) {
+      if (!uiWorkspace || typeof uiWorkspace.forkSession !== 'function') {
+        notify(tt('menu.unavailable'), 'error');
+        return;
+      }
+      try {
+        Promise.resolve(uiWorkspace.forkSession(session.id)).then(function () {
+          // 与宿主一致：分叉成功不导航，只提示分支已创建
+          notify(tt('toast.forked'));
+        }, function (reason) {
+          ahWarn('[activity-heat] fork failed:', reason && reason.message);
+          notify(tt('error.fork'), 'error');
+        });
+      } catch (error) {
+        ahWarn('[activity-heat] fork failed:', error && error.message);
+        notify(tt('error.fork'), 'error');
+      }
+    }
+
+    function archiveErrorText(reason) {
+      var message = reason && reason.message ? String(reason.message) : '';
+      return /active|running|busy|activity/i.test(message) ? tt('error.running') : tt('error.archive');
+    }
+
+    function restoreArchived(sessionId) {
+      if (!uiWorkspace || typeof uiWorkspace.unarchiveSession !== 'function') return;
+      try {
+        Promise.resolve(uiWorkspace.unarchiveSession(sessionId)).then(function () {
+          notify(tt('toast.unarchived'));
+        }, function (reason) {
+          ahWarn('[activity-heat] unarchive failed:', reason && reason.message);
+          notify(tt('error.unarchive'), 'error');
+        });
+      } catch (error) {
+        ahWarn('[activity-heat] unarchive failed:', error && error.message);
+        notify(tt('error.unarchive'), 'error');
+      }
+    }
+
+    function openRename(session) {
+      setRenameDraft(session.title || '');
+      setDialog({ kind: 'rename', session: session, pending: false, error: '' });
+    }
+
+    function submitRename() {
+      if (!dialog || dialog.kind !== 'rename') return;
+      var target = dialog.session;
+      var next = String(renameDraft || '').trim();
+      if (next === '') {
+        setDialog({ kind: 'rename', session: target, pending: false, error: tt('dialog.emptyTitle') });
+        return;
+      }
+      if (!sessionsService || typeof sessionsService.using !== 'function') {
+        setDialog({ kind: 'rename', session: target, pending: false, error: tt('menu.unavailable') });
+        return;
+      }
+      setDialog({ kind: 'rename', session: target, pending: true, error: '' });
+      var settle = function (ok, message) {
+        if (ok) {
+          setDialog(null);
+          notify(tt('toast.renamed'));
+          return;
+        }
+        setDialog({ kind: 'rename', session: target, pending: false, error: message || tt('error.rename') });
+      };
+      try {
+        // 与宿主行菜单同一条路径：临时 reference + session.rename
+        Promise.resolve(sessionsService.using(target.id, { source: 'workspaceOperation' }, function (reference) {
+          return reference.binding.session.rename(next);
+        })).then(function (result) {
+          if (result && result.ok === false) {
+            ahWarn('[activity-heat] rename rejected:', result.error && result.error.message);
+            settle(false, tt('error.rename'));
+            return;
+          }
+          settle(true);
+        }, function (reason) {
+          ahWarn('[activity-heat] rename failed:', reason && reason.message);
+          settle(false, tt('error.rename'));
+        });
+      } catch (error) {
+        ahWarn('[activity-heat] rename failed:', error && error.message);
+        settle(false, tt('error.rename'));
+      }
+    }
+
+    function confirmArchive() {
+      if (!dialog || dialog.kind !== 'archive') return;
+      var target = dialog.session;
+      if (!uiWorkspace || typeof uiWorkspace.archiveSession !== 'function') {
+        setDialog({ kind: 'archive', session: target, pending: false, error: tt('menu.unavailable') });
+        return;
+      }
+      setDialog({ kind: 'archive', session: target, pending: true, error: '' });
+      try {
+        Promise.resolve(uiWorkspace.archiveSession(target.id)).then(function () {
+          setDialog(null);
+          notify(tt('toast.archived'), 'info', tt('toast.undo'), function () {
+            restoreArchived(target.id);
+          });
+        }, function (reason) {
+          ahWarn('[activity-heat] archive failed:', reason && reason.message);
+          setDialog({
+            kind: 'archive',
+            session: target,
+            pending: false,
+            error: archiveErrorText(reason),
+          });
+        });
+      } catch (error) {
+        ahWarn('[activity-heat] archive failed:', error && error.message);
+        setDialog({ kind: 'archive', session: target, pending: false, error: tt('error.archive') });
+      }
+    }
+
+    function downloadLog(session) {
+      downloadSessionLog(session.id).then(function (ok) {
+        if (!ok) notify(tt('error.export'), 'error');
+      });
+    }
+
+    function startSessionIn(workspaceId) {
+      if (!uiWorkspace || typeof uiWorkspace.startSession !== 'function') {
+        notify(tt('menu.unavailable'), 'error');
+        return;
+      }
+      try {
+        uiWorkspace.startSession(workspaceId);
+      } catch (error) {
+        ahWarn('[activity-heat] startSession failed:', error && error.message);
+        notify(tt('error.start'), 'error');
+      }
+    }
+
+    function closeOpenWith() {
+      setOpenWith(null);
+      try {
+        if (lastMenuTrigger && lastMenuTrigger.isConnected !== false
+          && typeof lastMenuTrigger.focus === 'function') {
+          lastMenuTrigger.focus({ preventScroll: true });
+        }
+      } catch (ignored) { /* 卡片已被移除时忽略 */ }
+      lastMenuTrigger = null;
+    }
+
+    function openWithFor(path, label) {
+      var anchor = menu || { x: 12, y: 12 };
+      setMenu(null);
+      setOpenWith({ path: path, label: label, x: anchor.x, y: anchor.y });
+    }
+
+    /** 「打开方式」列表：按文件管理器 → 编辑器 → 终端 → 其他排序，组间加分隔。 */
+    function buildOpenWithItems(target) {
+      var path = target && target.path;
+      var ordered = apps.filter(function (id) {
+        // Git Bash 是 shell，不是终端模拟器；「终端」只列 Windows Terminal / Terminal 这一类
+        return id !== 'gitbash';
+      }).slice().sort(function (a, b) {
+        return openWithGroupRank(a) - openWithGroupRank(b);
+      });
+      var lastGroup = -1;
+      return ordered.map(function (id) {
+        var group = openWithGroupRank(id);
+        var item = {
+          id: 'app-' + id,
+          label: tt('openWith.item', { app: appLabelOf(id) }),
+          separatorBefore: lastGroup !== -1 && group !== lastGroup,
+          disabled: !isAbsolutePath(path),
+          onSelect: function () { openInApp(id, path); },
+        };
+        lastGroup = group;
+        return item;
+      });
+    }
+
+    function openTerminal(path) {
+      closeMenu();
+      try {
+        if (typeof fetch !== 'function' || !isAbsolutePath(path)) {
+          notify(tt('error.openTerminal'), 'error');
+          return;
+        }
+        fetch('activity-heat/open-terminal', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ path: path }),
+        }).then(function (response) {
+          return Boolean(response && response.ok);
+        }, function () {
+          return false;
+        }).then(function (ok) {
+          if (ok) notify(tt('toast.terminalOpened'));
+          else notify(tt('error.openTerminal'), 'error');
+        });
+      } catch (error) {
+        ahWarn('[activity-heat] open terminal failed:', error && error.message);
+        notify(tt('error.openTerminal'), 'error');
+      }
+    }
+
+    function openInApp(appId, path) {
+      closeOpenWith();
+      try {
+        if (typeof fetch !== 'function' || !isAbsolutePath(path)) {
+          notify(tt('error.openWith'), 'error');
+          return;
+        }
+        fetch('open-in-app/open', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ app: appId, path: path }),
+        }).then(function (response) {
+          return Boolean(response && response.ok);
+        }, function () {
+          return false;
+        }).then(function (ok) {
+          if (ok) notify(tt('toast.openedWith', { app: appLabelOf(appId) }));
+          else notify(tt('error.openWith'), 'error');
+        });
+      } catch (error) {
+        ahWarn('[activity-heat] open in app failed:', error && error.message);
+        notify(tt('error.openWith'), 'error');
+      }
+    }
+
+    function runSessionAction(actionId, session) {
+      if (!session) return;
+      if (actionId === 'open') { closeMenu(); markSeen(session.id, session.at); openSession(session.id); return; }
+      if (actionId === 'copy-id') { closeMenu(); copyWithToast(session.id); return; }
+      if (actionId === 'copy-title') { closeMenu(); copyWithToast(session.title); return; }
+      if (actionId === 'copy-prompt') {
+        closeMenu();
+        copyWithToast(promptRawOf(sessionState, session.id));
+        return;
+      }
+      if (actionId === 'copy-cwd') { closeMenu(); copyWithToast(session.cwd); return; }
+      if (actionId === 'pin') { closeMenu(); togglePin(session); return; }
+      if (actionId === 'rename') { closeMenu(); openRename(session); return; }
+      if (actionId === 'fork') { closeMenu(); forkSession(session); return; }
+      if (actionId === 'download') { closeMenu(); downloadLog(session); return; }
+      if (actionId === 'archive') {
+        closeMenu();
+        setDialog({ kind: 'archive', session: session, pending: false, error: '' });
+      }
+    }
+
+    function runGroupAction(actionId, group) {
+      if (!group) return;
+      if (actionId === 'open') { closeMenu(); openWorkspace(group.workspaceId); return; }
+      if (actionId === 'new-session') { closeMenu(); startSessionIn(group.workspaceId); return; }
+      if (actionId === 'copy-name') { closeMenu(); copyWithToast(group.label); return; }
+      if (actionId === 'copy-path') {
+        closeMenu();
+        copyWithToast(group.workspace && group.workspace.path);
+      }
+    }
+
+    function buildSessionItems(session) {
+      var pinned = pinnedIds.indexOf(session.id) !== -1;
+      var pinDisabled = pinned ? !caps.unpin : !caps.pin;
+      var items = [];
+      items.push({
+        id: 'open',
+        label: tt('menu.openSession'),
+        disabled: !caps.open,
+        hint: caps.open ? undefined : tt('menu.unavailable'),
+        onSelect: function () { runSessionAction('open', session); },
+      });
+      items.push({
+        id: 'terminal',
+        label: tt('menu.openTerminal'),
+        disabled: !isAbsolutePath(session.cwd),
+        hint: !isAbsolutePath(session.cwd) ? tt('menu.openWithNoPath') : undefined,
+        onSelect: function () { openTerminal(session.cwd); },
+      });
+      items.push({
+        id: 'open-with',
+        label: tt('menu.openWith'),
+        disabled: apps.length === 0 || !isAbsolutePath(session.cwd),
+        hint: apps.length === 0
+          ? tt('menu.openWithUnavailable')
+          : (!isAbsolutePath(session.cwd) ? tt('menu.openWithNoPath') : undefined),
+        onSelect: function () { openWithFor(session.cwd, session.title || session.id); },
+      });
+      items.push({
+        id: 'copy-id',
+        label: tt('menu.copyId'),
+        separatorBefore: true,
+        onSelect: function () { runSessionAction('copy-id', session); },
+      });
+      items.push({
+        id: 'copy-title',
+        label: tt('menu.copyTitle'),
+        disabled: !session.title,
+        onSelect: function () { runSessionAction('copy-title', session); },
+      });
+      items.push({
+        id: 'copy-prompt',
+        label: tt('menu.copyPrompt'),
+        disabled: !session.prompt,
+        onSelect: function () { runSessionAction('copy-prompt', session); },
+      });
+      items.push({
+        id: 'copy-cwd',
+        label: tt('menu.copyCwd'),
+        disabled: !session.cwd,
+        onSelect: function () { runSessionAction('copy-cwd', session); },
+      });
+      items.push({
+        id: 'pin',
+        label: tt(pinned ? 'menu.unpin' : 'menu.pin'),
+        separatorBefore: true,
+        disabled: pinDisabled,
+        hint: pinDisabled ? tt('menu.unavailable') : undefined,
+        onSelect: function () { runSessionAction('pin', session); },
+      });
+      items.push({
+        id: 'rename',
+        label: tt('menu.rename'),
+        disabled: !caps.rename,
+        hint: caps.rename ? undefined : tt('menu.unavailable'),
+        onSelect: function () { runSessionAction('rename', session); },
+      });
+      items.push({
+        id: 'fork',
+        label: tt('menu.fork'),
+        disabled: !caps.fork,
+        hint: caps.fork ? undefined : tt('menu.unavailable'),
+        onSelect: function () { runSessionAction('fork', session); },
+      });
+      items.push({
+        id: 'download',
+        label: tt('menu.downloadLog'),
+        separatorBefore: true,
+        onSelect: function () { runSessionAction('download', session); },
+      });
+      var running = session.running === true;
+      var archiveDisabled = running || !caps.archive;
+      items.push({
+        id: 'archive',
+        label: tt('menu.archive'),
+        separatorBefore: true,
+        danger: true,
+        disabled: archiveDisabled,
+        hint: running
+          ? tt('menu.archiveRunningHint')
+          : (!caps.archive ? tt('menu.unavailable') : undefined),
+        onSelect: function () { runSessionAction('archive', session); },
+      });
+      return items;
+    }
+
+    function buildGroupItems(group) {
+      var hasWorkspace = group.workspaceId !== undefined;
+      var items = [];
+      items.push({
+        id: 'open',
+        label: tt('menu.openWorkspace'),
+        disabled: !caps.openWorkspace,
+        hint: caps.openWorkspace ? undefined : tt('menu.unavailable'),
+        onSelect: function () { runGroupAction('open', group); },
+      });
+      var workspacePath = group.workspace && group.workspace.path;
+      items.push({
+        id: 'terminal',
+        label: tt('menu.openTerminal'),
+        disabled: !isAbsolutePath(workspacePath),
+        hint: !isAbsolutePath(workspacePath) ? tt('menu.openWithNoPath') : undefined,
+        onSelect: function () { openTerminal(workspacePath); },
+      });
+      items.push({
+        id: 'open-with',
+        label: tt('menu.openWith'),
+        disabled: apps.length === 0 || !isAbsolutePath(workspacePath),
+        hint: apps.length === 0
+          ? tt('menu.openWithUnavailable')
+          : (!isAbsolutePath(workspacePath) ? tt('menu.openWithNoPath') : undefined),
+        onSelect: function () { openWithFor(workspacePath, group.label); },
+      });
+      items.push({
+        id: 'new-session',
+        label: tt('menu.newSessionInWorkspace'),
+        separatorBefore: true,
+        disabled: !hasWorkspace || !caps.startSession,
+        hint: !hasWorkspace
+          ? tt('menu.unavailable')
+          : (!caps.startSession ? tt('menu.unavailable') : undefined),
+        onSelect: function () { runGroupAction('new-session', group); },
+      });
+      items.push({
+        id: 'copy-name',
+        label: tt('menu.copyWorkspaceName'),
+        separatorBefore: true,
+        onSelect: function () { runGroupAction('copy-name', group); },
+      });
+      items.push({
+        id: 'copy-path',
+        label: tt('menu.copyWorkspacePath'),
+        disabled: !(group.workspace && group.workspace.path),
+        onSelect: function () { runGroupAction('copy-path', group); },
+      });
+      return items;
+    }
+
     /** 当前视图的数据源（按数量上限切片后再按热度筛选）。 */
     var allRows = view === 'sessions'
       ? model.allSessions.slice(0, topCount)
@@ -2257,12 +4340,12 @@ function build(require) {
     ahLog('[activity-heat] panel view=' + view + ' rows=' + rows.length + '/' + allRows.length +
       ' totalSessions=' + model.total + ' groups=' + model.groups.length + ' filter=' + filter);
 
-    /* ---------- 顶部：标题 + 对象切换 ---------- */
+    /* ---------- 顶部：标题 + 对象切换 + 数量 ---------- */
+    // 标题已经去掉：视图切换直接作为第一层，把纵向空间留给列表
     var header = React.createElement('div', {
       key: 'head',
-      style: { display: 'flex', alignItems: 'center', gap: 10, padding: '16px ' + UI.padX + 'px 8px' },
+      style: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px ' + UI.padX + 'px 4px' },
     },
-      React.createElement('div', { style: { fontWeight: 650, fontSize: '1.05em', color: UI.textPrimary } }, tt('panel.title')),
       React.createElement(Segmented, {
         options: [
           { value: 'sessions', label: tt('panel.sessionsCount', { count: model.total }) },
@@ -2272,9 +4355,12 @@ function build(require) {
         onChange: setView,
       }),
       React.createElement('span', { style: { flex: '1 1 auto' } }),
-      // 数量切换：会话 10/20/30/50，工作区 5/10/20
+      // 数量：最次要的工具，改成无边框文字，避免和上面的视图/下面的筛选撞脸
+      React.createElement('span', {
+        style: { fontSize: '0.76em', color: UI.textTertiary, flex: 'none' },
+      }, tt('panel.countLabel')),
       React.createElement(Segmented, {
-        compact: true,
+        variant: 'text',
         options: view === 'sessions'
           ? [{ value: 10, label: '10' }, { value: 20, label: '20' }, { value: 30, label: '30' }, { value: 50, label: '50' }]
           : [{ value: 5, label: '5' }, { value: 10, label: '10' }, { value: 20, label: '20' }],
@@ -2297,22 +4383,40 @@ function build(require) {
     /* ---------- 列表 ---------- */
     var cards = [];
     if (view === 'sessions') {
-      cards = rows.map(function (session) {
+      cards = rows.map(function (session, index) {
         return React.createElement(SessionCard, {
           key: session.id,
           session: session,
           now: now,
-          onClick: function () { openSession(session.id); },
+          index: index,
+          onClick: function () {
+            // 点击打开即视为已读，立刻清掉「已完成」
+            markSeen(session.id, session.at);
+            openSession(session.id);
+          },
+          menuItems: buildSessionItems(session),
+          menuOpen: Boolean(menu && menu.kind === 'session' && menu.id === session.id),
+          menuX: menu ? menu.x : 0,
+          menuY: menu ? menu.y : 0,
+          onOpenMenu: function (event) { openMenuFor('session', session, event); },
+          onMenuClose: closeMenu,
         });
       });
     } else {
-      cards = rows.map(function (group) {
+      cards = rows.map(function (group, index) {
         return React.createElement(GroupCard, {
           key: 'g-' + group.key,
           group: group,
           now: now,
+          index: index,
           rank: model.rankOf[group.key],
           onClick: function () { openWorkspace(group.workspaceId); },
+          menuItems: buildGroupItems(group),
+          menuOpen: Boolean(menu && menu.kind === 'group' && menu.id === group.workspaceId),
+          menuX: menu ? menu.x : 0,
+          menuY: menu ? menu.y : 0,
+          onOpenMenu: function (event) { openMenuFor('group', group, event); },
+          onMenuClose: closeMenu,
         });
       });
     }
@@ -2322,6 +4426,7 @@ function build(require) {
       : tt(view === 'sessions' ? 'panel.empty' : 'panel.emptyWorkspaces');
 
     var emptyHint = React.createElement('div', {
+      className: AH.empty,
       style: { padding: '8px 0 14px', fontSize: '0.82em', color: UI.textTertiary },
     }, emptyText);
 
@@ -2329,6 +4434,7 @@ function build(require) {
     var scrollHint = canScroll
       ? React.createElement('span', {
           'aria-hidden': 'true',
+          className: AH.scrollHint,
           style: {
             position: 'absolute',
             right: 4,
@@ -2340,12 +4446,9 @@ function build(require) {
             gap: 3,
             padding: '7px 4px',
             borderRadius: 999,
-            background: 'var(--dsw-alias-bg-layer-2, rgba(127,127,127,0.12))',
-            border: '1px solid var(--dsw-alias-border-l1, rgba(127,127,127,0.18))',
             color: UI.textTertiary,
             pointerEvents: 'none',
             opacity: 0.92,
-            boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
           },
         },
           React.createElement('span', { style: { fontSize: 10, lineHeight: '10px' } }, '⌃'),
@@ -2355,6 +4458,9 @@ function build(require) {
           React.createElement('span', { style: { fontSize: 10, lineHeight: '10px' } }, '⌄'),
         )
       : null;
+
+    // 列表内容整体淡入：视图 / 筛选 / 数量变化时靠 key 重挂载来重播
+    var listKey = view + '|' + filter + '|' + (view === 'sessions' ? topCount : groupCount);
 
     var list = React.createElement('div', {
       key: 'list',
@@ -2373,7 +4479,13 @@ function build(require) {
           overflowY: 'auto',
           overscrollBehavior: 'contain',
         },
-      }, cards.length > 0 ? cards : emptyHint),
+      },
+        React.createElement('div', { key: listKey, className: AH.listInner },
+          cards.length > 0 ? cards : emptyHint),
+      ),
+      // 上下边缘的柔和遮罩：让滚动内容"淡出"到面板底色，而不是被硬切
+      canScroll ? React.createElement('span', { key: 'maskTop', 'aria-hidden': 'true', className: AH.listMaskTop }) : null,
+      canScroll ? React.createElement('span', { key: 'maskBottom', 'aria-hidden': 'true', className: AH.listMaskBottom }) : null,
       scrollHint,
     );
 
@@ -2385,9 +4497,38 @@ function build(require) {
       }, tt('panel.moreGroups', { count: model.groups.length - groupCount }));
     }
 
+    // 对话框与提示常驻渲染，open=false 时组件自己返回 null（状态集中在面板，便于键盘/测试）
+    var archiveNode = React.createElement(ConfirmArchive, {
+      open: Boolean(dialog && dialog.kind === 'archive'),
+      session: dialog ? dialog.session : undefined,
+      pending: Boolean(dialog && dialog.pending),
+      error: dialog ? dialog.error : undefined,
+      onCancel: function () { setDialog(null); },
+      onConfirm: confirmArchive,
+    });
+    var renameNode = React.createElement(RenameDialog, {
+      open: Boolean(dialog && dialog.kind === 'rename'),
+      value: renameDraft,
+      pending: Boolean(dialog && dialog.pending),
+      error: dialog ? dialog.error : undefined,
+      onChange: setRenameDraft,
+      onCancel: function () { setDialog(null); },
+      onSave: submitRename,
+    });
+    var toastNode = React.createElement(PanelToast, { open: Boolean(toast), toast: toast });
+    var openWithNode = React.createElement(ContextMenu, {
+      open: Boolean(openWith),
+      items: openWith ? buildOpenWithItems(openWith) : [],
+      x: openWith ? openWith.x : 0,
+      y: openWith ? openWith.y : 0,
+      label: tt('openWith.title'),
+      onClose: closeOpenWith,
+    });
+
     return React.createElement('div', {
+      className: AH.shell,
       style: { display: 'flex', flexDirection: 'column', paddingBottom: 16 },
-    }, [header, filterBar, list, footer]);
+    }, [header, filterBar, list, footer, archiveNode, renameNode, toastNode, openWithNode]);
   }
 
   function SessionRowHeat(props) {
@@ -2422,6 +4563,16 @@ function build(require) {
       level = heatLevelOf(Date.now() - at);
     }
 
+    // 侧栏行常驻，是推进"查看水位"最及时的入口：真正选中的会话立即算已读。
+    // 在 effect 里重新读一次 DOM，避免拿到上一帧的选中状态。
+    React.useEffect(function () {
+      try {
+        if (archived) return;
+        var open = isSelectedRow(sessionId, summary && summary.retainedBy && summary.retainedBy.mainView > 0);
+        syncSeenForSessions([{ id: sessionId, at: at, open: open }]);
+      } catch (ignored) { /* 水位失败不影响侧栏 */ }
+    }, [sessionId, at, archived]);
+
     // 把热度写进标题下方的背景线；卸载时撤销该会话的规则。
     React.useEffect(function () {
       try {
@@ -2451,11 +4602,16 @@ function build(require) {
     var sessionState = useSessions ? useSessions(function (state) { return state; }) : null;
     var workspaceState = useWorkspaces ? useWorkspaces(function (state) { return state; }) : null;
     var now = Date.now();
-    var level = heatLevelOf(now - at);
-    var model = sessionState && workspaceState ? buildModel(sessionState, workspaceState, now) : null;
+    var running = summary && summary.running === true;
     var facts = sessionState && sessionState.projectionsBySession
       ? factsFromProjection(sessionState.projectionsBySession[sessionId])
       : {};
+    var awaiting = facts.awaiting === true;
+    var isOpen = isSelectedRow(sessionId, summary && summary.retainedBy && summary.retainedBy.mainView > 0);
+    var done = doneUnseenOf(sessionId, at, running, isOpen, now);
+    // 与面板卡片同一口径：运行中按最高热度显示
+    var level = running ? 5 : heatLevelOf(now - at);
+    var model = sessionState && workspaceState ? buildModel(sessionState, workspaceState, now) : null;
 
     var group = null;
     if (model) {
@@ -2470,37 +4626,131 @@ function build(require) {
     }
     var rank = group ? model.rankOf[group.key] : undefined;
 
-    var rows = [
-      React.createElement('div', { key: 'heat', style: { display: 'flex', alignItems: 'center', gap: 6 } },
-        summary && summary.running === true
-          ? React.createElement(WorkingTag, { compact: true })
-          : React.createElement(RowHeatBar, { level: level, title: '', width: 10, height: 16, align: 'center' }),
-        React.createElement('span', null, tt('hover.heat', { level: level, name: heatNameOf(level) })),
-      ),
-      React.createElement('div', { key: 'at' }, tt('hover.lastActive', { time: relativeOf(at, now) })),
-    ];
-
-    var statBits = [];
-    if (typeof facts.turns === 'number') statBits.push(tt('fact.turns', { n: facts.turns }));
-    if (typeof facts.tokens === 'number') statBits.push(tt('fact.tokens', { n: compactNumber(facts.tokens) }));
-    if (facts.cacheRate !== undefined && facts.cacheRate !== '') statBits.push(tt('fact.cache', { n: facts.cacheRate }));
-    if (typeof facts.contextPct === 'number') statBits.push(tt('fact.context', { n: facts.contextPct }));
-    if (statBits.length > 0) {
-      rows.push(React.createElement('div', { key: 'stats' }, statBits.join(' · ')));
+    // 状态行：状态标签自带文字与颜色；没有状态时才显示档位名。
+    // 等待回答由宿主 hover 卡底部自带的那行表达，这里不再重复。
+    var stateTag = null;
+    if (done) {
+      stateTag = React.createElement(DoneTag, { compact: true });
+    } else if (running && !awaiting) {
+      stateTag = React.createElement(WorkingTag, { compact: true });
     }
 
-    if (group) {
-      rows.push(React.createElement('div', { key: 'ws', style: { display: 'flex', alignItems: 'center', gap: 6 } },
-        React.createElement(HeatMeter, { level: group.level, ratio: group.ratio, showLabel: false, width: 64, height: 8 }),
-        React.createElement('span', null, rank === 1
-          ? tt('hover.workspaceHot', { name: group.label })
-          : tt('hover.workspaceRank', { name: group.label, rank: rank })),
-      ));
+    var header = React.createElement('div', {
+      key: 'head',
+      style: { display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 },
+    },
+      stateTag || React.createElement(RowHeatBar, { level: level, title: '', width: 10, height: 16, align: 'center' }),
+      stateTag
+        ? null
+        : React.createElement('span', {
+            style: {
+              color: 'var(--dsw-alias-label-secondary)', whiteSpace: 'nowrap',
+              overflow: 'hidden', textOverflow: 'ellipsis',
+            },
+          }, heatNameOf(level)),
+      React.createElement('span', {
+        style: {
+          marginLeft: 'auto', color: 'var(--dsw-alias-label-tertiary)',
+          fontVariantNumeric: 'tabular-nums', flex: 'none',
+        },
+      }, tt('hover.heatLevel', { level: level })),
+    );
+
+    var meterRow = React.createElement('div', {
+      key: 'meter',
+      style: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 },
+    }, React.createElement(HeatMeter, {
+      level: level,
+      // 运行中按最高档显示，填充也接近满格，避免"档位炽热、进度条只有一半"
+      ratio: running ? 0.96 : heatRatioOf(now - at),
+      showLabel: true,
+      width: 118,
+      height: 6,
+    }));
+
+    function divider(key) {
+      return React.createElement('span', {
+        key: key,
+        'aria-hidden': 'true',
+        style: {
+          display: 'block', height: 1, margin: '5px 0',
+          background: 'color-mix(in srgb, var(--dsw-alias-label-tertiary) 26%, transparent)',
+        },
+      });
     }
+
+    var cells = [];
+    if (typeof facts.turns === 'number') cells.push([tt('field.turns'), tt('fact.turns', { n: facts.turns })]);
+    if (typeof facts.tokens === 'number') cells.push([tt('field.tokens'), tt('fact.tokens', { n: compactNumber(facts.tokens) })]);
+    if (facts.cacheRate !== undefined && facts.cacheRate !== '') cells.push([tt('field.cache'), tt('fact.cache', { n: facts.cacheRate })]);
+    if (typeof facts.contextPct === 'number') cells.push([tt('field.context'), tt('fact.context', { n: facts.contextPct })]);
+
+    var grid = cells.length > 0
+      ? React.createElement('div', {
+          key: 'stats',
+          style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 14px' },
+        }, cells.map(function (cell, index) {
+          return React.createElement('span', {
+            key: index,
+            style: { display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 },
+          },
+            React.createElement('span', {
+              style: {
+                fontSize: '0.72em', color: 'var(--dsw-alias-label-tertiary)',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              },
+            }, cell[0]),
+            React.createElement('span', {
+              style: {
+                fontSize: '0.9em', color: 'var(--dsw-alias-label-primary)',
+                fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+                overflow: 'hidden', textOverflow: 'ellipsis',
+              },
+            }, cell[1]),
+          );
+        }))
+      : null;
+
+    var workspaceRow = group
+      ? React.createElement('div', {
+          key: 'ws',
+          style: { display: 'flex', alignItems: 'center', gap: 6, marginTop: 5, minWidth: 0 },
+        },
+          React.createElement('span', {
+            'aria-hidden': 'true',
+            style: { flex: 'none', width: 3, height: 13, borderRadius: 2, background: heatToneOf(group.level), opacity: 0.9 },
+          }),
+          React.createElement('span', {
+            style: {
+              minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap', color: 'var(--dsw-alias-label-secondary)',
+            },
+          }, rank === 1
+            ? tt('hover.workspaceHot', { name: group.label })
+            : tt('hover.workspaceRank', { name: group.label, rank: rank })),
+        )
+      : null;
+
+    var footer = React.createElement('div', {
+      key: 'at',
+      style: { marginTop: 4, fontSize: '0.76em', color: 'var(--dsw-alias-label-tertiary)' },
+    }, tt('hover.lastActive', { time: relativeOf(at, now) }));
 
     return React.createElement('div', {
-      style: { display: 'flex', flexDirection: 'column', gap: 3, fontSize: '0.85em', color: 'var(--dsw-alias-label-secondary)' },
-    }, rows);
+      className: 'ah-hover-content',
+      style: {
+        display: 'flex', flexDirection: 'column', fontSize: '0.84em',
+        color: 'var(--dsw-alias-label-secondary)', minWidth: 0,
+      },
+    }, [
+      header,
+      meterRow,
+      cells.length > 0 ? divider('d1') : null,
+      grid,
+      group ? divider('d2') : null,
+      workspaceRow,
+      footer,
+    ]);
   }
 
   /* ---------------- 快捷键 ---------------- */
@@ -2634,28 +4884,7 @@ function build(require) {
       if (document.getElementById('activity-heat-style')) return undefined;
       var style = document.createElement('style');
       style.id = 'activity-heat-style';
-      style.textContent = [
-        '@keyframes ah-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.82)}}',
-        // 环绕跑马灯：一层超大 conic-gradient 在卡片背后匀速旋转，只从 2px 边缝露出
-        '@keyframes ah-orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}',
-        // 呼吸外发光：让"正在运行"的卡片持续向外涌动
-        '@keyframes ah-breathe{',
-        '0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--color-blue-500, #3b82f6) 0%, transparent)}',
-        '50%{box-shadow:0 0 14px 2px color-mix(in srgb, var(--color-blue-500, #3b82f6) 45%, transparent)}',
-        '}',
-        // 标题下划线：常驻整条；活跃会话用 200% 宽的渐变线左右往返，形成"闪动"
-        '@keyframes ah-title-flow{from{background-position-x:0%}to{background-position-x:100%}}',
-        // 鲸尾徽标由 GIF 自己的帧序列驱动，这里不再注册动画
-        '@media (prefers-reduced-motion: reduce){',
-        '@keyframes ah-orbit{from{transform:rotate(0deg)}to{transform:rotate(0deg)}}',
-        '@keyframes ah-breathe{0%,100%{box-shadow:none}50%{box-shadow:none}}',
-        // 减少动态时：下划线保留，但停止闪动
-        '[data-row-key^="session:"] [class*="_title"]{animation:none!important}',
-        '}',
-        // 列表自身的滚动条隐藏：保留滚动能力，右侧用浮标提示可以上下滑
-        '.ah-list{scrollbar-width:none;-ms-overflow-style:none;}',
-        '.ah-list::-webkit-scrollbar{width:0;height:0;display:none;}',
-      ].join('');
+      style.textContent = AH_CSS;
       document.head.appendChild(style);
       return function disposeStyles() {
         try {

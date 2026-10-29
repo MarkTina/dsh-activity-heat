@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "最近活跃",
-    "description": "用热度标识最近发生过对话的会话与工作区：侧栏入口、会话标题下方的热度下划线与悬停卡热度段，最近的活动最醒目。"
+    "description": "用热度标识最近发生过对话的会话与工作区：侧栏入口、会话标题前的热度圆点与悬停卡热度段，最近的活动最醒目。"
   },
   "nav": "最近活跃会话",
   "panel": {
-    "title": "最近活跃会话",
     "sessionsCount": "会话 {count}",
     "workspacesCount": "工作区 {count}",
+    "countLabel": "条数",
     "empty": "暂无最近活动。",
     "emptyFilteredSessions": "该热度档位下暂无会话。",
     "emptyFilteredWorkspaces": "该热度档位下暂无工作区。",
@@ -26,10 +26,18 @@
   },
   "hover": {
     "heat": "热度 {level}/5 · {name}",
+    "heatLevel": "热度 {level}/5",
+    "heatRunning": "热度 {level}/5 · 工作中",
     "lastActive": "最后活动：{time}",
     "workspaceRank": "工作区「{name}」排第 {rank}",
     "workspaceHot": "工作区「{name}」正热",
     "noData": "暂无活动记录"
+  },
+  "field": {
+    "turns": "轮次",
+    "tokens": "Tokens",
+    "cache": "缓存命中",
+    "context": "上下文"
   },
   "dot": { "tooltip": "热度 {level}/5 · {time}" },
   "running": {
@@ -37,6 +45,12 @@
     "title": "该会话正在运行",
     "short": "正在运行",
     "working": "工作中"
+  },
+  "status": {
+    "done": "已完成",
+    "doneTitle": "该会话已完成，尚未查看",
+    "awaiting": "等待回答",
+    "awaitingTitle": "该会话在等待你的回答"
   },
   "fact": {
     "turns": "{n} 轮",
@@ -88,5 +102,105 @@
     "weeks": "{n} 周前",
     "longAgo": "很久以前",
     "unknown": "未知"
+  },
+  "menu": {
+    "openSession": "打开会话",
+    "openWorkspace": "打开工作区",
+    "newSessionInWorkspace": "在工作区中新开会话",
+    "copyId": "复制会话 ID",
+    "copyTitle": "复制标题",
+    "copyPrompt": "复制最近提示词",
+    "copyCwd": "复制工作目录",
+    "copyWorkspaceName": "复制工作区名称",
+    "copyWorkspacePath": "复制工作区路径",
+    "pin": "置顶会话",
+    "unpin": "取消置顶",
+    "rename": "重命名…",
+    "fork": "分叉会话",
+    "downloadLog": "下载会话日志",
+    "archive": "归档会话",
+    "archiveRunningHint": "正在运行，请先停止",
+    "unavailable": "当前宿主不支持",
+    "openTerminal": "在终端中打开",
+    "openWith": "在其他应用中打开…",
+    "openWithUnavailable": "未检测到可用的应用",
+    "openWithNoPath": "该会话没有可打开的目录"
+  },
+  "toast": {
+    "copied": "已复制",
+    "pin": "已在侧栏置顶",
+    "unpin": "已取消置顶",
+    "renamed": "已重命名",
+    "forked": "已创建分支",
+    "archived": "已归档",
+    "unarchived": "已恢复",
+    "undo": "撤销",
+    "openedWith": "已在 {app} 中打开",
+    "terminalOpened": "已打开终端"
+  },
+  "dialog": {
+    "archiveTitle": "归档会话？",
+    "archiveBody": "「{title}」会从最近活跃列表移除，可在侧栏的已归档会话中恢复。",
+    "archiveConfirm": "归档",
+    "archiving": "归档中…",
+    "renameTitle": "重命名会话",
+    "renamePlaceholder": "会话标题",
+    "save": "保存",
+    "cancel": "取消",
+    "saving": "保存中…",
+    "emptyTitle": "标题不能为空"
+  },
+  "error": {
+    "copy": "复制失败",
+    "pin": "置顶失败",
+    "unpin": "取消置顶失败",
+    "rename": "重命名失败",
+    "fork": "分叉失败",
+    "archive": "归档失败",
+    "unarchive": "恢复失败",
+    "export": "当前安装不支持导出",
+    "running": "会话仍在运行，无法归档",
+    "start": "新建会话失败",
+    "openWith": "打开失败",
+    "openTerminal": "打开终端失败"
+  },
+  "openWith": {
+    "title": "打开方式",
+    "item": "在{app}中打开"
+  },
+  "app": {
+    "explorer": "文件资源管理器",
+    "finder": "访达",
+    "filemanager": "文件管理器",
+    "vscode": "VS Code",
+    "vscodeinsiders": "VS Code Insiders",
+    "cursor": "Cursor",
+    "windsurf": "Windsurf",
+    "zed": "Zed",
+    "sublimetext": "Sublime Text",
+    "xcode": "Xcode",
+    "androidstudio": "Android Studio",
+    "intellijidea": "IntelliJ IDEA",
+    "pycharm": "PyCharm",
+    "webstorm": "WebStorm",
+    "phpstorm": "PhpStorm",
+    "goland": "GoLand",
+    "rider": "Rider",
+    "rustrover": "RustRover",
+    "terminal": "终端",
+    "windowsterminal": "Windows Terminal",
+    "iterm": "iTerm2",
+    "warp": "Warp",
+    "ghostty": "Ghostty",
+    "kitty": "kitty",
+    "gnometerminal": "GNOME Terminal",
+    "konsole": "Konsole",
+    "fork": "Fork",
+    "sourcetree": "Sourcetree",
+    "github": "GitHub Desktop",
+    "tower": "Tower",
+    "gitkraken": "GitKraken",
+    "smartgit": "SmartGit",
+    "sublimemerge": "Sublime Merge"
   }
 }
