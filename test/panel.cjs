@@ -339,6 +339,12 @@ function collect(tree) {
   );
   check(wrappers.length === 1, '运行中卡片有呼吸外层', wrappers.length);
   check(orbits.length === 1, '运行中卡片有跑马灯光带', orbits.length);
+  check(
+    wrappers[0] && String(wrappers[0].props.style.border || '').indexOf('color-mix') !== -1
+      && String(wrappers[0].props.style.border).indexOf('--color-blue-500') !== -1,
+    '运行中外框有常驻浅蓝边框（呼吸最淡时也不消失）',
+    wrappers[0] && wrappers[0].props.style.border,
+  );
   check(all.indexOf('工作中') !== -1, '显示「工作中」鲸鱼标识');
   const currentBadges = c.components.filter((x) => x.name === 'CurrentBadge');
   check(currentBadges.length === 1, '「当前」做成标题前徽章');
@@ -706,7 +712,7 @@ function collect(tree) {
   check(bars.length === 6, '每张卡片都有热度竖条', bars.length);
   // 竖条现在是「档位色 → 白尖」的竖向渐变，颜色落在 backgroundImage 里
   const barColors = new Set(bars.map((n) => String(n.props.style.backgroundImage)));
-  check(barColors.size >= 4, '竖条按档位呈现多种颜色（灰白 → 灰黑 → 蓝）', barColors.size);
+  check(barColors.size >= 3, '竖条按三区间取色（亮蓝 / 深灰 / 浅灰）', barColors.size);
   check(
     bars.every((n) => {
       const color = String(n.props.style.backgroundImage);

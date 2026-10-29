@@ -65,6 +65,7 @@ Cards for sessions with `session.running === true` get:
 - a whale-tail mark with a **Working** label in the card's right-hand whitespace — the mark is a 12-frame animated GIF that plays its own loop (no CSS wobble), 28 px tall
 - an **orbiting light band** around the card border (`conic-gradient`, one turn per 2.2 s)
 - a **breathing outer glow** (one cycle per 2.4 s)
+- a **constant light-blue border** around the frame, so the card outline never disappears when the breathing glow is at its dimmest
 - **heat follows the run state**: the host's `updatedAt` only advances at turn boundaries, so a long-running session keeps its old timestamp. Running sessions therefore count as heat 5/5 and sort first; the card still shows the real "last active" time and the hover card labels the heat "working"
 - the row-leading cell is left entirely to the host: running/pending rows draw the native `StateDot`, sessions with scheduled tasks draw the clock marker, and the plugin puts nothing there. Heat shows only as the small dot before the title
 
@@ -108,7 +109,7 @@ Three layers:
 2. **Frosting** — the panel paints **no background gradient** of its own; the glass sits directly on the host's base colour. Hovering a card fades in a `backdrop-filter` layer; hover cards use the host's `--dsw-menu-backdrop-filter`.
 3. **Gradients** — mini meters, selected states, the running orbit band and the heat bar are gradients.
 
-Heat no longer uses blue alone: the bar and the meter step through **grey → dark grey → grey-blue → blue → bright blue** (`HEAT_TONES`), so cold sessions stay quiet and hot ones stand out. The bar **keeps its tier colour for the full height** and only brightens toward the top (the same tone mixed with white, `heatBarSurface`), with a 1px inner highlight and a hairline glass edge (`heatBarShadow`) — so it reads as a lit glass rod, and the lower half no longer dissolves into the card. The low steps use the neutral `label` tokens, which read as light grey in light themes and dark grey in dark themes — no per-theme colours.
+Heat uses just **three bands — light grey → deep grey → bright blue** (`HEAT_TONES`): light grey for cold/stale/recent, deep grey for active, bright blue for warm/blazing. The bar **keeps its band colour for the full height** and only brightens toward the top (the same tone mixed with white, `heatBarSurface`), with a 1px inner highlight and a hairline glass edge (`heatBarShadow`) — so it reads as a lit glass rod, and the lower half no longer dissolves into the card. The grey steps use the neutral `label` tokens, which read as light grey in light themes and dark grey in dark themes — no per-theme colours.
 
 Motion (all of it stops under `prefers-reduced-motion: reduce`):
 
@@ -128,10 +129,10 @@ This plugin is installed as a local directory or a GitHub repository; it is **no
 ```bash
 # inside your DSH profile directory
 cd ~/.dsh/profiles/<your-profile>
-pnpm add github:MarkTina/dsh-activity-heat#v0.3.2
+pnpm add github:MarkTina/dsh-activity-heat#v0.3.3
 ```
 
-Pin a tag (`#v0.3.2`) rather than following `main`, so an unrelated commit cannot change what you run. To upgrade later, bump the tag and restart DSH.
+Pin a tag (`#v0.3.3`) rather than following `main`, so an unrelated commit cannot change what you run. To upgrade later, bump the tag and restart DSH.
 
 The repository must be **public**; a private repo needs a token (`https://<token>@github.com/...` or an SSH remote) before `pnpm add` can fetch it.
 

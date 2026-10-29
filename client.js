@@ -561,13 +561,14 @@ function build(require) {
    * 低档的透明度不要压太低：竖条是靠"整条都有颜色"撑质感的，30% 的灰在
    * 白底上几乎看不见，看起来就像一根没渲染完的条。
    */
+  /** 三区间热度色：亮蓝（4/5 温热·炽热）、深灰（3 活跃）、浅灰（0/1/2 冷却·陈旧·近期）。 */
+  var HEAT_LIGHT = 'color-mix(in srgb, var(--dsw-alias-label-tertiary, #7f8287) 58%, transparent)';
+  var HEAT_DEEP = 'color-mix(in srgb, var(--dsw-alias-label-secondary, #545557) 92%, transparent)';
+  var HEAT_BLUE = 'var(--color-blue-500, #3b82f6)';
   var HEAT_TONES = [
-    'color-mix(in srgb, var(--dsw-alias-label-tertiary, #7f8287) 42%, transparent)',
-    'color-mix(in srgb, var(--dsw-alias-label-tertiary, #7f8287) 64%, transparent)',
-    'color-mix(in srgb, var(--dsw-alias-label-secondary, #545557) 84%, transparent)',
-    'color-mix(in srgb, var(--color-blue-500, #3b82f6) 52%, var(--dsw-alias-label-tertiary, #7f8287))',
-    'color-mix(in srgb, var(--color-blue-500, #3b82f6) 82%, var(--color-blue-400, #60a5fa))',
-    'var(--color-blue-500, #3b82f6)',
+    HEAT_LIGHT, HEAT_LIGHT, HEAT_LIGHT,
+    HEAT_DEEP,
+    HEAT_BLUE, HEAT_BLUE,
   ];
 
   /**
@@ -2594,6 +2595,9 @@ function build(require) {
           padding: 1.5,
           borderRadius: UI.radius,
           overflow: 'hidden',
+          // 常驻浅蓝边框：呼吸灯最淡时边界也不能消失
+          border: '1px solid color-mix(in srgb, var(--color-blue-500, #3b82f6) 40%, transparent)',
+          boxSizing: 'border-box',
           background: 'var(--dsw-alias-bg-base, #ffffff)',
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
           animation: 'ah-breathe 2.4s ease-in-out infinite',

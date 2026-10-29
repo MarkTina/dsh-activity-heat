@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3 — 2026-10-29
+
+- **Three heat bands.** The six-step grey → blue ramp (whose grey-blue middle read muddy in light themes) collapses to three bands: light grey (cold/stale/recent), deep grey (active) and bright blue (warm/blazing).
+- **Running cards keep their outline.** The running frame now has a constant light-blue border; the 2.4 s breathing animation only varies the outer glow, so the card boundary never disappears at its dimmest.
+
 ## 0.3.2 — 2026-10-29
 
 - **"Open in…" is a hover submenu.** The app picker now expands to the right of its parent row on hover (or `→`), instead of requiring a click and a second floating menu. Moving to another row closes it; `←`/`Esc` returns to the parent. The first row stays "Open in terminal", independent of the host catalog.
