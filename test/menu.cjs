@@ -676,20 +676,18 @@ function reset() {
   const openWithItem = itemsOf(menuOf(view)).find((item) => item.id === 'open-with');
   check(Boolean(openWithItem), '菜单包含「在其他应用中打开…」');
   check(openWithItem && openWithItem.disabled === false, '检测到应用后「打开方式」可用');
-  openWithItem.onSelect();
-  view = render({ initialApps: appIds });
-  const picker = menuOf(view);
-  check(Boolean(picker), '「打开方式」浮层出现');
-  const pickerLabels = picker ? itemsOf(picker).map((item) => item.label) : [];
+  check(openWithItem && Array.isArray(openWithItem.submenu), '「在其他应用中打开…」带二级菜单');
+  const pickerItems = openWithItem && openWithItem.submenu ? openWithItem.submenu : [];
+  const pickerLabels = pickerItems.map((item) => item.label);
   check(pickerLabels[0] === '在终端中打开', '终端固定在第一项', pickerLabels[0]);
   check(pickerLabels[1] === '在文件资源管理器中打开', '文件管理器排在其后', pickerLabels[1]);
   check(pickerLabels.indexOf('在VS Code中打开') !== -1, '编辑器在列表中');
   check(pickerLabels.indexOf('在Windows Terminal中打开') !== -1, '终端在列表中');
   check(pickerLabels.indexOf('在Git Bash中打开') === -1, 'Git Bash 不作为终端显示');
-  itemsOf(picker).find((item) => item.label === '在终端中打开').onSelect();
+  pickerItems.find((item) => item.label === '在终端中打开').onSelect();
   await flush();
   check(terminalCalls.some((call) => call.path === 'D:/p/alpha'), '二级列表的终端项可用');
-  itemsOf(picker).find((item) => item.label === '在VS Code中打开').onSelect();
+  pickerItems.find((item) => item.label === '在VS Code中打开').onSelect();
   await flush();
   check(
     openCalls.some((call) => call.app === 'vscode' && call.path === 'D:/p/alpha'),
@@ -710,9 +708,9 @@ function reset() {
     currentTarget: { getBoundingClientRect: () => ({ left: 40, top: 60, bottom: 90 }) },
   });
   view = render({ initialView: 'workspaces', initialApps: appIds });
-  itemsOf(menuOf(view)).find((item) => item.id === 'open-with').onSelect();
-  view = render({ initialView: 'workspaces', initialApps: appIds });
-  itemsOf(menuOf(view)).find((item) => item.label === '在VS Code中打开').onSelect();
+  const groupOpenWith = itemsOf(menuOf(view)).find((item) => item.id === 'open-with');
+  const groupSubmenu = groupOpenWith && groupOpenWith.submenu ? groupOpenWith.submenu : [];
+  groupSubmenu.find((item) => item.label === '在VS Code中打开').onSelect();
   await flush();
   check(
     openCalls.some((call) => call.app === 'vscode' && call.path === 'D:/p/alpha'),

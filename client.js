@@ -655,6 +655,7 @@ function build(require) {
     menuItem: 'ah-menu-item',
     menuLabel: 'ah-menu-label',
     menuHint: 'ah-menu-hint',
+    menuArrow: 'ah-menu-arrow',
     menuSep: 'ah-menu-sep',
     toast: 'ah-toast',
     toastAction: 'ah-toast-action',
@@ -857,6 +858,7 @@ function build(require) {
     '.ah-menu-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82em;line-height:20px;}',
     '.ah-menu-hint{flex:none;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;',
     'color:var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));font-size:.7em;}',
+    '.ah-menu-arrow{flex:none;margin-left:4px;color:var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));font-size:1em;line-height:20px;}',
     '.ah-menu-sep{height:1px;margin:5px 7px;background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 80%, transparent);}',
     '.ah-dialog{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:2200;',
     'width:min(320px, calc(100vw - 32px));padding:14px 16px;',
@@ -2692,6 +2694,27 @@ function build(require) {
     return Math.min(height, MENU_MAX_HEIGHT);
   }
 
+  /** 子菜单定位：默认贴父项右侧；右侧空间不足时翻到左侧。 */
+  function submenuPosition(anchor, width, height) {
+    var viewportWidth = 1280;
+    var viewportHeight = 800;
+    try {
+      if (typeof window !== 'undefined') {
+        if (window.innerWidth) viewportWidth = window.innerWidth;
+        if (window.innerHeight) viewportHeight = window.innerHeight;
+      }
+    } catch (ignored) { /* 测试沙箱没有视口，用默认值 */ }
+    var left = anchor && typeof anchor.right === 'number' ? anchor.right - 2 : 12;
+    if (left + width > viewportWidth - 8) {
+      left = anchor && typeof anchor.left === 'number' ? anchor.left - width + 2 : viewportWidth - width - 8;
+    }
+    if (left < 8) left = 8;
+    var top = anchor && typeof anchor.top === 'number' ? anchor.top - 6 : 12;
+    if (top + height > viewportHeight - 8) top = viewportHeight - height - 8;
+    if (top < 8) top = 8;
+    return { left: left, top: top };
+  }
+
   /** 菜单/对话框挂到 body：列表是 overflow 容器，原地渲染会被裁掉。 */
   function portalLayer(node) {
     try {
@@ -2885,6 +2908,19 @@ function build(require) {
     var active = activeState[0];
     var setActive = activeState[1];
     var surfaceRef = React.useRef ? React.useRef(null) : { current: null };
+    var itemRefs = React.useRef ? React.useRef([]) : { current: [] };
+    var submenuState = React.useState(null);
+    var submenu = submenuState[0];
+    var setSubmenu = submenuState[1];
+
+    function openSubmenu(index, element, subItems) {
+      if (!subItems || subItems.length === 0) return;
+      var rect = element && typeof element.getBoundingClientRect === 'function'
+        ? element.getBoundingClientRect()
+        : { left: 0, right: 0, top: 0, bottom: 0 };
+      var position = submenuPosition(rect, MENU_WIDTH, menuHeightOf(subItems));
+      setSubmenu({ index: index, items: subItems, x: position.left, y: position.top });
+    }
 
     // 外部点击 / 滚动 / 缩放都要关闭；portal 到 body 后这些事件不会冒泡进列表。
     React.useEffect(function () {
@@ -2892,12 +2928,18 @@ function build(require) {
       var onPointer = function (event) {
         var surface = surfaceRef.current;
         if (surface && surface.contains && event && event.target && surface.contains(event.target)) return;
+        // 点在任意一层菜单（含子菜单）里都不关闭父层，由那一层自己处理
+        if (event && event.target && typeof event.target.closest === 'function'
+          && event.target.closest('[data-ah-menu]')) return;
         if (props.onClose) props.onClose();
       };
       // 菜单自己滚（应用多时）不能把自己关掉；只有外层列表/页面滚动才关闭
       var onScroll = function (event) {
         var surface = surfaceRef.current;
         if (surface && event && event.target && surface.contains && surface.contains(event.target)) return;
+        // 子菜单自己滚动时不要关掉父菜单
+        if (event && event.target && typeof event.target.closest === 'function'
+          && event.target.closest('[data-ah-menu]')) return;
         if (props.onClose) props.onClose();
       };
       var onResize = function () { if (props.onClose) props.onClose(); };
@@ -2921,7 +2963,8 @@ function build(require) {
 
     React.useEffect(function () {
       if (!open) return;
-      // 每次打开都从第一个可用项开始，避免沿用上一次的高亮位置
+      // 每次打开都从干净状态开始：清掉残留子菜单、从第一个可用项高亮
+      setSubmenu(null);
       setActive(firstEnabledIndex(items));
       var surface = surfaceRef.current;
       if (surface && typeof surface.focus === 'function') {
@@ -2938,7 +2981,20 @@ function build(require) {
       var key = event.key;
       if (key === 'Escape') {
         event.preventDefault();
+        if (submenu) { setSubmenu(null); return; }
         if (props.onClose) props.onClose();
+        return;
+      }
+      if (key === 'ArrowRight') {
+        var subItem = items[active];
+        if (subItem && subItem.submenu && subItem.submenu.length) {
+          event.preventDefault();
+          openSubmenu(active, itemRefs.current[active], subItem.submenu);
+        }
+        return;
+      }
+      if (key === 'ArrowLeft') {
+        if (submenu) { event.preventDefault(); setSubmenu(null); }
         return;
       }
       if (key === 'ArrowDown') {
@@ -2968,7 +3024,12 @@ function build(require) {
       if (key === 'Enter' || key === ' ') {
         event.preventDefault();
         var item = items[active];
-        if (item && !item.disabled && item.onSelect) item.onSelect();
+        if (!item || item.disabled) return;
+        if (item.submenu && item.submenu.length) {
+          openSubmenu(active, itemRefs.current[active], item.submenu);
+          return;
+        }
+        if (item.onSelect) item.onSelect();
         return;
       }
       if (key === 'Tab' && props.onClose) props.onClose();
@@ -2977,6 +3038,7 @@ function build(require) {
     var nodes = [];
     for (var index = 0; index < items.length; index += 1) {
       var item = items[index];
+      var hasSubmenu = Boolean(item.submenu && item.submenu.length);
       if (item.separatorBefore) {
         nodes.push(React.createElement('div', {
           key: 'sep-' + item.id,
@@ -2990,24 +3052,42 @@ function build(require) {
         type: 'button',
         role: 'menuitem',
         tabIndex: -1,
+        ref: function (position) {
+          return function (element) { itemRefs.current[position] = element; };
+        }(index),
         'aria-disabled': item.disabled ? 'true' : undefined,
+        'aria-haspopup': hasSubmenu ? 'menu' : undefined,
+        'aria-expanded': hasSubmenu && submenu && submenu.index === index ? 'true' : undefined,
         'data-danger': item.danger ? 'true' : undefined,
         'data-active': index === active ? 'true' : 'false',
         className: AH.menuItem,
-        onClick: function (selected) {
-          return function () {
+        onClick: function (selected, position) {
+          return function (event) {
             if (selected.disabled) return;
+            if (selected.submenu && selected.submenu.length) {
+              openSubmenu(position, event && event.currentTarget, selected.submenu);
+              return;
+            }
             if (selected.onSelect) selected.onSelect();
           };
-        }(item),
-        onMouseEnter: function (hovered) {
-          return function () { setActive(hovered); };
-        }(index),
+        }(item, index),
+        onMouseEnter: function (hovered, selected, position) {
+          return function (event) {
+            setActive(hovered);
+            if (selected.submenu && selected.submenu.length) {
+              openSubmenu(position, event && event.currentTarget, selected.submenu);
+            } else {
+              setSubmenu(null);
+            }
+          };
+        }(index, item, index),
       }, [
         React.createElement('span', { key: 'label', className: AH.menuLabel }, item.label),
-        item.hint
-          ? React.createElement('span', { key: 'hint', className: AH.menuHint }, item.hint)
-          : null,
+        hasSubmenu
+          ? React.createElement('span', { key: 'arrow', className: AH.menuArrow, 'aria-hidden': 'true' }, '›')
+          : (item.hint
+            ? React.createElement('span', { key: 'hint', className: AH.menuHint }, item.hint)
+            : null),
       ]));
     }
 
@@ -3017,6 +3097,7 @@ function build(require) {
       tabIndex: -1,
       'aria-activedescendant': 'ah-menu-active',
       'aria-label': props.label,
+      'data-ah-menu': 'true',
       className: AH.menu,
       style: {
         position: 'fixed',
@@ -3032,7 +3113,18 @@ function build(require) {
       onContextMenu: function (event) { event.preventDefault(); },
     }, nodes);
 
-    return portalLayer(surface);
+    var layer = portalLayer(surface);
+    if (!submenu) return layer;
+
+    var subLayer = React.createElement(ContextMenu, {
+      open: true,
+      items: submenu.items,
+      x: submenu.x,
+      y: submenu.y,
+      label: tt('openWith.title'),
+      onClose: function () { setSubmenu(null); },
+    });
+    return React.createElement(React.Fragment, null, layer, subLayer);
   }
 
   function ConfirmArchive(props) {
@@ -3711,9 +3803,6 @@ function build(require) {
     var appsState = React.useState(initialApps && initialApps.length > 0 ? initialApps : []);
     var apps = appsState[0];
     var setApps = appsState[1];
-    var openWithState = React.useState(null);
-    var openWith = openWithState[0];
-    var setOpenWith = openWithState[1];
 
     // 列表滚动：隐藏原生滚动条，靠右侧的浮动提示告诉用户还能上下滑。
     var listRef = React.useRef ? React.useRef(null) : { current: null };
@@ -4045,24 +4134,7 @@ function build(require) {
       }
     }
 
-    function closeOpenWith() {
-      setOpenWith(null);
-      try {
-        if (lastMenuTrigger && lastMenuTrigger.isConnected !== false
-          && typeof lastMenuTrigger.focus === 'function') {
-          lastMenuTrigger.focus({ preventScroll: true });
-        }
-      } catch (ignored) { /* 卡片已被移除时忽略 */ }
-      lastMenuTrigger = null;
-    }
-
-    function openWithFor(path, label) {
-      var anchor = menu || { x: 12, y: 12 };
-      setMenu(null);
-      setOpenWith({ path: path, label: label, x: anchor.x, y: anchor.y });
-    }
-
-    /** 「打开方式」列表：终端固定第一项；其余按文件管理器 → 编辑器 → 终端 → 其他排序，组间加分隔。 */
+    /** 「打开方式」子菜单：终端固定第一项；其余按文件管理器 → 编辑器 → 终端 → 其他排序，组间加分隔。 */
     function buildOpenWithItems(target) {
       var path = target && target.path;
       // 宿主 catalog 可能解析不到 windowsterminal，不能因此让列表里没有终端
@@ -4071,7 +4143,7 @@ function build(require) {
         label: tt('menu.openTerminal'),
         disabled: !isAbsolutePath(path),
         hint: !isAbsolutePath(path) ? tt('menu.openWithNoPath') : undefined,
-        onSelect: function () { closeOpenWith(); openTerminal(path); },
+        onSelect: function () { closeMenu(); openTerminal(path); },
       }];
       var ordered = apps.filter(function (id) {
         // Git Bash 是 shell，不是终端模拟器；「终端」只列 Windows Terminal / Terminal 这一类
@@ -4120,7 +4192,7 @@ function build(require) {
     }
 
     function openInApp(appId, path) {
-      closeOpenWith();
+      closeMenu();
       try {
         if (typeof fetch !== 'function' || !isAbsolutePath(path)) {
           notify(tt('error.openWith'), 'error');
@@ -4197,11 +4269,9 @@ function build(require) {
       items.push({
         id: 'open-with',
         label: tt('menu.openWith'),
-        disabled: apps.length === 0 || !isAbsolutePath(session.cwd),
-        hint: apps.length === 0
-          ? tt('menu.openWithUnavailable')
-          : (!isAbsolutePath(session.cwd) ? tt('menu.openWithNoPath') : undefined),
-        onSelect: function () { openWithFor(session.cwd, session.title || session.id); },
+        submenu: buildOpenWithItems({ path: session.cwd }),
+        disabled: !isAbsolutePath(session.cwd),
+        hint: !isAbsolutePath(session.cwd) ? tt('menu.openWithNoPath') : undefined,
       });
       items.push({
         id: 'copy-id',
@@ -4292,11 +4362,9 @@ function build(require) {
       items.push({
         id: 'open-with',
         label: tt('menu.openWith'),
-        disabled: apps.length === 0 || !isAbsolutePath(workspacePath),
-        hint: apps.length === 0
-          ? tt('menu.openWithUnavailable')
-          : (!isAbsolutePath(workspacePath) ? tt('menu.openWithNoPath') : undefined),
-        onSelect: function () { openWithFor(workspacePath, group.label); },
+        submenu: buildOpenWithItems({ path: workspacePath }),
+        disabled: !isAbsolutePath(workspacePath),
+        hint: !isAbsolutePath(workspacePath) ? tt('menu.openWithNoPath') : undefined,
       });
       items.push({
         id: 'new-session',
@@ -4524,19 +4592,11 @@ function build(require) {
       onSave: submitRename,
     });
     var toastNode = React.createElement(PanelToast, { open: Boolean(toast), toast: toast });
-    var openWithNode = React.createElement(ContextMenu, {
-      open: Boolean(openWith),
-      items: openWith ? buildOpenWithItems(openWith) : [],
-      x: openWith ? openWith.x : 0,
-      y: openWith ? openWith.y : 0,
-      label: tt('openWith.title'),
-      onClose: closeOpenWith,
-    });
 
     return React.createElement('div', {
       className: AH.shell,
       style: { display: 'flex', flexDirection: 'column', paddingBottom: 16 },
-    }, [header, filterBar, list, footer, archiveNode, renameNode, toastNode, openWithNode]);
+    }, [header, filterBar, list, footer, archiveNode, renameNode, toastNode]);
   }
 
   function SessionRowHeat(props) {

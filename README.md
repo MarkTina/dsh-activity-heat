@@ -46,7 +46,7 @@ Right-click a session card (or focus it and press `Shift+F10` / the Menu key):
 |---|---|
 | Open session | Same as clicking the card |
 | Open in terminal | Opens the session/workspace directory in the system terminal: Windows tries Windows Terminal → PowerShell 7 → Windows PowerShell; macOS uses Terminal; Linux uses x-terminal-emulator |
-| Open in… | Lists the host's probed file managers, editors, terminals and Git GUIs; picking one opens the session's working directory there |
+| Open in… | Expands a submenu on hover (first row is always "Open in terminal"), then lists the host's probed file managers, editors, terminals and Git GUIs; picking one opens the session's working directory there |
 | Copy session ID / title / latest prompt / working directory | The latest prompt is copied in full; clipboard failures are reported |
 | Pin / unpin | Writes the host sidebar order; this panel keeps sorting by heat |
 | Rename… | Prefilled with the current title; an empty title cannot be saved |
@@ -128,10 +128,10 @@ This plugin is installed as a local directory or a GitHub repository; it is **no
 ```bash
 # inside your DSH profile directory
 cd ~/.dsh/profiles/<your-profile>
-pnpm add github:MarkTina/dsh-activity-heat#v0.3.1
+pnpm add github:MarkTina/dsh-activity-heat#v0.3.2
 ```
 
-Pin a tag (`#v0.3.1`) rather than following `main`, so an unrelated commit cannot change what you run. To upgrade later, bump the tag and restart DSH.
+Pin a tag (`#v0.3.2`) rather than following `main`, so an unrelated commit cannot change what you run. To upgrade later, bump the tag and restart DSH.
 
 The repository must be **public**; a private repo needs a token (`https://<token>@github.com/...` or an SSH remote) before `pnpm add` can fetch it.
 

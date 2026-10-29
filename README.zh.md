@@ -46,7 +46,7 @@ DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话�
 |---|---|
 | 打开会话 | 与单击一致 |
 | 在终端中打开 | 用系统终端打开当前会话 / 工作区目录：Windows 依次尝试 Windows Terminal → PowerShell 7 → Windows PowerShell；macOS 用 Terminal；Linux 用 x-terminal-emulator |
-| 在其他应用中打开… | 列出宿主检测到的文件管理器 / 编辑器 / 终端 / Git 客户端，点选后在对应应用中打开当前会话的工作目录 |
+| 在其他应用中打开… | 悬停自动展开二级菜单，第一项固定「在终端中打开」；其余列出宿主检测到的文件管理器 / 编辑器 / 终端 / Git 客户端，点选后在对应应用中打开当前会话的工作目录 |
 | 复制会话 ID / 标题 / 最近提示词 / 工作目录 | 最近提示词取完整原文；剪贴板不可用时提示失败 |
 | 置顶 / 取消置顶 | 写宿主侧栏顺序，本面板仍按热度排序 |
 | 重命名… | 预填当前标题，空标题不可保存 |
@@ -128,10 +128,10 @@ DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话�
 ```bash
 # 在 DSH profile 目录下
 cd ~/.dsh/profiles/<你的 profile>
-pnpm add github:MarkTina/dsh-activity-heat#v0.3.1
+pnpm add github:MarkTina/dsh-activity-heat#v0.3.2
 ```
 
-建议**锁定 tag**（`#v0.3.1`）而不是跟随 `main`，这样仓库上后续的无关提交不会改变你实际运行的代码。升级时换 tag 再重启即可。
+建议**锁定 tag**（`#v0.3.2`）而不是跟随 `main`，这样仓库上后续的无关提交不会改变你实际运行的代码。升级时换 tag 再重启即可。
 
 仓库必须是**公开**的；私有仓库需要先配好 token（`https://<token>@github.com/...`）或 SSH remote，`pnpm add` 才能拉取。
 

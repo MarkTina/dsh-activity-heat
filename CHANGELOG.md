@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2 — 2026-10-29
+
+- **"Open in…" is a hover submenu.** The app picker now expands to the right of its parent row on hover (or `→`), instead of requiring a click and a second floating menu. Moving to another row closes it; `←`/`Esc` returns to the parent. The first row stays "Open in terminal", independent of the host catalog.
+
 ## 0.3.1 — 2026-10-29
 
 - **Terminal stays visible in the picker.** The "Open in…" submenu now pins "Open in terminal" as its first row, so it is available even when the host `open-in-app` catalog cannot resolve Windows Terminal. It calls the plugin's own `POST /activity-heat/open-terminal` (Windows Terminal → PowerShell 7 → Windows PowerShell).
