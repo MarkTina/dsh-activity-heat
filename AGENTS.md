@@ -5,7 +5,7 @@ DSH Web 插件：按"距最后一次活动的时间"算热度，标记最近活�
 ## 常用命令
 
 ```bash
-npm test                 # panel / menu / shortcut / boot-timing / locale / assets 六项自检
+npm test                 # panel / menu / shortcut / boot-timing / locale 五项自检
 node --check client.js   # 改完先跑这个
 node test/panel.cjs      # 只跑渲染与交互断言
 node test/menu.cjs       # 只跑右键菜单的动作与降级断言
@@ -17,13 +17,12 @@ node test/menu.cjs       # 只跑右键菜单的动作与降级断言
 
 ```
 index.js            Host 入口：open-terminal 路由（启动系统终端），其余留给 loader 挂载
-client.js           全部 UI 逻辑 + 内联字典 + 内联鲸尾 GIF
+client.js           全部 UI 逻辑 + 内联字典（状态视觉复用宿主 StateDot）
 design.md           视觉与交互纲领（改 UI 前必读）
 cordis.patch.yml    插入 activity-heat 行与默认配置
 locale/zh.json      插件元数据 + 界面字典（与 client.js 内联字典由测试强制一致）
 locale/en.json
-assets/active.gif   运行中徽标动图（内联副本由 test/assets.cjs 校验）
-test/               六项免依赖自检
+test/               五项免依赖自检
 ```
 
 ## 改代码前必须知道

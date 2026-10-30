@@ -50,7 +50,7 @@ var AH_I18N = /* AH_I18N_START */ {
     hover: {
       heat: '热度 {level}/5 · {name}',
       heatLevel: '热度 {level}/5',
-      heatRunning: '热度 {level}/5 · 工作中',
+      heatRunning: '热度 {level}/5 · 进行中',
       lastActive: '最后活动：{time}',
       workspaceRank: '工作区「{name}」排第 {rank}',
       workspaceHot: '工作区「{name}」正热',
@@ -63,21 +63,21 @@ var AH_I18N = /* AH_I18N_START */ {
       context: '上下文',
     },
     dot: { tooltip: '热度 {level}/5 · {time}' },
-    running: {
-      label: '运行中',
-      title: '该会话正在运行',
-      short: '正在运行',
-      working: '工作中',
-    },
     status: {
-      done: '已完成',
-      doneTitle: '该会话已完成，尚未查看',
-      awaiting: '等待回答',
-      awaitingTitle: '该会话在等待你的回答',
-      approval: '等待审批',
-      approvalTitle: '该会话在等待你的授权',
+      running: '进行中',
+      idle: '空闲',
+      waitingApproval: '等待审批',
       planReview: '计划待审',
+      waitingAnswer: '等待回答',
+      completed: '已完成',
+      subagentsRunning: { one: '{n} 个子智能体运行中', other: '{n} 个子智能体运行中' },
+      compact: { approval: '待审批', planReview: '计划待审', answer: '待回答', subagents: '{n} 子智能体' },
+      runningTitle: '该会话正在运行',
+      idleTitle: '该会话空闲',
+      waitingApprovalTitle: '该会话在等待你的授权',
       planReviewTitle: '该会话的计划在等待你审阅',
+      waitingAnswerTitle: '该会话在等待你的回答',
+      completedTitle: '该会话已完成，尚未查看',
     },
     fact: {
       turns: '{n} 轮',
@@ -281,7 +281,7 @@ var AH_I18N = /* AH_I18N_START */ {
     hover: {
       heat: 'Heat {level}/5 · {name}',
       heatLevel: 'Heat {level}/5',
-      heatRunning: 'Heat {level}/5 · working',
+      heatRunning: 'Heat {level}/5 · running',
       lastActive: 'Last active: {time}',
       workspaceRank: 'Workspace “{name}” ranks #{rank}',
       workspaceHot: 'Workspace “{name}” is hot',
@@ -294,21 +294,21 @@ var AH_I18N = /* AH_I18N_START */ {
       context: 'Context',
     },
     dot: { tooltip: 'Heat {level}/5 · {time}' },
-    running: {
-      label: 'Running',
-      title: 'This session is running',
-      short: 'Running',
-      working: 'Working',
-    },
     status: {
-      done: 'Done',
-      doneTitle: 'Finished, not viewed yet',
-      awaiting: 'Waiting',
-      awaitingTitle: 'This session is waiting for your answer',
-      approval: 'Approval',
-      approvalTitle: 'This session is waiting for your approval',
-      planReview: 'Review plan',
+      running: 'Running',
+      idle: 'Idle',
+      waitingApproval: 'Waiting for approval',
+      planReview: 'Plan awaiting review',
+      waitingAnswer: 'Waiting for answer',
+      completed: 'Completed',
+      subagentsRunning: { one: '{n} subagent running', other: '{n} subagents running' },
+      compact: { approval: 'Approval', planReview: 'Plan review', answer: 'Answer', subagents: '{n} subagents' },
+      runningTitle: 'This session is running',
+      idleTitle: 'This session is idle',
+      waitingApprovalTitle: 'This session is waiting for your approval',
       planReviewTitle: 'This session plan is waiting for review',
+      waitingAnswerTitle: 'This session is waiting for your answer',
+      completedTitle: 'Finished, not viewed yet',
     },
     fact: {
       turns: '{n} turns',
@@ -595,9 +595,6 @@ function build(require) {
   /** main slot 里当前是否显示着本插件的面板（用于快捷键二次切换）。 */
   var panelVisible = false;
 
-  /** 运行中徽标：官方鲸尾动图（assets/active.gif 的内联副本），播放器自己逐帧走。 */
-  var ACTIVE_TAIL = 'data:image/gif;base64,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';
-
   /**
    * 界面文案统一入口。宿主 locale 服务可用时走它的字典（随语言切换实时更新），
    * 否则退回随包的中文字典——测试与降级场景都保持可读的文案。
@@ -653,12 +650,6 @@ function build(require) {
       + tone + ' 62%, ' + tone + ' 100%)';
   }
 
-  /** 竖条的光影：顶部 1px 高光 + 发丝玻璃边缘，高温档再加外发光。 */
-  function heatBarShadow(tone, level) {
-    return 'inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 0 0.5px rgba(255,255,255,.18)'
-      + (level >= 4 ? ', 0 0 10px ' + tone : '');
-  }
-
   function heatToneOf(level) {
     return HEAT_TONES[Math.max(0, Math.min(5, level || 0))];
   }
@@ -698,17 +689,20 @@ function build(require) {
     chip: 'ah-chip',
     meterTrack: 'ah-meter-track',
     meterFill: 'ah-meter-fill',
-    meterTick: 'ah-meter-tick',
+    waterV: 'ah-water-v',
+    waterHead: 'ah-water-head',
+    vpipe: 'ah-vpipe',
+    vpipeFill: 'ah-vpipe-fill',
+    vpipeHead: 'ah-vpipe-head',
+    vpipeLow: 'ah-low',
     miniTrack: 'ah-mini-track',
     miniFill: 'ah-mini-fill',
     tab: 'ah-tab',
     seg: 'ah-seg',
     count: 'ah-count',
     badge: 'ah-current-badge',
-    doneTag: 'ah-done-tag',
-    doneGlyph: 'ah-done-glyph',
-    awaitingTag: 'ah-awaiting-tag',
-    awaitingGlyph: 'ah-awaiting-glyph',
+    statusDot: 'ah-status-dot',
+    statusTag: 'ah-status-tag',
     popover: 'ah-popover',
     popoverInner: 'ah-popover-inner',
     ring: 'ah-ring',
@@ -722,7 +716,6 @@ function build(require) {
     listMaskTop: 'ah-list-mask ah-list-mask--top',
     listMaskBottom: 'ah-list-mask ah-list-mask--bottom',
     filterBar: 'ah-filterbar',
-    heatBar: 'ah-heat-bar',
     menu: 'ah-menu',
     menuItem: 'ah-menu-item',
     menuLabel: 'ah-menu-label',
@@ -806,27 +799,87 @@ function build(require) {
     '.ah-card--running:hover{transform:none;box-shadow:none;}',
     'body[data-ds-dark-theme] .ah-card{background-image:linear-gradient(180deg, rgba(255,255,255,.06), transparent 46%);}',
 
-    /* ---------- 热度条（主色由内联按档位给，再渐变到纯白） ---------- */
-    '.ah-heat-bar{',
-    'flex:none;align-self:stretch;border-radius:4px;',
-    'transition:filter 220ms var(--ah-ease), box-shadow 220ms var(--ah-ease);',
-    '}',
-    '.ah-card:hover .ah-heat-bar{filter:brightness(1.12) saturate(1.05);}',
-
-    /* ---------- 热度计 / 迷你条 ---------- */
+    /* ---------- 热度条：管道水流 + 挡板涌浪（无刻度） ---------- */
+    /* 管道（轨道）：上下压暗、中间提亮，像一根圆柱管 */
     '.ah-meter-track{position:relative;display:block;border-radius:999px;overflow:hidden;flex:none;',
-    'background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 66%, transparent);',
-    'box-shadow:inset 0 1px 2px rgba(0,0,0,.10);}',
-    '.ah-meter-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;',
-    'background-image:linear-gradient(90deg, transparent, rgba(255,255,255,.16));',
-    'transition:width 200ms var(--ah-ease), opacity 200ms var(--ah-ease), background-color 260ms var(--ah-ease), filter 220ms var(--ah-ease);}',
-    '.ah-meter-tick{position:absolute;top:0;bottom:0;width:1px;background:var(--dsw-alias-bg-layer-1, rgba(0,0,0,.35));opacity:.45;}',
+    'background:linear-gradient(180deg, rgba(0,0,0,.10), rgba(255,255,255,.10) 30%, rgba(255,255,255,.06) 55%, rgba(0,0,0,.13)), color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 56%, transparent);',
+    'box-shadow:inset 0 1.5px 3px rgba(0,0,0,.18), inset 0 -1.5px 3px rgba(0,0,0,.12), inset 0 0 0 .5px rgba(255,255,255,.24);}',
+    '.ah-meter-track::before{content:"";position:absolute;z-index:3;left:6px;right:6px;top:2px;height:2px;border-radius:999px;',
+    'background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);pointer-events:none;}',
+    /* 水体：圆柱截面（中间亮、上下暗），并整体轻微晃荡 */
+    '.ah-meter-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;overflow:hidden;',
+    'background-image:linear-gradient(180deg, color-mix(in srgb, currentColor 76%, #000) 0%, color-mix(in srgb, currentColor 70%, #fff) 34%, color-mix(in srgb, currentColor 92%, #fff) 50%, color-mix(in srgb, currentColor 70%, #fff) 66%, color-mix(in srgb, currentColor 80%, #000) 100%);',
+    'background-size:100% 220%;background-position:0 0;',
+    'box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(0,0,0,.18);',
+    'animation:ah-water-sloshl 2.6s ease-in-out infinite;',
+    'transition:width 260ms var(--ah-ease), opacity 200ms var(--ah-ease), color 260ms var(--ah-ease), filter 220ms var(--ah-ease);}',
+    '@keyframes ah-water-sloshl{0%,100%{background-position:0 0%}50%{background-position:0 35%}}',
+    /* 水流：焦散集中在管腔中部偏上，整体前移（不是尖锐条纹） */
+    '.ah-meter-fill::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:1;',
+    'background-image:radial-gradient(34% 55% at 26% 50%, rgba(255,255,255,.42), transparent 64%),',
+    'radial-gradient(30% 48% at 58% 48%, rgba(255,255,255,.28), transparent 62%),',
+    'radial-gradient(26% 42% at 84% 52%, rgba(255,255,255,.20), transparent 62%);',
+    'background-size:240% 100%;animation:ah-water-flow 1.6s linear infinite;}',
+    /* 水面微光：放在管腔偏上的位置，水平居中起伏 */
+    '.ah-meter-fill::after{content:"";position:absolute;left:0;right:0;top:32%;height:2px;pointer-events:none;opacity:.9;',
+    'background-image:linear-gradient(90deg, transparent, rgba(255,255,255,.85) 42%, transparent);',
+    'background-size:55% 100%;background-repeat:no-repeat;animation:ah-water-surface 2.2s ease-in-out infinite;}',
+    '@keyframes ah-water-flow{from{background-position:0% 0}to{background-position:-140% 0}}',
+    '@keyframes ah-water-surface{0%{background-position:-60% 0}50%{background-position:80% 0}100%{background-position:-60% 0}}',
+    /* 挡板处水涌：上下留边的一道居中亮水墙，带辉光与周期涟漪 */
+    '.ah-water-head{position:absolute;top:2px;bottom:2px;right:0;width:min(24%,38px);pointer-events:none;z-index:2;',
+    'border-radius:0 999px 999px 0;transform-origin:right center;',
+    'background-image:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.06) 24%, rgba(255,255,255,.30) 62%, rgba(255,255,255,.80) 100%);',
+    'box-shadow:inset -2px 0 0 rgba(255,255,255,.85), 0 0 8px color-mix(in srgb, currentColor 55%, transparent);',
+    'animation:ah-water-surge 1.4s ease-in-out infinite;}',
+    '.ah-water-head::after{content:"";position:absolute;right:-2px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;',
+    'border:1.5px solid rgba(255,255,255,.55);pointer-events:none;',
+    'animation:ah-water-ripple 1.6s ease-out infinite;}',
+    '@keyframes ah-water-surge{0%,100%{transform:scaleX(.90) scaleY(.85);opacity:.55}50%{transform:scaleX(1.04) scaleY(1.03);opacity:1}}',
+    '@keyframes ah-water-ripple{0%{transform:scale(.30);opacity:.90}70%{transform:scale(1.5);opacity:0}100%{opacity:0}}',
+    /* 竖向热度条：水在细管里向上涌，顶端亮水头 */
+    '.ah-water-v{position:relative;overflow:hidden;}',
+    '.ah-water-v::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:.85;',
+    'background-image:radial-gradient(120% 55% at 30% 12%, rgba(255,255,255,.32), transparent 60%),',
+    'radial-gradient(120% 45% at 70% 40%, rgba(255,255,255,.20), transparent 60%);',
+    'background-size:100% 200%;animation:ah-water-flow-y 2s linear infinite;}',
+    '.ah-water-v::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;border-radius:999px 999px 0 0;pointer-events:none;',
+    'background-image:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.10));',
+    'box-shadow:0 0 7px color-mix(in srgb, currentColor 60%, transparent);',
+    'animation:ah-water-surge-y 1.4s ease-in-out infinite;}',
+    '@keyframes ah-water-flow-y{from{background-position:0 0}to{background-position:0 -140%}}',
+    '@keyframes ah-water-surge-y{0%,100%{height:2px;opacity:.55}50%{height:7px;opacity:1}}',
+    /* 竖向水管：水位按比例从底部涨上来；低水位时水头打不上来（水源不足） */
+    '.ah-vpipe{position:relative;display:block;border-radius:999px;overflow:hidden;flex:none;',
+    'background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 56%, transparent);',
+    'box-shadow:inset 0 0 0 .5px rgba(255,255,255,.26), inset 1px 0 2px rgba(0,0,0,.10), inset -1px 0 2px rgba(0,0,0,.10);}',
+    '.ah-vpipe::before{content:"";position:absolute;z-index:3;left:1px;right:1px;top:3px;bottom:3px;border-radius:999px;',
+    'background:linear-gradient(180deg,transparent,rgba(255,255,255,.22),rgba(255,255,255,.06));pointer-events:none;}',
+    '.ah-vpipe-fill{position:absolute;left:0;right:0;bottom:0;border-radius:999px;overflow:hidden;',
+    'background-image:linear-gradient(0deg, color-mix(in srgb, currentColor 92%, #000) 0%, currentColor 55%, color-mix(in srgb, currentColor 88%, #fff) 100%);',
+    'background-size:100% 240%;background-position:0 0;',
+    'box-shadow:inset 0 0 0 .5px rgba(255,255,255,.20);',
+    'animation:ah-vpipe-sloshl 2.8s ease-in-out infinite;transition:height 300ms var(--ah-ease);}',
+    '@keyframes ah-vpipe-sloshl{0%,100%{background-position:0 0%}50%{background-position:0 80%}}',
+    '.ah-vpipe-fill::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:.9;',
+    'background-image:radial-gradient(circle, rgba(255,255,255,.55) 0 1.2px, transparent 1.6px);',
+    'background-size:9px 22px;animation:ah-bubbles 1.5s linear infinite;}',
+    '@keyframes ah-bubbles{from{background-position:0 0}to{background-position:0 -22px}}',
+    '.ah-vpipe-head{position:absolute;left:-1px;right:-1px;top:-1px;height:6px;border-radius:999px 999px 50% 50%;pointer-events:none;',
+    'background-image:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.10));',
+    'box-shadow:0 0 7px color-mix(in srgb, currentColor 60%, transparent);',
+    'transform-origin:bottom center;animation:ah-vpipe-surge 1.3s ease-in-out infinite;}',
+    '@keyframes ah-vpipe-surge{0%,100%{transform:scaleY(.7);opacity:.55}45%{transform:scaleY(1.15);opacity:1}60%{transform:scaleY(.9);opacity:.8}}',
+    '.ah-vpipe-fill.ah-low .ah-vpipe-head{animation:ah-vpipe-sputter 1.6s ease-in-out infinite;}',
+    '@keyframes ah-vpipe-sputter{0%,100%{transform:translateY(2px) scaleY(.5);opacity:.35}35%{transform:translateY(-2px) scaleY(1.2);opacity:1}55%{transform:translateY(1px) scaleY(.7);opacity:.6}}',
+    '.ah-vpipe-fill.ah-low::before{animation-duration:1.1s;opacity:.7}',
     '.ah-mini-track{position:relative;display:inline-block;border-radius:999px;overflow:hidden;flex:none;vertical-align:middle;',
-    'background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 66%, transparent);',
-    'box-shadow:inset 0 1px 1px rgba(0,0,0,.08);}',
+    'background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 58%, transparent);',
+    'box-shadow:inset 0 1px 1px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.20);}',
     '.ah-mini-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;opacity:.92;',
-    'background-image:linear-gradient(90deg, transparent, rgba(255,255,255,.22));}',
-    '.ah-card:hover .ah-meter-fill{box-shadow:0 0 9px color-mix(in srgb, var(--color-blue-500, #3b82f6) 55%, transparent);}',
+    'background-image:linear-gradient(180deg, rgba(255,255,255,.40), rgba(255,255,255,0) 55%, rgba(0,0,0,.08));',
+    'box-shadow:inset 0 1px 0 rgba(255,255,255,.40);}',
+    '.ah-card:hover .ah-meter-fill{box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 0 10px color-mix(in srgb, var(--color-blue-500, #3b82f6) 42%, transparent);}',
 
     /* ---------- 顶部：筛选 tab / 分段 / 数量 ---------- */
     '.ah-filterbar{position:relative;border-bottom:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.18)) 65%, transparent);}',
@@ -872,14 +925,9 @@ function build(require) {
     'background-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 10%, transparent);',
     'background-image:linear-gradient(135deg, rgba(255,255,255,.18), transparent 62%);',
     'box-shadow:inset 0 1px 0 rgba(255,255,255,.22);color:var(--color-blue-500, #3b82f6);}',
-    /* 已完成（未查看）：绿色系；等待回答：琥珀色。两者与蓝色的热度 / 运行中明确区分 */
-    '.ah-done-tag{color:var(--dsw-alias-state-success-primary, #22c55e);}',
-    '.ah-done-glyph{filter:drop-shadow(0 0 4px color-mix(in srgb, var(--dsw-alias-state-success-primary, #22c55e) 42%, transparent));',
-    'animation:ah-done-breathe 3.2s ease-in-out infinite;}',
-    '.ah-awaiting-tag{color:var(--dsw-alias-state-warn-primary, #f59e0b);}',
-    '.ah-awaiting-glyph{filter:drop-shadow(0 0 4px color-mix(in srgb, var(--dsw-alias-state-warn-primary, #f59e0b) 42%, transparent));',
-    'animation:ah-done-breathe 3.2s ease-in-out infinite;}',
-    '@keyframes ah-done-breathe{0%,100%{opacity:.72;transform:scale(.96)}50%{opacity:1;transform:scale(1.05)}}',
+    /* 状态点 / 状态标签：颜色与形态交给宿主 StateDot，这里只提供布局 */
+    '.ah-status-dot{display:inline-flex;align-items:center;justify-content:center;flex:none;border-radius:50%;corner-shape:round;}',
+    '.ah-status-tag{display:inline-flex;align-items:center;justify-content:center;gap:5px;font-weight:700;line-height:16px;white-space:nowrap;flex:none;}',
     '.ah-chip{border:1px solid transparent;border-radius:6px;padding:1px 5px;margin:-1px -1px;',
     'color:var(--dsw-alias-label-secondary);',
     'transition:background-color 160ms var(--ah-ease), border-color 160ms var(--ah-ease), color 160ms var(--ah-ease);}',
@@ -1036,7 +1084,7 @@ function build(require) {
     '@keyframes ah-dot-pulse{0%,100%{opacity:.8;transform:none;box-shadow:none}50%{opacity:1;transform:none;box-shadow:none}}',
     '@keyframes ah-done-breathe{0%,100%{opacity:1;transform:none}50%{opacity:1;transform:none}}',
     '.ah-shell,.ah-card,.ah-card::before,.ah-list-inner,.ah-empty,',
-    '.ah-tab::after,.ah-seg,.ah-count::before,.ah-popover-inner,.ah-ring,.ah-strip-seg,.ah-heat-ring,.ah-done-glyph,.ah-awaiting-glyph,',
+    '.ah-tab::after,.ah-seg,.ah-count::before,.ah-popover-inner,.ah-ring,.ah-strip-seg,.ah-heat-ring,.ah-meter-fill,.ah-meter-fill::before,.ah-meter-fill::after,.ah-water-head,.ah-water-head::after,.ah-water-v::before,.ah-water-v::after,.ah-vpipe-fill,.ah-vpipe-fill::before,.ah-vpipe-head,',
     '.ah-menu,.ah-dialog,.ah-toast{',
     'animation:none!important;transition:none!important;}',
     '.ah-card:hover{transform:none;box-shadow:none;}',
@@ -1450,6 +1498,79 @@ function build(require) {
     return undefined;
   }
 
+  /**
+   * 归一化宿主会话状态快照（useSessionStatus 的 map.get(id)）：
+   * { running, pendingInteraction:{kind}, completionUnread }。
+   * 返回 { hasSnapshot, running?, pending?, completionUnread? }；字段缺失时由调用方兜底。
+   */
+  function nativeStatusOf(statusOf, id) {
+    var out = {};
+    try {
+      var status = typeof statusOf === 'function' ? statusOf(id) : undefined;
+      if (status && typeof status === 'object') {
+        out.hasSnapshot = true;
+        if (typeof status.running === 'boolean') out.running = status.running;
+        out.pending = pendingKindOf(status);
+        if (typeof status.completionUnread === 'boolean') out.completionUnread = status.completionUnread;
+      }
+    } catch (ignored) { /* 状态域异常时静默降级 */ }
+    return out;
+  }
+
+  /** 正在运行的直接子智能体数量（与宿主 workspace 的 runningChildCount 同口径）。 */
+  function runningChildCount(id, projections, byId, statusOf) {
+    try {
+      var proj = projections && projections[id];
+      var catalog = proj && proj.values && proj.values.subagentCatalog;
+      if (!Array.isArray(catalog)) return 0;
+      var count = 0;
+      for (var i = 0; i < catalog.length; i += 1) {
+        var child = catalog[i];
+        if (!child || child.id === undefined) continue;
+        var cs = nativeStatusOf(statusOf, child.id);
+        var cr = typeof cs.running === 'boolean'
+          ? cs.running
+          : (byId && byId[child.id] ? byId[child.id].running === true : false);
+        if (cr === true) count += 1;
+      }
+      return count;
+    } catch (ignored) { return 0; }
+  }
+
+  /**
+   * 生成与宿主 sessionStatuses() 同构的状态项列表，供所有展示面统一消费。
+   * 每项：{ state, key, params?, ariaKey, kind?, additive? }。
+   * 优先级：pending（审批＞计划＞回答）＞ running ＞ 子智能体 ＞ 已完成 ＞ 空闲。
+   */
+  function statusItemsOf(facts) {
+    var items = [];
+    var pending = facts.pending;
+    var sub = facts.runningSubagentCount > 0;
+    var subKey = facts.runningSubagentCount === 1
+      ? 'status.subagentsRunning.one'
+      : 'status.subagentsRunning.other';
+    var subParams = { n: facts.runningSubagentCount };
+    if (pending) {
+      var pk = pending === 'approval' ? 'waitingApproval'
+        : (pending === 'plan-review' ? 'planReview' : 'waitingAnswer');
+      items.push({ state: 'warning', key: 'status.' + pk, kind: pending, ariaKey: 'status.' + pk + 'Title' });
+    } else if (facts.running === true) {
+      items.push({ state: 'ongoing', key: 'status.running', ariaKey: 'status.runningTitle' });
+    } else if (sub) {
+      items.push({ state: 'ongoing', key: subKey, params: subParams, ariaKey: subKey });
+    }
+    if (items.length === 0 && facts.completionUnread === true) {
+      items.push({ state: 'done', key: 'status.completed', ariaKey: 'status.completedTitle' });
+    }
+    if (items.length === 0) {
+      items.push({ state: 'idle', key: 'status.idle', ariaKey: 'status.idleTitle' });
+    }
+    if (sub && items[0].key.indexOf('status.subagentsRunning') !== 0) {
+      items.push({ state: 'ongoing', key: subKey, params: subParams, ariaKey: subKey, additive: true });
+    }
+    return items;
+  }
+
   function factsFromProjection(projections) {
     var out = {};
     try {
@@ -1617,20 +1738,30 @@ function build(require) {
       var open = hasSelection
         ? selected[String(id)] === true
         : Boolean(summary.retainedBy && summary.retainedBy.mainView > 0);
-      var running = summary.running === true;
-      // 等待用户处理：优先取 client 侧 pendingInteraction（审批/计划/提问），
-      // 拿不到状态域时退回宿主的 userQuestions 投影（只覆盖提问）。
-      var pending;
-      if (statusOf) {
-        try { pending = pendingKindOf(statusOf(id)); } catch (ignored) { pending = undefined; }
-      }
-      if (!pending && facts.awaiting === true) pending = 'question';
+      // 数据源以宿主 useSessionStatus 为准；字段缺失时才退回归一化前的兜底。
+      var native = nativeStatusOf(statusOf, id);
+      var running = typeof native.running === 'boolean' ? native.running : summary.running === true;
+      var pending = native.pending;
+      // pendingInteraction 读不到（没有状态域 / 该会话不在快照里）才退回 userQuestions 投影。
+      if (!pending && native.hasSnapshot !== true && facts.awaiting === true) pending = 'question';
+      var runningSubagentCount = runningChildCount(id, projections, byId, statusOf);
+      // 已完成：宿主 completionUnread 为主；拿不到该字段时才用本地查看水位兜底。
+      var completionUnread = typeof native.completionUnread === 'boolean'
+        ? native.completionUnread
+        : doneUnseenOf(id, at, running, open, now);
+      var statusItems = statusItemsOf({
+        pending: pending,
+        running: running,
+        runningSubagentCount: runningSubagentCount,
+        completionUnread: completionUnread,
+      });
+      var primaryState = statusItems[0].state;
       // 宿主的 updatedAt 只在一轮开始/结束刷新，长任务运行中不会更新；
       // 因此"正在工作"不能只按时间算，否则会被 10 分钟前的空闲会话压下去。
       // 运行中的会话按最高热度计（level 5），真实时间仍留给右侧的"最后活动"。
       var age = at === undefined ? undefined : now - at;
-      var level = running ? 5 : (age === undefined ? 0 : heatLevelOf(age));
-      var ratio = running
+      var level = primaryState === 'ongoing' ? 5 : (age === undefined ? 0 : heatLevelOf(age));
+      var ratio = primaryState === 'ongoing'
         ? Math.max(0.92, age === undefined ? 0 : heatRatioOf(age))
         : (age === undefined ? 0 : heatRatioOf(age));
       sessions.push({
@@ -1644,8 +1775,11 @@ function build(require) {
         cwd: typeof summary.cwd === 'string' ? summary.cwd : '',
         open: open,
         running: running,
-        done: doneUnseenOf(id, at, running, open, now),
+        runningSubagentCount: runningSubagentCount,
+        done: completionUnread,
         pending: pending,
+        statusItems: statusItems,
+        primaryState: primaryState,
         awaiting: pending === 'question' || facts.awaiting === true,
         archived: isArchived,
         subagent: isSubagent,
@@ -1661,8 +1795,10 @@ function build(require) {
       });
     }
     sessions.sort(function (x, y) {
-      // 正在工作的会话优先；同为运行时再按最近活动时间
-      if (x.running !== y.running) return x.running ? -1 : 1;
+      // 进行中（含子智能体在跑）优先；同为运行时再按最近活动时间
+      var xo = x.primaryState === 'ongoing';
+      var yo = y.primaryState === 'ongoing';
+      if (xo !== yo) return xo ? -1 : 1;
       return compareByRecency(x, y);
     });
 
@@ -1698,7 +1834,7 @@ function build(require) {
         groupList.push(group);
       }
       group.count += 1;
-      if (session.running === true) group.running = true;
+      if (session.primaryState === 'ongoing') group.running = true;
       if (typeof session.tokens === 'number') group.tokens += session.tokens;
       if (typeof session.turns === 'number') group.turns += session.turns;
       if (typeof session.steps === 'number') group.steps += session.steps;
@@ -1917,14 +2053,15 @@ function build(require) {
     // 色深：颜色本身已按档位从灰过渡到蓝，透明度只做轻微衰减
     var tone = heatToneOf(level);
     var fillOpacity = 0.62 + ratio * 0.38;
-    var ticks = [];
-    // 5 个刻度分隔线，帮助读出"填充到第几格"
-    for (var t = 1; t <= 4; t += 1) {
-      ticks.push(React.createElement('span', {
-        key: 'tick' + t,
-        className: AH.meterTick,
-        style: { left: (t * 20) + '%' },
-      }));
+    var fillStyle = {
+      width: Math.round(ratio * 100) + '%',
+      opacity: fillOpacity,
+      color: tone,
+      backgroundColor: tone,
+    };
+    // 高温档加同色辉光；管道水流、水头与涌浪由 CSS 负责
+    if (level >= 4) {
+      fillStyle.boxShadow = 'inset 0 1px 0 rgba(255,255,255,.48), 0 0 12px color-mix(in srgb, ' + tone + ' 45%, transparent)';
     }
     var track = React.createElement(
       'span',
@@ -1937,14 +2074,10 @@ function build(require) {
       },
       React.createElement('span', {
         className: AH.meterFill,
-        style: {
-          width: Math.round(ratio * 100) + '%',
-          opacity: fillOpacity,
-          backgroundColor: tone,
-          boxShadow: level >= 4 ? '0 0 6px ' + tone : 'none',
-        },
-      }),
-      ticks,
+        style: fillStyle,
+      },
+        React.createElement('span', { className: AH.waterHead }),
+      ),
     );
 
     return React.createElement(
@@ -1965,6 +2098,47 @@ function build(require) {
             },
           }, heatNameOf(level))
         : null,
+    );
+  }
+
+  /**
+   * 竖向水管热度条：水位按 ratio 从底部涨上来，顶部是一枚会涌/会打不上来的水头。
+   * 低水位（<30%）用 `ah-low` 模拟水源不足：水头反复冲一下就落回去。
+   * @param props.level - 0..5 档位（决定颜色）
+   * @param props.ratio - 0..1 水位
+   * @param props.width - 管宽，默认 6
+   * @param props.stretch - true 时随父容器拉伸（卡片左侧那一根）
+   * @param props.height - 非拉伸模式下的管高
+   */
+  function VerticalHeatPipe(props) {
+    var level = Math.max(0, Math.min(5, (props && props.level) || 0));
+    var ratio = typeof props.ratio === 'number' && isFinite(props.ratio)
+      ? Math.max(0, Math.min(1, props.ratio))
+      : heatAlphaOf(level);
+    var width = props && typeof props.width === 'number' ? props.width : 6;
+    var tone = heatToneOf(level);
+    var low = ratio < 0.3;
+    // 留一点最低水位，避免低档时看起来是一根空管
+    var pct = Math.max(4, Math.round(ratio * 100));
+    var outerStyle = { width: width };
+    if (props && props.stretch === true) outerStyle.alignSelf = 'stretch';
+    else outerStyle.height = props && typeof props.height === 'number' ? props.height : 20;
+    if (props && props.style) {
+      for (var k in props.style) {
+        if (Object.prototype.hasOwnProperty.call(props.style, k)) outerStyle[k] = props.style[k];
+      }
+    }
+    return React.createElement(
+      'span',
+      { className: AH.vpipe, style: outerStyle, 'aria-hidden': 'true' },
+      React.createElement(
+        'span',
+        {
+          className: AH.vpipeFill + (low ? ' ' + AH.vpipeLow : ''),
+          style: { height: pct + '%', color: tone, backgroundColor: tone },
+        },
+        React.createElement('span', { className: AH.vpipeHead }),
+      ),
     );
   }
 
@@ -2004,11 +2178,13 @@ function build(require) {
         },
       },
       React.createElement('span', {
+        className: AH.waterV,
         style: {
           width: barWidth,
           height: barHeight,
           borderRadius: 999,
-          // 竖直温度条：整条保持档位色，只在顶部提亮
+          color: heatToneOf(level),
+          // 竖直温度条：整条保持档位色，管道水流与顶端水头由 .ah-water-v 负责
           backgroundImage: heatBarSurface(heatToneOf(level)),
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 0 0.5px rgba(255,255,255,.18)'
             + (level >= 4 ? ', 0 0 6px ' + heatToneOf(level) : ''),
@@ -2546,149 +2722,95 @@ function build(require) {
   }
 
   /**
-   * 「工作中」标识：官方鲸尾动图 + 文字，替代原来的描边小徽章。
-   * 动画是 GIF 自己的帧序列，这里不加任何 transform，避免整张图被"晃"。
+   * 状态点：优先用宿主原生的 StateDot（转圈/点/对勾与颜色都由宿主决定），
+   * 拿不到 primitives 时退回本地圆点，仍用宿主主题令牌，保证测试/旧宿主可渲染。
    */
-  /** 工作中 / 已完成两个状态图标的统一尺寸，避免两边大小再次漂移。 */
-  function statusIconSize(compact) {
-    return compact ? 22 : 28;
-  }
-
-  function WorkingTag(props) {
-    var stacked = props && props.stacked === true;
-    var compact = props && props.compact === true;
-    var size = statusIconSize(compact);
-    return React.createElement(
-      'span',
-      {
-        title: tt('running.title'),
-        style: {
-          display: 'inline-flex',
-          flexDirection: stacked ? 'column' : 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: stacked ? 3 : 6,
-          color: HEAT_INK,
-          textShadow: '0 0 10px color-mix(in srgb, var(--color-blue-500, #3b82f6) 42%, transparent)',
-          fontSize: stacked ? '0.78em' : '0.8em',
-          fontWeight: 700,
-          lineHeight: '16px',
-          whiteSpace: 'nowrap',
-          flex: 'none',
-        },
+  function StatusDot(props) {
+    var state = (props && props.state) || 'idle';
+    var size = props && props.size;
+    try {
+      if (Primitives && Primitives.StateDot) {
+        return React.createElement(Primitives.StateDot, { state: state, size: size });
+      }
+    } catch (ignored) { /* primitives 不可用时退回本地圆点 */ }
+    var d = size || (state === 'ongoing' ? 14 : 10);
+    var color = state === 'warning'
+      ? 'var(--dsw-alias-state-warn-primary, #f59e0b)'
+      : state === 'done'
+        ? 'var(--dsw-alias-state-success-primary, #22c55e)'
+        : state === 'idle'
+          ? 'var(--dsw-alias-label-tertiary, #9ca3af)'
+          : 'var(--color-blue-500, #3b82f6)';
+    return React.createElement('span', {
+      className: AH.statusDot,
+      'data-state': state,
+      'aria-hidden': 'true',
+      style: {
+        display: 'inline-flex', width: d, height: d, flex: 'none', borderRadius: 999,
+        background: state === 'ongoing' ? 'transparent' : color,
+        border: state === 'ongoing' ? '2px solid ' + color : 'none',
+        boxSizing: 'border-box',
       },
-      React.createElement('img', {
-        src: ACTIVE_TAIL,
-        alt: '',
-        'aria-hidden': 'true',
-        width: size,
-        height: size,
-        style: {
-          display: 'block',
-          width: size,
-          height: size,
-          filter: 'drop-shadow(0 0 4px color-mix(in srgb, var(--color-blue-500, #3b82f6) 55%, transparent))',
-        },
-      }),
-      tt('running.working'),
-    );
+    });
   }
 
   /**
-   * 「已完成」标识：agent 已经跑完、但用户还没看过结果的会话。
-   *
-   * 颜色刻意用宿主的 success 绿色，与蓝色的热度 / 运行中区分开；
-   * 只做一个 3.2s 的轻微呼吸，`prefers-reduced-motion` 下静止。
-   * 用 aria-label 而不是 title，避免原生 tooltip 盖住悬停卡。
+   * 状态标签 = 状态点 + 原生文案。item = { state, key, params, ariaKey }。
+   * key 直接是宿主对齐的 status.* 字典键（进行中 / 等待审批 / 计划待审 / 等待回答 / 已完成）。
    */
-  /** 已完成状态的鲸尾：与「工作中」的鲸鱼同源，取官方姿态的静止版。 */
-  var DONE_TAIL_PATH = 'M 97 60 L 102 61 L 107 63 L 110 66 L 114 69 L 118 71 L 122 73 L 127 75 L 132 76 L 136 78 L 142 79 L 147 80 L 152 82 L 157 83 L 161 85 L 165 88 L 169 90 L 173 93 L 177 95 L 180 98 L 183 102 L 186 105 L 189 108 L 191 113 L 193 117 L 197 118 L 202 117 L 208 117 L 215 117 L 221 117 L 226 118 L 232 119 L 236 121 L 241 123 L 246 124 L 250 126 L 255 128 L 259 130 L 265 131 L 270 132 L 275 133 L 282 133 L 287 132 L 291 134 L 295 137 L 297 141 L 297 148 L 295 152 L 292 155 L 289 159 L 287 163 L 283 166 L 281 170 L 278 173 L 274 176 L 270 178 L 267 181 L 263 184 L 258 185 L 253 187 L 249 189 L 244 190 L 238 191 L 233 192 L 226 192 L 221 193 L 215 193 L 208 193 L 202 193 L 197 194 L 193 197 L 192 202 L 192 207 L 192 213 L 193 218 L 194 224 L 195 229 L 196 234 L 196 241 L 197 246 L 198 252 L 198 258 L 198 264 L 197 270 L 191 270 L 184 270 L 181 267 L 182 262 L 181 256 L 181 250 L 180 245 L 180 238 L 179 233 L 178 227 L 177 222 L 176 217 L 175 211 L 175 205 L 176 199 L 177 194 L 179 190 L 182 186 L 185 183 L 188 180 L 193 178 L 198 177 L 205 177 L 211 177 L 216 176 L 223 176 L 229 176 L 234 175 L 240 174 L 245 173 L 250 171 L 254 169 L 258 167 L 262 164 L 266 162 L 269 158 L 272 155 L 275 152 L 273 149 L 267 149 L 263 147 L 257 146 L 253 144 L 248 142 L 243 141 L 239 139 L 234 137 L 230 135 L 224 134 L 219 133 L 213 133 L 206 133 L 201 134 L 196 135 L 190 136 L 185 135 L 181 132 L 179 128 L 178 123 L 175 119 L 173 115 L 170 111 L 167 108 L 164 105 L 159 103 L 155 101 L 151 99 L 146 97 L 142 95 L 136 94 L 131 93 L 126 92 L 121 90 L 117 88 L 113 86 L 108 84 L 104 82 L 101 82 L 100 87 L 100 93 L 101 99 L 103 103 L 105 108 L 107 112 L 110 115 L 113 119 L 116 122 L 118 126 L 122 129 L 125 132 L 129 135 L 132 138 L 136 140 L 140 143 L 143 146 L 147 149 L 150 152 L 153 155 L 156 159 L 158 163 L 160 167 L 162 172 L 162 178 L 160 183 L 159 188 L 157 192 L 155 197 L 153 201 L 151 206 L 149 210 L 147 214 L 145 219 L 144 224 L 142 228 L 141 234 L 140 239 L 138 244 L 137 249 L 137 255 L 136 261 L 135 266 L 134 271 L 128 270 L 122 270 L 119 266 L 120 261 L 120 255 L 121 249 L 122 244 L 123 238 L 124 233 L 125 228 L 127 223 L 128 218 L 130 214 L 132 209 L 134 205 L 136 200 L 138 196 L 140 192 L 142 187 L 144 183 L 145 177 L 144 172 L 142 168 L 139 164 L 136 161 L 133 158 L 129 155 L 125 153 L 121 150 L 118 147 L 115 144 L 111 141 L 108 138 L 105 135 L 102 131 L 99 128 L 96 124 L 94 120 L 91 117 L 89 112 L 87 108 L 86 102 L 84 98 L 84 92 L 84 85 L 85 80 L 86 75 L 88 70 L 90 66 L 93 62 Z';
-
-  /**
-   * 静态状态尾标：同一只鲸尾，variant 决定颜色与文案。
-   * - done：绿色「已完成」
-   * - awaiting：琥珀色「等待回答」
-   * 尺寸与「工作中」共用 statusIconSize()，不再各写一套。
-   */
-  function StatusTailTag(props) {
+  function StatusTag(props) {
+    var items = props && props.items ? props.items : [];
+    var item = items[0];
+    if (!item) return null;
     var stacked = props && props.stacked === true;
     var compact = props && props.compact === true;
-    var isDone = (props && props.variant) !== 'awaiting';
-    var size = statusIconSize(compact);
-    var ariaLabel = (props && props.ariaLabel)
-      || tt(isDone ? 'status.doneTitle' : 'status.awaitingTitle');
-    var textLabel = (props && props.label)
-      || tt(isDone ? 'status.done' : 'status.awaiting');
+    var label = tt(item.key, item.params);
+    var aria = tt(item.ariaKey || (item.key + 'Title'), item.params);
     return React.createElement(
       'span',
       {
-        className: isDone ? AH.doneTag : AH.awaitingTag,
+        className: AH.statusTag,
         role: 'img',
-        'aria-label': ariaLabel,
+        'aria-label': aria,
+        'data-state': item.state,
         style: {
-          display: 'inline-flex',
           flexDirection: stacked ? 'column' : 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
           gap: stacked ? 3 : 5,
-          fontSize: stacked ? '0.78em' : '0.8em',
-          fontWeight: 700,
-          lineHeight: '16px',
-          whiteSpace: 'nowrap',
-          flex: 'none',
+          fontSize: compact ? '0.76em' : (stacked ? '0.78em' : '0.8em'),
         },
       },
-      React.createElement(
-        'svg',
-        {
-          className: isDone ? AH.doneGlyph : AH.awaitingGlyph,
-          width: size,
-          height: size,
-          viewBox: '84 60 213 211',
-          fill: 'none',
-          stroke: 'currentColor',
-          strokeWidth: 2,
-          strokeLinecap: 'round',
-          strokeLinejoin: 'round',
-          'aria-hidden': 'true',
-          style: { display: 'block', flex: 'none' },
-        },
-        React.createElement('path', { d: DONE_TAIL_PATH, fill: 'currentColor', stroke: 'none' }),
-      ),
-      textLabel,
+      React.createElement(StatusDot, { state: item.state, size: compact ? 12 : undefined }),
+      React.createElement('span', null, label),
     );
   }
 
   /**
-   * 「等待用户处理」的三种子状态：等待审批 / 计划待审 / 等待回答。
-   * 共用同一只琥珀色鲸尾（一个色相只表达一件事：需要你动手），只换文案与无障碍名称。
+   * 可叠加状态：N 个子智能体运行中。与主状态并列，不替代主状态。
+   * compact 时用短文案（卡片 66px 列），完整文案仍放进 aria-label。
    */
-  function PendingTag(props) {
-    var kind = props && props.kind;
-    var key = kind === 'approval' ? 'approval' : (kind === 'plan-review' ? 'planReview' : 'awaiting');
-    return React.createElement(StatusTailTag, {
-      variant: 'awaiting',
-      stacked: props && props.stacked === true,
-      compact: props && props.compact === true,
-      label: tt('status.' + key),
-      ariaLabel: tt('status.' + key + 'Title'),
-    });
-  }
-
-  function DoneTag(props) {
-    return React.createElement(StatusTailTag, {
-      variant: 'done',
-      stacked: props && props.stacked === true,
-      compact: props && props.compact === true,
-    });
-  }
-
-  function AwaitingTag(props) {
-    return React.createElement(StatusTailTag, {
-      variant: 'awaiting',
-      stacked: props && props.stacked === true,
-      compact: props && props.compact === true,
-    });
+  function SubagentTag(props) {
+    var count = props && props.count;
+    if (!count) return null;
+    var key = count === 1 ? 'status.subagentsRunning.one' : 'status.subagentsRunning.other';
+    var full = tt(key, { n: count });
+    var label = props.compact ? tt('status.compact.subagents', { n: count }) : full;
+    return React.createElement(
+      'span',
+      {
+        className: AH.statusTag,
+        role: 'img',
+        'aria-label': full,
+        'data-state': 'ongoing',
+        style: {
+          flexDirection: props && props.stacked === true ? 'column' : 'row',
+          gap: 4,
+          fontSize: props && props.compact ? '0.7em' : '0.74em',
+          color: 'var(--dsw-alias-label-secondary)',
+        },
+      },
+      React.createElement(StatusDot, { state: 'ongoing', size: props && props.compact ? 10 : 12 }),
+      React.createElement('span', null, label),
+    );
   }
 
   /* ---------------- 轻量触达席位的组件（P1-6） ---------------- */
@@ -2711,12 +2833,17 @@ function build(require) {
         ? props.useSessionStatus(function (s) { return s; })
         : null;
     } catch (ignored) { statuses = null; }
+    var statusOfF = statuses && typeof statuses.get === 'function'
+      ? function (sid) { return statuses.get(sid); }
+      : undefined;
     var count = 0;
     for (var i = 0; i < ids.length; i += 1) {
       var summary = byId[ids[i]];
       if (!summary) continue;
-      var status = statuses && typeof statuses.get === 'function' ? statuses.get(ids[i]) : undefined;
-      if (summary.running === true || pendingKindOf(status)) count += 1;
+      var native = nativeStatusOf(statusOfF, ids[i]);
+      var runningNow = typeof native.running === 'boolean' ? native.running : summary.running === true;
+      var subCount = runningChildCount(ids[i], (state && state.projectionsBySession) || {}, byId, statusOfF);
+      if (native.pending || runningNow || subCount > 0) count += 1;
     }
     if (count <= 0) return null;
     return React.createElement('span', {
@@ -2783,16 +2910,27 @@ function build(require) {
         : null;
     } catch (ignored) { statuses = null; }
 
+    var statusOfF = statuses && typeof statuses.get === 'function'
+      ? function (sid) { return statuses.get(sid); }
+      : undefined;
     var live = [];
     for (var i = 0; i < state.ids.length; i += 1) {
       var id = state.ids[i];
       var summary = byId[id];
       if (!summary || summary.blank === true || summary.origin === 'subagent') continue;
       if (archived[String(id)]) continue;
-      var status = statuses && typeof statuses.get === 'function' ? statuses.get(id) : undefined;
-      var pending = pendingKindOf(status);
-      if (summary.running !== true && !pending) continue;
-      live.push({ id: id, title: titleOf(summary, id), at: lastActiveOf(summary), running: summary.running === true, pending: pending });
+      var native = nativeStatusOf(statusOfF, id);
+      var runningNow = typeof native.running === 'boolean' ? native.running : summary.running === true;
+      var subCount = runningChildCount(id, state.projectionsBySession || {}, byId, statusOfF);
+      var pending = native.pending;
+      if (!runningNow && !pending && subCount <= 0) continue;
+      var items = statusItemsOf({
+        pending: pending, running: runningNow, runningSubagentCount: subCount, completionUnread: false,
+      });
+      live.push({
+        id: id, title: titleOf(summary, id), at: lastActiveOf(summary),
+        running: items[0].state === 'ongoing', pending: pending, state: items[0].state,
+      });
     }
     if (live.length === 0) return null;
     live.sort(function (x, y) {
@@ -2823,15 +2961,7 @@ function build(require) {
           lineHeight: '18px', cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
         },
       },
-        React.createElement('span', {
-          'aria-hidden': 'true',
-          style: {
-            width: 6, height: 6, borderRadius: 999, flex: 'none',
-            background: item.pending
-              ? 'var(--dsw-alias-state-warn-primary, #f59e0b)'
-              : 'var(--color-blue-500, #3b82f6)',
-          },
-        }),
+        React.createElement(StatusDot, { state: item.state, size: 8 }),
         item.title,
       );
     });
@@ -2896,11 +3026,18 @@ function build(require) {
     }
 
     var items = rows.map(function (item) {
-      var key = item.pending === 'approval' ? 'approval'
-        : (item.pending === 'plan-review' ? 'planReview' : (item.pending === 'question' ? 'awaiting' : undefined));
-      var sub = key
-        ? tt('status.' + key)
-        : (item.running ? tt('running.working') : tt('hover.lastActive', { time: relativeOf(item.at, now) }));
+      var primary = item.statusItems && item.statusItems[0];
+      var state = primary ? primary.state : 'idle';
+      var sub;
+      if (primary && state !== 'idle') {
+        sub = tt(primary.key, primary.params);
+        if (item.statusItems.length > 1) {
+          var extra = item.statusItems[1];
+          sub += ' · ' + tt(extra.key, extra.params);
+        }
+      } else {
+        sub = tt('hover.lastActive', { time: relativeOf(item.at, now) });
+      }
       return React.createElement('button', {
         key: item.id,
         type: 'button',
@@ -2920,14 +3057,7 @@ function build(require) {
         React.createElement('span', {
           style: { display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 },
         },
-          React.createElement('span', {
-            'aria-hidden': 'true',
-            style: {
-              width: 6, height: 6, borderRadius: 999, flex: 'none',
-              background: item.running ? 'var(--color-blue-500, #3b82f6)'
-                : (key ? 'var(--dsw-alias-state-warn-primary, #f59e0b)' : 'var(--dsw-alias-label-tertiary)'),
-            },
-          }),
+          React.createElement(StatusDot, { state: state, size: 8 }),
           React.createElement('span', {
             style: {
               minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -3941,17 +4071,17 @@ function build(require) {
     // 组内用圆点分隔，组间用竖线 + 更大留白，让同类信息聚在一起
     var metaRow = renderMetaGroups(groups);
 
-    // 卡片右侧的状态列：工作中（蓝）/ 已完成（绿），两者互斥
+    // 卡片右侧的状态列：主状态 + 可叠加的子智能体
     var statusColumnStyle = {
       flex: 'none',
       width: 66,
       alignSelf: 'stretch',
       display: 'flex',
+      flexDirection: 'column',
+      gap: 2,
       alignItems: 'center',
       justifyContent: 'center',
     };
-
-    var barTone = heatToneOf(session.level);
 
     var children = [
       props && props.selectMode
@@ -3967,16 +4097,13 @@ function build(require) {
             },
           }, props.selected ? '✓' : '')
         : null,
-      React.createElement('span', {
+      React.createElement(VerticalHeatPipe, {
         key: 'bar',
-        className: AH.heatBar,
-        style: {
-          width: 6,
-          marginLeft: 8,
-          // 整条保持档位色，只在顶部提亮；见 heatBarSurface 的注释
-          backgroundImage: heatBarSurface(barTone),
-          boxShadow: heatBarShadow(barTone, session.level),
-        },
+        level: session.level,
+        ratio: session.ratio,
+        width: 6,
+        stretch: true,
+        style: { marginLeft: 8 },
       }),
       React.createElement(
         'span',
@@ -4025,24 +4152,23 @@ function build(require) {
           },
         }, metaRow),
       ),
-      // 状态互斥，优先级：等待用户处理（审批/计划/回答） > 已完成 > 工作中。
-      // 都落在卡片右侧的留白里（不用标题前的小徽章）。
-      session.archived !== true && session.pending
+      // 状态列：主状态（原生六态之一）+ 可叠加的「N 子智能体」；归档/空闲不显示。
+      session.archived !== true && session.primaryState !== 'idle'
         ? React.createElement('span', {
-            key: 'pending',
+            key: 'status',
             style: statusColumnStyle,
-          }, React.createElement(PendingTag, { kind: session.pending, stacked: true }))
-        : (session.archived !== true && session.done === true
-          ? React.createElement('span', {
-              key: 'done',
-              style: statusColumnStyle,
-            }, React.createElement(DoneTag, { stacked: true }))
-          : (session.archived !== true && session.running === true
-            ? React.createElement('span', {
-                key: 'working',
-                style: statusColumnStyle,
-              }, React.createElement(WorkingTag, { stacked: true }))
-            : null)),
+          },
+            session.statusItems[0].key.indexOf('status.subagentsRunning') === 0
+              ? React.createElement(SubagentTag, {
+                  count: session.runningSubagentCount, compact: true, stacked: true,
+                })
+              : React.createElement(StatusTag, { items: session.statusItems, stacked: true }),
+            session.statusItems.length > 1
+              ? React.createElement(SubagentTag, {
+                  count: session.runningSubagentCount, compact: true, stacked: true,
+                })
+              : null)
+        : null,
       React.createElement(
         'span',
         {
@@ -4074,7 +4200,7 @@ function build(require) {
               },
             }, workspaceName)
           : React.createElement('span', { style: { lineHeight: '20px' } }),
-        React.createElement(HeatMeter, { level: session.level, ratio: session.ratio, showLabel: true, width: 96, height: 10 }),
+        React.createElement(HeatMeter, { level: session.level, ratio: session.ratio, showLabel: true, width: 96, height: 12 }),
         React.createElement('span', {
           style: {
             width: '100%',
@@ -4089,9 +4215,9 @@ function build(require) {
       ),
     ];
 
-    var running = session.running === true;
-    // 已完成 / 等待用户处理的会话不再套运行中外框 / 跑马灯
-    var activeRunning = running && session.done !== true && session.pending === undefined;
+    var running = session.primaryState === 'ongoing';
+    // 等待用户处理 / 已完成不套运行中外框；进行中才套
+    var activeRunning = running;
 
     var buttonStyle = {
       display: 'flex',
@@ -4268,14 +4394,12 @@ function build(require) {
           animationDelay: enterDelay + 'ms',
         },
       },
-      React.createElement('span', {
+      React.createElement(VerticalHeatPipe, {
         key: 'bar',
-        className: AH.heatBar,
-        style: {
-          width: 6,
-          backgroundImage: heatBarSurface(heatToneOf(group.level)),
-          boxShadow: heatBarShadow(heatToneOf(group.level), group.level),
-        },
+        level: group.level,
+        ratio: group.ratio,
+        width: 6,
+        stretch: true,
       }),
       React.createElement(
         'span',
@@ -4283,7 +4407,10 @@ function build(require) {
         React.createElement('span', {
           style: { display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 },
         },
-          running ? React.createElement(WorkingTag, { compact: true }) : null,
+          running ? React.createElement(StatusTag, {
+            compact: true,
+            items: [{ state: 'ongoing', key: 'status.running', ariaKey: 'status.runningTitle' }],
+          }) : null,
           React.createElement('span', {
             style: {
               color: UI.textPrimary,
@@ -4311,7 +4438,7 @@ function build(require) {
       React.createElement(
         'span',
         { key: 'right', style: { flex: 'none', display: 'flex', alignItems: 'center', gap: 10 } },
-        React.createElement(HeatMeter, { level: group.level, ratio: group.ratio, showLabel: true, width: 100, height: 11 }),
+        React.createElement(HeatMeter, { level: group.level, ratio: group.ratio, showLabel: true, width: 100, height: 12 }),
         React.createElement('span', {
           style: {
             flex: 'none',
@@ -5558,27 +5685,27 @@ function build(require) {
     var sessionState = useSessions ? useSessions(function (state) { return state; }) : null;
     var workspaceState = useWorkspaces ? useWorkspaces(function (state) { return state; }) : null;
     var now = Date.now();
-    var running = summary && summary.running === true;
+    // 运行状态与原生同源（useSessionStatus）；拿不到时退回 summary.running。
+    var useSessionStatus = props && props.useSessionStatus;
+    var statusMap = null;
+    try {
+      statusMap = useSessionStatus ? useSessionStatus(function (state) { return state; }) : null;
+    } catch (ignored) { statusMap = null; }
+    var statusOf = statusMap && typeof statusMap.get === 'function'
+      ? function (statusId) { return statusMap.get(statusId); }
+      : undefined;
+    var native = nativeStatusOf(statusOf, sessionId);
+    var running = typeof native.running === 'boolean'
+      ? native.running
+      : (summary && summary.running === true);
     var facts = sessionState && sessionState.projectionsBySession
       ? factsFromProjection(sessionState.projectionsBySession[sessionId])
       : {};
-    // 优先读客户端状态域的 pendingInteraction（审批 / 计划审阅 / 提问），
-    // 没有该 hook 时退回 userQuestions 投影。
-    var useSessionStatus = props && props.useSessionStatus;
-    var statusRecord;
-    try {
-      statusRecord = useSessionStatus
-        ? useSessionStatus(function (state) {
-            return state && typeof state.get === 'function' ? state.get(sessionId) : undefined;
-          })
-        : undefined;
-    } catch (ignored) { statusRecord = undefined; }
-    var pending = pendingKindOf(statusRecord) || (facts.awaiting === true ? 'question' : undefined);
-    var isOpen = isSelectedRow(sessionId, summary && summary.retainedBy && summary.retainedBy.mainView > 0);
-    var done = doneUnseenOf(sessionId, at, running, isOpen, now);
     // 与面板卡片同一口径：运行中按最高热度显示
     var level = running ? 5 : heatLevelOf(now - at);
-    var model = sessionState && workspaceState ? buildModel(sessionState, workspaceState, now) : null;
+    var model = sessionState && workspaceState
+      ? buildModel(sessionState, workspaceState, now, 12, 5, { statusOf: statusOf })
+      : null;
 
     var group = null;
     if (model) {
@@ -5593,30 +5720,19 @@ function build(require) {
     }
     var rank = group ? model.rankOf[group.key] : undefined;
 
-    // 状态行：状态标签自带文字与颜色；没有状态时才显示档位名。
-    // 等待回答由宿主 hover 卡底部自带的那行表达，这里不再重复。
-    var stateTag = null;
-    if (pending) {
-      stateTag = React.createElement(PendingTag, { kind: pending, compact: true });
-    } else if (done) {
-      stateTag = React.createElement(DoneTag, { compact: true });
-    } else if (running) {
-      stateTag = React.createElement(WorkingTag, { compact: true });
-    }
-
+    // 状态行由宿主 SessionHoverContent 原生渲染（StateDot + 原生标签）；
+    // 插件这里只放热度，绝不重复状态文字（design.md §8）。
     var header = React.createElement('div', {
       key: 'head',
       style: { display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 },
     },
-      stateTag || React.createElement(RowHeatBar, { level: level, title: '', width: 10, height: 16, align: 'center' }),
-      stateTag
-        ? null
-        : React.createElement('span', {
-            style: {
-              color: 'var(--dsw-alias-label-secondary)', whiteSpace: 'nowrap',
-              overflow: 'hidden', textOverflow: 'ellipsis',
-            },
-          }, heatNameOf(level)),
+      React.createElement(RowHeatBar, { level: level, title: '', width: 10, height: 16, align: 'center' }),
+      React.createElement('span', {
+        style: {
+          color: 'var(--dsw-alias-label-secondary)', whiteSpace: 'nowrap',
+          overflow: 'hidden', textOverflow: 'ellipsis',
+        },
+      }, heatNameOf(level)),
       React.createElement('span', {
         style: {
           marginLeft: 'auto', color: 'var(--dsw-alias-label-tertiary)',
@@ -5634,7 +5750,7 @@ function build(require) {
       ratio: running ? 0.96 : heatRatioOf(now - at),
       showLabel: true,
       width: 118,
-      height: 6,
+      height: 8,
     }));
 
     function divider(key) {

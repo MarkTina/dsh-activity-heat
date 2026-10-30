@@ -370,13 +370,17 @@ function collect(tree) {
     '运行中外框有常驻浅蓝边框（呼吸最淡时也不消失）',
     wrappers[0] && wrappers[0].props.style.border,
   );
-  check(all.indexOf('工作中') !== -1, '显示「工作中」鲸鱼标识');
+  check(all.indexOf('进行中') !== -1, '显示原生「进行中」状态');
   const currentBadges = c.components.filter((x) => x.name === 'CurrentBadge');
   check(currentBadges.length === 1, '「当前」做成标题前徽章');
   const workingCol = c.nodes.find(
-    (n) => n.props && n.props.key === 'working' && n.props.style && n.props.style.width === 66,
+    (n) => n.props && n.props.key === 'status' && n.props.style && n.props.style.width === 66,
   );
-  check(Boolean(workingCol), '「工作中」落在卡片右侧留白列');
+  check(Boolean(workingCol), '会话状态落在卡片右侧 66px 留白列');
+  check(
+    c.components.some((x) => x.name === 'StatusTag' && x.props.items && x.props.items[0].state === 'ongoing'),
+    '进行中用 StatusTag(ongoing)',
+  );
 
   const meters = c.components.filter((x) => x.name === 'HeatMeter');
   check(meters.length > 0, '存在热度计', meters.length);
@@ -384,7 +388,9 @@ function collect(tree) {
   const ratios = meters.map((m) => m.props.ratio);
   check(Math.max(...ratios) > 0.85, '最热的接近满格', Math.max(...ratios));
   check(Math.min(...ratios) < 0.5, '较冷的明显不满格', Math.min(...ratios));
-  check(new Set(ratios.map((r) => r.toFixed(2))).size >= 4, '存在多档比例（连续刻度）');
+  check(new Set(ratios.map((r) => r.toFixed(2))).size >= 4, '存在多档比例（连续填充）');
+  check(c.nodes.some((n) => String(n.props.className || '') === 'ah-meter-fill'), '热度条为管道水流水体');
+  check(!c.nodes.some((n) => String(n.props.className || '').indexOf('ah-meter-tick') !== -1), '热度条没有分段刻度');
 
   sessionCards[0].props.onClick();
   check(b.opened[0] && b.opened[0].indexOf('session:') === 0, '点击会话跳转', b.opened[0]);
@@ -606,7 +612,7 @@ function collect(tree) {
   const all = c.texts.join(' | ');
 
   check(all.indexOf('工作区 3') !== -1, '工作区视图可渲染');
-  check(all.indexOf('工作中') !== -1, '含运行会话的工作区显示工作中标识');
+  check(all.indexOf('进行中') !== -1, '含运行会话的工作区显示「进行中」标识');
 
   const wrappers = c.nodes.filter(
     (x) => x.props && typeof x.props.style === 'object'
@@ -735,17 +741,17 @@ function collect(tree) {
 
   const meters = sessionsView.components.filter((x) => x.name === 'HeatMeter');
   check(meters.length > 0, '热度计仍走组件（视觉由 ah-meter-* 类接管）', meters.length);
-  const bars = sessionsView.nodes.filter((n) => String(n.props.className || '').indexOf('ah-heat-bar') !== -1);
-  check(bars.length === 6, '每张卡片都有热度竖条', bars.length);
-  // 竖条现在是「档位色 → 白尖」的竖向渐变，颜色落在 backgroundImage 里
-  const barColors = new Set(bars.map((n) => String(n.props.style.backgroundImage)));
-  check(barColors.size >= 3, '竖条按三区间取色（亮蓝 / 深灰 / 浅灰）', barColors.size);
+  const pipes = sessionsView.components.filter((x) => x.name === 'VerticalHeatPipe');
+  check(pipes.length === 6, '每张卡片都有竖向水管热度条', pipes.length);
+  const pipeFills = sessionsView.nodes.filter((n) => String(n.props.className || '').indexOf('ah-vpipe-fill') !== -1);
+  const barColors = new Set(pipeFills.map((n) => String(n.props.style && n.props.style.color)));
+  check(barColors.size >= 3, '竖管按三区间取色（亮蓝 / 深灰 / 浅灰）', barColors.size);
   check(
-    bars.every((n) => {
-      const color = String(n.props.style.backgroundImage);
+    pipeFills.every((n) => {
+      const color = String(n.props.style && n.props.style.color);
       return color.indexOf('color-mix') !== -1 || color.indexOf('--color-blue-500') !== -1;
     }),
-    '竖条颜色只走主题令牌',
+    '竖管颜色只走主题令牌',
   );
 }
 
@@ -772,16 +778,18 @@ function collect(tree) {
 
   const first = render(state);
   check(first.texts.join(' | ').indexOf('已完成') !== -1, '已结束且未查看的会话显示「已完成」');
-  const tags = first.components.filter((x) => x.name === 'DoneTag');
-  check(tags.length === 1, '只有未查看的那一个带 DoneTag', tags.length);
-  const glyph = first.nodes.find((n) => String(n.props.className || '') === 'ah-done-glyph');
-  check(Boolean(glyph), '已完成用勾形图标（ah-done-glyph）');
+  const tags = first.components.filter(
+    (x) => x.name === 'StatusTag' && x.props.items && x.props.items[0].state === 'done',
+  );
+  check(tags.length === 1, '只有未查看的那一个带 StatusTag(done)', tags.length);
+  const glyph = first.nodes.find((n) => n.props && n.props['data-state'] === 'done' && String(n.props.className || '') === 'ah-status-dot');
+  check(Boolean(glyph), '已完成用 done 状态点（data-state=done）');
   check(
     first.buttons.some((x) => String(x.props['aria-label'] || '').indexOf('刚跑完的会话') !== -1),
     '已完成会话仍是可点击的卡片',
   );
   check(
-    String(b.env.styles[0] && b.env.styles[0].textContent).indexOf('--dsw-alias-state-success-primary') !== -1,
+    Boolean(glyph && String(glyph.props.style && glyph.props.style.background || '').indexOf('--dsw-alias-state-success-primary') !== -1),
     '已完成用宿主 success 绿色，与蓝色区分',
   );
 
@@ -822,11 +830,16 @@ function collect(tree) {
   }));
   const all = view.texts.join(' | ');
   check(all.indexOf('等待回答') !== -1, '未回答的提问显示「等待回答」');
-  const tags = view.components.filter((x) => x.name === 'PendingTag' && x.props.kind === 'question');
-  check(tags.length === 1, '等待回答用 PendingTag(question)', tags.length);
-  const css = b.env.styles[0] ? b.env.styles[0].textContent : '';
-  check(css.indexOf('--dsw-alias-state-warn-primary') !== -1, '等待回答用宿主 warn 琥珀色');
-  check(css.indexOf('ah-awaiting-breathe') !== -1 || css.indexOf('ah-done-breathe 3.2s') !== -1, '等待回答有轻微呼吸');
+  const tags = view.components.filter(
+    (x) => x.name === 'StatusTag' && x.props.items && x.props.items[0].kind === 'question',
+  );
+  check(tags.length === 1, '等待回答用 StatusTag(question)', tags.length);
+  const warnDot = view.nodes.find((n) => n.props && n.props['data-state'] === 'warning' && String(n.props.className || '') === 'ah-status-dot');
+  check(Boolean(warnDot), '等待回答用 warning 状态点');
+  check(
+    Boolean(warnDot && String(warnDot.props.style && warnDot.props.style.background || '').indexOf('--dsw-alias-state-warn-primary') !== -1),
+    '等待回答用宿主 warn 琥珀色',
+  );
 
   /* 有未回答提问时，优先级高于已完成 */
   const both = {
@@ -880,10 +893,14 @@ function collect(tree) {
   const all = view.texts.join(' | ');
   check(all.indexOf('等待审批') !== -1, '读取 pendingInteraction 显示「等待审批」');
   check(all.indexOf('计划待审') !== -1, '读取 pendingInteraction 显示「计划待审」');
-  const approvals = view.components.filter((x) => x.name === 'PendingTag' && x.props.kind === 'approval');
-  const plans = view.components.filter((x) => x.name === 'PendingTag' && x.props.kind === 'plan-review');
-  check(approvals.length === 1, '审批用 PendingTag(approval)', approvals.length);
-  check(plans.length === 1, '计划审阅用 PendingTag(plan-review)', plans.length);
+  const approvals = view.components.filter(
+    (x) => x.name === 'StatusTag' && x.props.items && x.props.items[0].kind === 'approval',
+  );
+  const plans = view.components.filter(
+    (x) => x.name === 'StatusTag' && x.props.items && x.props.items[0].kind === 'plan-review',
+  );
+  check(approvals.length === 1, '审批用 StatusTag(approval)', approvals.length);
+  check(plans.length === 1, '计划审阅用 StatusTag(plan-review)', plans.length);
 }
 
 /* ================= 16. 范围视图：已归档 / 子代理 ================= */
@@ -1059,6 +1076,66 @@ function collect(tree) {
   check(Boolean(rowBtn), '右侧栏行是按钮');
   if (rowBtn && typeof rowBtn.props.onClick === 'function') rowBtn.props.onClick();
   check(b.opened.indexOf('session:hot') !== -1, '右侧栏点击打开会话', b.opened.join(','));
+}
+
+/* ================= 22. 原生状态：running / completionUnread / idle / 子智能体叠加 ================= */
+{
+  const b = boot(false);
+  const reg = b.regs.find((r) => r.o.name === 'main');
+  const injected = typeof reg.o.inject === 'function' ? reg.o.inject() : {};
+  const emptyWs = { archivedSessionIds: [], items: [] };
+  const render = (sessionState, statuses) => collect(reg.C({
+    ...injected,
+    useSessions: (sel) => sel(sessionState),
+    useWorkspaces: (sel) => sel(emptyWs),
+    useSessionStatus: (sel) => sel(statuses),
+  }));
+  const base = (extra) => Object.assign({ id: 's', title: '会话', updatedAt: Date.now() - 3600000 }, extra);
+
+  // running 来自 useSessionStatus（summary 里没有 running 字段）
+  const runView = render(
+    { ids: ['s'], byId: { s: base({}) }, projectionsBySession: {} },
+    new Map([['s', { running: true, completionUnread: false }]]),
+  );
+  check(runView.texts.join(' ').indexOf('进行中') !== -1, '原生 running 驱动「进行中」');
+  check(runView.components.some((x) => x.name === 'StatusTag' && x.props.items[0].state === 'ongoing'), '进行中用 StatusTag(ongoing)');
+
+  // completionUnread 驱动「已完成」（即使 updatedAt 很旧）
+  const doneView = render(
+    { ids: ['s'], byId: { s: base({ updatedAt: Date.now() - 86400000 }) }, projectionsBySession: {} },
+    new Map([['s', { running: false, completionUnread: true }]]),
+  );
+  check(doneView.texts.join(' ').indexOf('已完成') !== -1, '原生 completionUnread 驱动「已完成」');
+
+  // 原生 completionUnread=false 覆盖本地水位兜底：不再显示「已完成」
+  const notDoneView = render(
+    { ids: ['s'], byId: { s: base({ updatedAt: Date.now() + 5000 }) }, projectionsBySession: {} },
+    new Map([['s', { running: false, completionUnread: false }]]),
+  );
+  check(notDoneView.texts.join(' ').indexOf('已完成') === -1, 'completionUnread=false 时不显示「已完成」');
+
+  // idle：卡片不画状态、也不出现「空闲」文字
+  const idleView = render(
+    { ids: ['s'], byId: { s: base({}) }, projectionsBySession: {} },
+    new Map([['s', { running: false, completionUnread: false }]]),
+  );
+  check(idleView.components.filter((x) => x.name === 'StatusTag').length === 0, 'idle 卡片不画状态标签');
+  check(idleView.texts.join(' ').indexOf('空闲') === -1, 'idle 不在卡片内显示「空闲」');
+
+  // 子智能体叠加：父会话 running + 子会话 running
+  const subView = render(
+    {
+      ids: ['p'],
+      byId: { p: base({ id: 'p', title: '父会话' }), c: { id: 'c', title: '子', running: true } },
+      projectionsBySession: { p: { values: { subagentCatalog: [{ id: 'c' }] } } },
+    },
+    new Map([
+      ['p', { running: true, completionUnread: false }],
+      ['c', { running: true, completionUnread: false }],
+    ]),
+  );
+  check(subView.components.some((x) => x.name === 'SubagentTag'), '子智能体运行中作为叠加状态渲染');
+  check(subView.texts.join(' ').indexOf('进行中') !== -1 && subView.texts.join(' ').indexOf('子智能体') !== -1, '主状态与子智能体状态并列');
 }
 
 console.log(failed === 0 ? '\nHARNESS PASSED' : '\nHARNESS FAILED (' + failed + ')');

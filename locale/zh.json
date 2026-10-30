@@ -28,7 +28,7 @@
   "hover": {
     "heat": "热度 {level}/5 · {name}",
     "heatLevel": "热度 {level}/5",
-    "heatRunning": "热度 {level}/5 · 工作中",
+    "heatRunning": "热度 {level}/5 · 进行中",
     "lastActive": "最后活动：{time}",
     "workspaceRank": "工作区「{name}」排第 {rank}",
     "workspaceHot": "工作区「{name}」正热",
@@ -41,21 +41,21 @@
     "context": "上下文"
   },
   "dot": { "tooltip": "热度 {level}/5 · {time}" },
-  "running": {
-    "label": "运行中",
-    "title": "该会话正在运行",
-    "short": "正在运行",
-    "working": "工作中"
-  },
   "status": {
-    "done": "已完成",
-    "doneTitle": "该会话已完成，尚未查看",
-    "awaiting": "等待回答",
-    "awaitingTitle": "该会话在等待你的回答",
-    "approval": "等待审批",
-    "approvalTitle": "该会话在等待你的授权",
+    "running": "进行中",
+    "idle": "空闲",
+    "waitingApproval": "等待审批",
     "planReview": "计划待审",
-    "planReviewTitle": "该会话的计划在等待你审阅"
+    "waitingAnswer": "等待回答",
+    "completed": "已完成",
+    "subagentsRunning": { "one": "{n} 个子智能体运行中", "other": "{n} 个子智能体运行中" },
+    "compact": { "approval": "待审批", "planReview": "计划待审", "answer": "待回答", "subagents": "{n} 子智能体" },
+    "runningTitle": "该会话正在运行",
+    "idleTitle": "该会话空闲",
+    "waitingApprovalTitle": "该会话在等待你的授权",
+    "planReviewTitle": "该会话的计划在等待你审阅",
+    "waitingAnswerTitle": "该会话在等待你的回答",
+    "completedTitle": "该会话已完成，尚未查看"
   },
   "fact": {
     "turns": "{n} 轮",

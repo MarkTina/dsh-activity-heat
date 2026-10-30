@@ -28,7 +28,7 @@
   "hover": {
     "heat": "Heat {level}/5 · {name}",
     "heatLevel": "Heat {level}/5",
-    "heatRunning": "Heat {level}/5 · working",
+    "heatRunning": "Heat {level}/5 · running",
     "lastActive": "Last active: {time}",
     "workspaceRank": "Workspace “{name}” ranks #{rank}",
     "workspaceHot": "Workspace “{name}” is hot",
@@ -41,21 +41,21 @@
     "context": "Context"
   },
   "dot": { "tooltip": "Heat {level}/5 · {time}" },
-  "running": {
-    "label": "Running",
-    "title": "This session is running",
-    "short": "Running",
-    "working": "Working"
-  },
   "status": {
-    "done": "Done",
-    "doneTitle": "Finished, not viewed yet",
-    "awaiting": "Waiting",
-    "awaitingTitle": "This session is waiting for your answer",
-    "approval": "Approval",
-    "approvalTitle": "This session is waiting for your approval",
-    "planReview": "Review plan",
-    "planReviewTitle": "This session plan is waiting for review"
+    "running": "Running",
+    "idle": "Idle",
+    "waitingApproval": "Waiting for approval",
+    "planReview": "Plan awaiting review",
+    "waitingAnswer": "Waiting for answer",
+    "completed": "Completed",
+    "subagentsRunning": { "one": "{n} subagent running", "other": "{n} subagents running" },
+    "compact": { "approval": "Approval", "planReview": "Plan review", "answer": "Answer", "subagents": "{n} subagents" },
+    "runningTitle": "This session is running",
+    "idleTitle": "This session is idle",
+    "waitingApprovalTitle": "This session is waiting for your approval",
+    "planReviewTitle": "This session plan is waiting for review",
+    "waitingAnswerTitle": "This session is waiting for your answer",
+    "completedTitle": "Finished, not viewed yet"
   },
   "fact": {
     "turns": "{n} turns",

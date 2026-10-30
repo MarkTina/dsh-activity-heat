@@ -18,7 +18,7 @@ This plugin computes a 0–100% heat score from **time since last activity** and
 |---|---|
 | **Sidebar entry** | A heat-ring icon whose brightness follows the hottest session in the profile |
 | **Session title** | A small dot before the title text: solid = warm/blazing, hollow = active and cooler. Cold sessions are grey, hotter ones turn blue; active sessions pulse gently; hidden after 7 days. The row-leading cell stays with the host's state dot and the schedule clock |
-| **Session hover card** | `Heat 4/5 · Warm`, `Last active: 40 min ago`, `This workspace is hot`; a green *Done* label when the session finished unseen |
+| **Session hover card** | `Heat 4/5 · Warm`, `Last active: 40 min ago`, `This workspace is hot`; the status line is rendered natively by the host (Running / Waiting for approval / Plan review / Waiting for answer / Completed / Idle) |
 | **Main panel** | Sessions / Workspaces views, each with heat filters and a count selector |
 
 ### Panel
@@ -28,8 +28,7 @@ This plugin computes a 0–100% heat score from **time since last activity** and
 - **Count selector**: sessions `10 / 20 / 30 / 50`, workspaces `5 / 10 / 20`
 - **Heat filter**: All / Blazing / Warm / Active / Recent / Stale, with live counts
 - **Every card**: the bottom row is split into three groups divided by hairlines — ① cache hit rate + context usage (each with a mini progress bar) ② turns + steps + tokens ③ accumulated conversation time; items inside a group use a dot, groups are separated by a vertical rule. The `Current` state is a badge before the title, and the relative time lives in the right column, not the meta row.
-- **Finished, not viewed**: a session the agent has finished but you have not opened shows a green whale tail plus **Done** in the card's right-hand column — the same whale as **Working**, one static and one animated. Opening the session clears it immediately.
-- **Waiting for answer**: a session where the agent asked a question you have not answered shows an **amber whale tail plus Waiting** in the right-hand column; it outranks Done and Working (data from the host's `userQuestions` projection).
+- **Session status (native-aligned)**: Running / Waiting for approval / Plan awaiting review / Waiting for answer / Completed / Idle, all drawn with the host `StateDot` (blue spinner / amber dot / green dot / grey dot). The data source is the host `useSessionStatus` (`running` / `pendingInteraction` / `completionUnread`); “N subagents running” stacks alongside the primary state. Waiting states and Completed drop the running frame; only Running keeps it.
 - **Token breakdown**: hovering the token figure opens a details card — exact total, cache hit rate, uncached input, cached input, cache write (when non-zero) and output, mirroring the host's "Token usage" dialog
 - **Time breakdown**: hovering the conversation time opens a card with the active duration, a donut of wait / thinking / reply / tool-argument / tool-run / other, its legend and a proportional timeline strip — same source (`contextTimeline.timing`) and same segmentation as the host's timing panel; the card is portaled to `document.body` so the scrolling list can never clip it
 - **Right column**: a fixed 168 px column stacks the workspace name (top), the heat meter with its level label (middle) and the relative time (bottom), so every row lines up
@@ -58,38 +57,27 @@ Workspace cards also offer open workspace, open in…, new session in workspace,
 
 The menu is portaled to `document.body` so the scrolling list cannot clip it; arrow keys plus Enter cover every action, `Esc` or an outside click closes it, and focus returns to the card.
 
-### Running sessions are marked
+### Session status (native-aligned)
 
-Cards for sessions with `session.running === true` get:
+Status model, labels and colours all follow the host's `sessionStatuses()`; the plugin no longer draws its own whale-tail status marks:
 
-- a whale-tail mark with a **Working** label in the card's right-hand whitespace — the mark is a 12-frame animated GIF that plays its own loop (no CSS wobble), 28 px tall
-- an **orbiting light band** around the card border (`conic-gradient`, one turn per 2.2 s)
-- a **breathing outer glow** (one cycle per 2.4 s)
-- a **constant light-blue border** around the frame, so the card outline never disappears when the breathing glow is at its dimmest
-- **heat follows the run state**: the host's `updatedAt` only advances at turn boundaries, so a long-running session keeps its old timestamp. Running sessions therefore count as heat 5/5 and sort first; the card still shows the real "last active" time and the hover card labels the heat "working"
-- the row-leading cell is left entirely to the host: running/pending rows draw the native `StateDot`, sessions with scheduled tasks draw the clock marker, and the plugin puts nothing there. Heat shows only as the small dot before the title
+- **Running**: `running === true`, blue `StateDot` spinner + "Running"; the card gets the orbiting band and breathing glow.
+- **Waiting for approval / Plan awaiting review / Waiting for answer**: `pendingInteraction.kind` is approval / plan-review / question, amber warning dot; highest priority.
+- **Completed**: `completionUnread === true` (a non-main session finished but unread), green dot + "Completed"; clears when opened.
+- **Idle**: anything else; no dot in the row, grey dot in detail views.
+- **Additive**: when `runningSubagentCount > 0`, "N subagents running" is shown alongside the primary state.
+- **Data source**: prefer the `useSessionStatus` snapshot; only fall back to `summary.running`, `userQuestions.active` or the local seen watermark when that snapshot is missing. Running sessions still count as heat 5/5 and sort first.
+- **Row-leading cell stays with the host**: the native state dot and schedule clock live there; the plugin puts nothing in it and shows heat only as the small dot before the title.
 
-Workspace cards get the same treatment when **any** session inside that workspace is running — same whale-tail label, same orbiting band, same breathing glow — so live work is visible from the Workspaces view too.
+**Workspace cards**: when any session inside the workspace is Running, the card shows the same running frame and "Running" mark, so live work is visible from the Workspaces view too.
 
 A workspace card also aggregates everything that can be summed: session count, turns, steps, tokens and total conversation time. Cache hit rate is weighted across the workspace's billing buckets (not an average of percentages), and context usage shows the most loaded session. Nothing that cannot be summarised — prompts, the current-session flag — is carried over.
-
-### Finished but not viewed
-
-A session the agent has finished, which you have not opened yet, shows a **green whale tail plus Done** (static vector, a 3.2 s breath) on the right of its card. It is the same tail as **Working** — blue animated GIF while running, green static copy when done. A Done card **drops the orbit band**, so a "finished" mark never sits inside a "running" frame:
-
-- **Rule**: the session is not the one currently selected, its `updatedAt` is newer than the local seen watermark, and **this turn has ended** — `running === false`, or `running` is still true but nothing has changed for 60 seconds (the host can lag a beat before flipping it back).
-- **Current session**: detected from the host sidebar's `_selected` class, **not** `retainedBy.mainView` — that is a reference count and can retain several sessions at once, which is why the `Current` badge previously landed on the wrong row.
-- **Watermark**: sessions whose activity predates the plugin's first run count as already seen, so installing it does not flood the list with Done marks; clicking a card, or switching to the session from the sidebar (its row becomes selected), clears the mark.
-- **Storage**: the watermark lives in `localStorage` (`activity-heat.seen.v1`) and survives refreshes. The Web build changes port on every launch, so `localStorage` changes origin and the watermark can be lost — in that case the plugin falls back to "finished within the last 30 minutes".
-- **Caveat**: the host's `SessionSummary` has no unread field — this is the plugin's own bookkeeping. Workspace cards do not show the state.
-
-**Waiting for answer** is the third state: when the host's `userQuestions` projection has a non-empty `active` (the agent asked something you have not answered), the card shows an **amber whale tail plus Waiting** instead. It outranks Done and Working, also drops the orbit band, and clears as soon as the question is answered. All three states share one whale tail and differ by colour: blue = working, green = done, amber = waiting.
 
 > `prefers-reduced-motion` is respected: with reduced motion enabled, all animation stops.
 
 ## New in 0.4–0.5 — more than one panel
 
-- **Five states**: Waiting for approval / plan review / your answer (`pendingInteraction.kind`), all the same amber whale tail and ranked above Done / Working.
+- **Native-aligned session status**: Waiting for approval / Plan awaiting review / Waiting for answer / Running / Completed / Idle, all drawn with the host `StateDot` from `useSessionStatus`; subagents stack on top of the primary state.
 - **Range views**: the session view switches between Active / Archived / Subagents; archived rows can be restored in place.
 - **Two lightweight entries**: collapsed badge (attention count) and the sidebar “More” menu — reach the panel without opening it. The session-header corner seat belongs to ui-sidebar-right’s panel button, so this plugin no longer contends for it.
 - **Bottom activity bar**: appears only when sessions are running or waiting, click to open.
@@ -123,10 +111,14 @@ Three layers:
 
 Heat uses just **three bands — light grey → deep grey → bright blue** (`HEAT_TONES`): light grey for cold/stale/recent, deep grey for active, bright blue for warm/blazing. The bar **keeps its band colour for the full height** and only brightens toward the top (the same tone mixed with white, `heatBarSurface`), with a 1px inner highlight and a hairline glass edge (`heatBarShadow`) — so it reads as a lit glass rod, and the lower half no longer dissolves into the card. The grey steps use the neutral `label` tokens, which read as light grey in light themes and dark grey in dark themes — no per-theme colours.
 
+Heat meters and heat bars are **continuous, tick-free fills** shaped like “water rushing against a baffle in a pipe”: the track and water body are shaded as a **cylindrical section** (darker top/bottom, brighter middle), the fill is the tier colour with a liquid-level gradient that gently sloshes, caustics drift forward around the upper-middle of the bore while a water-surface glint rises and falls slightly above centre, and the leading edge is a bright water wall inset top and bottom, centred, with a soft surge and periodic ripple. Warm tiers add a matching glow; every heat-bar surface shares the same styling.
+
+The vertical heat bar (left of each card) is a **water-level pipe** instead: water rises from the bottom to the heat ratio, with bubbles climbing inside and a bright water head on top; below 30% the head keeps spurting and falling back — “not enough water to climb higher”.
+
 Motion (all of it stops under `prefers-reduced-motion: reduce`):
 
 - **Transitions** — the list fades in when the view, filter or count changes, with a `min(index, 8) × 20 ms` stagger; the filter underline grows with `scaleX`; segmented controls cross-fade their fill.
-- **Hover** — cards lift 1px with a soft outer glow while the frosted layer fades in; pressing settles them back. Meta chips get a tinted capsule, and heat bars/meters glow a little brighter. There is **no one-shot sheen** any more.
+- **Hover** — cards lift 1px with a soft outer glow while the frosted layer fades in; pressing settles them back. Meta chips get a tinted capsule, and heat bars/meters glow a little brighter. There is **no one-shot sheen**; the heat bar itself is a continuous forward water current (the only looping effect).
 - **Hover cards** — 170 ms pop-in and a 130 ms reverse pop-out (the direction follows the up/down flip); the timing donut rotates into place and the timeline segments grow in sequence.
 - **Sidebar** — the title dot is a radial gradient with a soft glow and grows a 3px halo when its row is hovered; the entry ring uses a `conic-gradient` and brightens on hover.
 
@@ -210,7 +202,7 @@ Everything is read from **public host snapshots** — no private APIs, nothing w
 | Context usage | `…values.contextPressure` — `projectedTokens ?? pressureTokens` over `contextWindow`, the value the composer context meter reads |
 | Session prompt | `…values.contextTimeline` (`initialPrompt` / `lastUser` / `lastReply`) — the status bar does not show prompts |
 | Conversation time & breakdown | `…values.contextTimeline.timing` (`wallMs` / `ttftMs` / `genMs` / `toolsMs` and the generation subdivisions) — the same source and segmentation as the host timing panel |
-| Running state | `sessions.list.byId[id].running` |
+| Session status | `useSessionStatus` snapshot: `running` / `pendingInteraction.kind` (approval / plan-review / question) / `completionUnread`; subagent count from `…values.subagentCatalog` combined with child `running` |
 
 **Excluded**: archived sessions, subagent child sessions, blank draft sessions.
 
@@ -228,9 +220,6 @@ dsh-activity-heat/
 │   ├── zh.json         Plugin metadata + UI dictionary (Chinese)
 │   └── en.json         Plugin metadata + UI dictionary (English)
 ├── icon.svg            Plugin icon (exported as ./icon)
-├── assets/
-│   ├── active.gif      Animated whale-tail badge (inlined into client.js)
-│   └── active.png      Static source frame for the GIF
 ├── test/               Dependency-free self-checks, run with node
 ├── package.json        Manifest — dsh.bundle.patch, dsh.client, exports, files
 ├── README.md           This file
@@ -259,10 +248,9 @@ node test/menu.cjs         # right-click menu: actions, confirmation, export pro
 node test/shortcut.cjs     # shortcut defaults against host reserved-key rules
 node test/boot-timing.cjs  # restart timing: recovery when slots become ready late
 node test/locale.cjs       # locale dictionaries and metadata stay in sync
-node test/assets.cjs       # inlined running badge matches assets/active.png
 ```
 
-`npm test` runs all six.
+`npm test` runs all five.
 
 ## Known limitations
 
