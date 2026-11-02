@@ -24,7 +24,7 @@ This plugin computes a 0–100% heat score from **time since last activity** and
 ### Panel
 
 - **Top-level switch**: `Sessions 58` / `Workspaces 10` — no more mixed list
-- **Two-tier toolbar**: the panel no longer draws a title; the filled Sessions/Workspaces switch leads, followed by the text-tab heat filter (underline on the active band) and a lightweight text count picker labelled *Count*
+- **Two-row toolbar, one material**: the panel draws no title. The **primary row** holds the Sessions/Workspaces switch, the range switch (Active / Archived / Subagents), and a right-aligned count picker labelled *Count* with Select. The **filter row** is its own line: heat bands as pill chips with a count badge, horizontally scrollable. Every control shares **one glass surface** (translucent fill + hairline border + top highlight); the active state only layers blue fill/border/text on that same glass, so hierarchy comes from accent strength alone — never a mix of solid white blocks, bare text and solid blue pills.
 - **Count selector**: sessions `10 / 20 / 30 / 50`, workspaces `5 / 10 / 20`
 - **Heat filter**: All / Blazing / Warm / Active / Recent / Stale, with live counts
 - **Every card**: the bottom row is split into three groups divided by hairlines — ① cache hit rate + context usage (each with a mini progress bar) ② turns + steps + tokens ③ accumulated conversation time; items inside a group use a dot, groups are separated by a vertical rule. The `Current` state is a badge before the title, and the relative time lives in the right column, not the meta row.
@@ -61,7 +61,7 @@ The menu is portaled to `document.body` so the scrolling list cannot clip it; ar
 
 Status model, labels and colours all follow the host's `sessionStatuses()`; the plugin no longer draws its own whale-tail status marks:
 
-- **Running**: `running === true`, blue `StateDot` spinner + "Running"; the card gets the orbiting band and breathing glow.
+- **Running**: `running === true`, blue `StateDot` spinner + "Running"; the card gets the orbiting band and breathing glow, and DeepSeek whales swim back and forth along the bottom edge (one more every minute, up to 5).
 - **Waiting for approval / Plan awaiting review / Waiting for answer**: `pendingInteraction.kind` is approval / plan-review / question, amber warning dot; highest priority.
 - **Completed**: `completionUnread === true` (a non-main session finished but unread), green dot + "Completed"; clears when opened.
 - **Idle**: anything else; no dot in the row, grey dot in detail views.
@@ -105,7 +105,7 @@ Every surface is built from host theme tokens plus `color-mix` — **no hard-cod
 
 Three layers:
 
-1. **Transparency** — cards, badges, the count picker and the filter underline use a translucent fill (`color-mix(..., 70%, bg-base)`) over the panel background, with a 1px top highlight and a hairline gradient border.
+1. **Transparency** — cards, badges, the count picker and the filter chips use a translucent fill (`color-mix(..., 70%, bg-base)`) over the panel background, with a 1px top highlight and a hairline gradient border.
 2. **Frosting** — the panel paints **no background gradient** of its own; the glass sits directly on the host's base colour. Hovering a card fades in a `backdrop-filter` layer; hover cards use the host's `--dsw-menu-backdrop-filter`.
 3. **Gradients** — mini meters, selected states, the running orbit band and the heat bar are gradients.
 
@@ -113,11 +113,11 @@ Heat uses just **three bands — light grey → deep grey → bright blue** (`HE
 
 Heat meters and heat bars are **continuous, tick-free fills** shaped like “water rushing against a baffle in a pipe”: the track and water body are shaded as a **cylindrical section** (darker top/bottom, brighter middle), the fill is the tier colour with a liquid-level gradient that gently sloshes, caustics drift forward around the upper-middle of the bore while a water-surface glint rises and falls slightly above centre, and the leading edge is a bright water wall inset top and bottom, centred, with a soft surge and periodic ripple. Warm tiers add a matching glow; every heat-bar surface shares the same styling.
 
-The vertical heat bar (left of each card) is a **water-level pipe** instead: water rises from the bottom to the heat ratio, with bubbles climbing inside and a bright water head on top; below 30% the head keeps spurting and falling back — “not enough water to climb higher”.
+The **left edge of each card is a workspace-name pill** (`ah-ws-tag`): a rounded glass tag with an 11px folder outline icon showing the workspace the session belongs to — **width adapts to the card** (`clamp(104px,20%,208px)`), the name **wraps up to two lines when long** (ellipsis beyond, full on one line when wide) and the full name on hover; **when there is no workspace an equal-width transparent placeholder keeps the column aligned**. The previous vertical glass thermometer is removed; workspace-view card titles (the workspace name) also wrap up to two lines when long.
 
 Motion (all of it stops under `prefers-reduced-motion: reduce`):
 
-- **Transitions** — the list fades in when the view, filter or count changes, with a `min(index, 8) × 20 ms` stagger; the filter underline grows with `scaleX`; segmented controls cross-fade their fill.
+- **Transitions** — the list fades in when the view, filter or count changes, with a `min(index, 8) × 20 ms` stagger; filter chips cross-fade their fill and border; segmented controls cross-fade their fill.
 - **Hover** — cards lift 1px with a soft outer glow while the frosted layer fades in; pressing settles them back. Meta chips get a tinted capsule, and heat bars/meters glow a little brighter. There is **no one-shot sheen**; the heat bar itself is a continuous forward water current (the only looping effect).
 - **Hover cards** — 170 ms pop-in and a 130 ms reverse pop-out (the direction follows the up/down flip); the timing donut rotates into place and the timeline segments grow in sequence.
 - **Sidebar** — the title dot is a radial gradient with a soft glow and grows a 3px halo when its row is hovered; the entry ring uses a `conic-gradient` and brightens on hover.

@@ -309,18 +309,22 @@ function collect(tree) {
   const activeFilter = chips.find((x) => String((x.children && x.children[0]) || '') === '全部');
   check(
     activeFilter && String(activeFilter.props.className || '').indexOf('ah-tab') !== -1,
-    '筛选 tab 走 ah-tab 类（下划线由 ::after 渐变绘制）',
+    '筛选 chip 走 ah-tab 类（实心底由 class + data-active 控制）',
   );
   check(
     activeFilter && activeFilter.props['data-active'] === 'true',
-    '选中的筛选 tab 标记 data-active',
+    '选中的筛选 chip 标记 data-active',
   );
-  check(activeFilter && activeFilter.props.style.borderRadius === 0, '筛选不再是胶囊');
+  check(activeFilter && activeFilter.props['data-empty'] !== undefined, '筛选 chip 带 data-empty（空档位淡化）');
   const countPill = c.buttons.find((x) => String((x.children && x.children[0]) || '') === '10');
-  check(countPill && countPill.props.style.background === 'transparent', '数量选择为无底色文字');
-  check(countPill && String(countPill.props.style.border).indexOf('transparent') !== -1, '数量选择无边框');
-  check(countPill && String(countPill.props.className || '').indexOf('ah-count') !== -1, '数量选择带 ah-count 类（选中玻璃底由 ::before 画）');
+  check(countPill && String(countPill.props.className || '').indexOf('ah-count') !== -1, '数量选择走 ah-count（玻璃表面由 class 统一）');
   check(countPill && countPill.props['data-active'] === 'true', '选中的数量标记 data-active');
+  // 顶部所有控件共用同一套玻璃表面：对象/范围/数量/筛选都在同一组 CSS 选择器里
+  const styleCss = String((b.env.styles[0] && b.env.styles[0].textContent) || '');
+  check(
+    /\.ah-seg,\s*\.ah-count,\s*\.ah-tab\s*\{/.test(styleCss),
+    '对象/范围/数量/筛选共用同一玻璃控件表面（设计语言统一）',
+  );
 
   check(all.indexOf('14 轮') !== -1, '轮次取宿主 sessionStats（与状态栏一致）');
   check(all.indexOf('40 步') !== -1, '步数取宿主 sessionStats.steps');
@@ -356,19 +360,23 @@ function collect(tree) {
   check(all.indexOf('把面板做得更好看一点') !== -1, '显示最近提示词');
   check(all.indexOf('“') === -1, '提示词无引号');
 
-  const wrappers = c.nodes.filter(
-    (x) => x.props && typeof x.props.style === 'object' && String(x.props.style.animation || '').indexOf('ah-breathe') !== -1,
+  const frames = c.nodes.filter(
+    (x) => x.props && typeof x.props.style === 'object' && x.props.style.isolation === 'isolate',
   );
   const orbits = c.nodes.filter(
     (x) => x.props && typeof x.props.style === 'object' && String(x.props.style.animation || '').indexOf('ah-orbit') !== -1,
   );
-  check(wrappers.length === 1, '运行中卡片有呼吸外层', wrappers.length);
+  check(frames.length === 1, '运行中卡片有常亮高亮外框', frames.length);
   check(orbits.length === 1, '运行中卡片有跑马灯光带', orbits.length);
   check(
-    wrappers[0] && String(wrappers[0].props.style.border || '').indexOf('color-mix') !== -1
-      && String(wrappers[0].props.style.border).indexOf('--color-blue-500') !== -1,
-    '运行中外框有常驻浅蓝边框（呼吸最淡时也不消失）',
-    wrappers[0] && wrappers[0].props.style.border,
+    frames[0] && String(frames[0].props.style.border || '').indexOf('color-mix') !== -1
+      && String(frames[0].props.style.border).indexOf('--color-blue-500') !== -1,
+    '运行中外框常亮高亮蓝边框',
+    frames[0] && frames[0].props.style.border,
+  );
+  check(
+    frames[0] && String(frames[0].props.style.animation || '') === '',
+    '运行中外框不做呼吸/闪烁动画（常亮）',
   );
   check(all.indexOf('进行中') !== -1, '显示原生「进行中」状态');
   const currentBadges = c.components.filter((x) => x.name === 'CurrentBadge');
@@ -473,7 +481,7 @@ function collect(tree) {
   const css = b.env.styles[0] ? b.env.styles[0].textContent : '';
   check(b.env.styles.length === 1, '注入了一个 style 标签', b.env.styles.length);
   check(css.indexOf('ah-orbit') !== -1, '含跑马灯 keyframes');
-  check(css.indexOf('ah-breathe') !== -1, '含呼吸 keyframes');
+  check(css.indexOf('ah-frame-flash') === -1, '无边框闪烁 keyframes（常亮高亮）');
   check(css.indexOf('ah-pulse') !== -1, '含脉冲 keyframes');
   check(css.indexOf('ah-dot-pulse') !== -1, '含标题前圆点脉冲 keyframes');
   check(css.indexOf('prefers-reduced-motion') !== -1, '尊重减少动态偏好');
@@ -614,15 +622,14 @@ function collect(tree) {
   check(all.indexOf('工作区 3') !== -1, '工作区视图可渲染');
   check(all.indexOf('进行中') !== -1, '含运行会话的工作区显示「进行中」标识');
 
-  const wrappers = c.nodes.filter(
-    (x) => x.props && typeof x.props.style === 'object'
-      && String(x.props.style.animation || '').indexOf('ah-breathe') !== -1,
+  const frames = c.nodes.filter(
+    (x) => x.props && typeof x.props.style === 'object' && x.props.style.isolation === 'isolate',
   );
   const orbits = c.nodes.filter(
     (x) => x.props && typeof x.props.style === 'object'
       && String(x.props.style.animation || '').indexOf('ah-orbit') !== -1,
   );
-  check(wrappers.length === 1, '只有含运行会话的工作区有呼吸外层', wrappers.length);
+  check(frames.length === 1, '只有含运行会话的工作区有常亮高亮外框', frames.length);
   check(orbits.length === 1, '只有含运行会话的工作区有跑马灯', orbits.length);
   const aboveOrbit = c.nodes.filter(
     (x) => x.type === 'button' && x.props && x.props.style && x.props.style.zIndex === 1
@@ -667,9 +674,9 @@ function collect(tree) {
   );
 
   const rightCol = c.nodes.find(
-    (n) => n.props && n.props.style && n.props.style.width === 168 && n.props.style.justifyContent === 'space-between',
+    (n) => n.props && n.props.style && n.props.style.width === 110 && n.props.style.justifyContent === 'center',
   );
-  check(Boolean(rightCol), '右侧信息列固定宽度并两行对齐');
+  check(Boolean(rightCol), '右侧信息列收窄并居中两行（工作区名已移到左侧）');
   const cardButtons = c.buttons.filter((b) => b.props && b.props['aria-label']);
   check(
     cardButtons.length > 0 && cardButtons.every((b) => !b.props.title),
@@ -680,8 +687,8 @@ function collect(tree) {
   );
   check(dividers.length >= 2, 'meta 行按组插入竖线分隔', dividers.length);
   check(
-    rightCol && rightCol.children && rightCol.children.length === 3,
-    '右侧列三行：工作区名 / 热度 / 时间',
+    rightCol && rightCol.children && rightCol.children.length === 2,
+    '右侧列两行：热度 / 时间',
     rightCol && rightCol.children ? rightCol.children.length : 'none',
   );
 }
@@ -741,18 +748,10 @@ function collect(tree) {
 
   const meters = sessionsView.components.filter((x) => x.name === 'HeatMeter');
   check(meters.length > 0, '热度计仍走组件（视觉由 ah-meter-* 类接管）', meters.length);
-  const pipes = sessionsView.components.filter((x) => x.name === 'VerticalHeatPipe');
-  check(pipes.length === 6, '每张卡片都有竖向水管热度条', pipes.length);
-  const pipeFills = sessionsView.nodes.filter((n) => String(n.props.className || '').indexOf('ah-vpipe-fill') !== -1);
-  const barColors = new Set(pipeFills.map((n) => String(n.props.style && n.props.style.color)));
-  check(barColors.size >= 3, '竖管按三区间取色（亮蓝 / 深灰 / 浅灰）', barColors.size);
-  check(
-    pipeFills.every((n) => {
-      const color = String(n.props.style && n.props.style.color);
-      return color.indexOf('color-mix') !== -1 || color.indexOf('--color-blue-500') !== -1;
-    }),
-    '竖管颜色只走主题令牌',
-  );
+  const wsTags = sessionsView.nodes.filter((n) => String(n.props.className || '').indexOf('ah-ws-tag') !== -1);
+  check(wsTags.length > 0, '卡片最左侧显示工作区名标签（替代温度计）', wsTags.length);
+  const noPipes = sessionsView.components.filter((x) => x.name === 'VerticalHeatPipe');
+  check(noPipes.length === 0, '会话卡片已移除温度计组件', noPipes.length);
 }
 
 /* ================= 13. 已完成（未查看）状态 ================= */
