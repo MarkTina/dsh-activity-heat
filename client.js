@@ -3242,11 +3242,10 @@ function build(require) {
       } catch (e) { return undefined; }
     }, []);
 
-    // 底部鲸鱼群：数量随「本卡片持续运行的时长」增长（首次渲染记起点、面板每分钟重渲染 +1，最多 5）
-    var whaleStart = React.useRef ? React.useRef(null) : { current: null };
-    if (whaleStart.current == null) whaleStart.current = Date.now();
-    var whaleMin = (Date.now() - whaleStart.current) / 60000;
-    var whaleCount = Math.max(1, Math.min(5, 1 + Math.floor(whaleMin)));
+    // 底部鲸鱼群：数量按「本次运行已持续时长」计算（props.elapsedMs，来自会话 last-activity），
+    // 这样切视图/重进面板都不会重置；每分钟 +1，最多 5。
+    var elapsedMs = (props && typeof props.elapsedMs === 'number' && isFinite(props.elapsedMs)) ? Math.max(0, props.elapsedMs) : 0;
+    var whaleCount = Math.max(1, Math.min(5, 1 + Math.floor(elapsedMs / 60000)));
     // 固定像素速度：一个来回 ≈ 2×(卡片宽+46)；75px/s，越慢动作链越清楚
     var tripPx = 2 * (Math.max(200, frameW) + 46);
     var durSec = Math.max(6, Math.min(60, tripPx / 75));
@@ -4383,7 +4382,8 @@ function build(require) {
       : null;
 
     // 非运行中：不引入额外 DOM；菜单关闭时 ContextMenu 自己返回 null
-    var frame = activeRunning ? React.createElement(RunningFrame, null, cardButton) : cardButton;
+    var runElapsed = (typeof session.at === 'number' && typeof now === 'number') ? Math.max(0, now - session.at) : 0;
+    var frame = activeRunning ? React.createElement(RunningFrame, { elapsedMs: runElapsed }, cardButton) : cardButton;
     if (!menuNode) return frame;
     return React.createElement(React.Fragment, null, frame, menuNode);
   }
@@ -4574,7 +4574,8 @@ function build(require) {
       : null;
 
     // 工作区里有正在跑的会话时，与会话卡片使用同一套运行中动效
-    var frame = running ? React.createElement(RunningFrame, null, cardButton) : cardButton;
+    var runElapsed = (typeof group.at === 'number' && typeof now === 'number') ? Math.max(0, now - group.at) : 0;
+    var frame = running ? React.createElement(RunningFrame, { elapsedMs: runElapsed }, cardButton) : cardButton;
     if (!menuNode) return frame;
     return React.createElement(React.Fragment, null, frame, menuNode);
   }
