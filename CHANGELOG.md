@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.13 — 2026-11-03
+
+- **修复 DSH 重启后插件不自动加载（必须在插件列表里禁用再启用才生效）。** 根因：`dsh.client.immediately: true` 让客户端模块在重启时常早于 UI 的 `slots` 服务执行，而插件只在 `apply` 内部用 `ctx.inject(['slots'])` 异步等待；宿主的 client 运行时会把这种「apply 已完成但 fiber 仍在等激活」的插件判为 `waiting for activation` 并且不再重试，于是整插件不挂载，只有重新 apply（禁用/启用）才激活。改为**插件级 `inject: ['slots']`**，由 cordis 在槽位服务就绪后再调度 `apply`；`apply` 内直接使用 `ctx.slots` / `ctx.get('slots')`，并保留 `ctx.inject` 兜底以兼容老宿主。这同时也是 DSH facade 报错里给出的官方写法（`return { inject: ['slots'], apply(ctx) { ctx.slots.… } }`）。
+- test/boot-timing 增加回归断言（插件必须声明 `inject: ['slots']`）；`npm test` 五项全绿。
+
 ## 0.7.12 — 2026-11-03
 
 - **修复底部活跃会话栏与「会话信息」重叠：从 `conversation.composer.dock` 回退到贴底的 `shell.bottom`。** 宿主自己的会话统计（`activity` 轮次/步数/速度、`usage` token/缓存命中）就注册在 `conversation.composer.dock`，同挂该 dock 会让活跃会话标签与统计行挤在同一行、视觉重叠。改回**横跨三列下方整行**的 `shell.bottom`（默认组合不占用；被 inspector 占用时延迟 250ms 注册抢占），恢复「整条嵌在最下面、不重叠」；仍仅「运行中/等待」时出现、点击直达。

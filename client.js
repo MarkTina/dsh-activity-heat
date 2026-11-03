@@ -6215,6 +6215,13 @@ function build(require) {
   }
 
   return {
+    // 插件级 inject：cordis 会等 slots（UI 槽位）服务就绪后再调用 apply。
+    // 这是「重启后插件不自动加载、要手动禁用/启用才生效」的根因修复：
+    // 重启时本模块（dsh.client.immediately: true）常早于 UI 槽位服务执行；若只在
+    // apply 内部用 ctx.inject 异步等 slots，宿主的 client-modules 会把该插件判为
+    // “waiting for activation” 且不再重试，于是整插件不挂载，只有重新 apply 才激活。
+    // 声明为插件级 inject 后，激活时机交给 cordis 统一调度，重启即可自动挂载。
+    inject: ['slots'],
     apply: function apply(ctx) {
       try {
         if (typeof ctx.effect === 'function') ctx.effect(ensureStyles, 'activity-heat: styles');
@@ -6241,18 +6248,12 @@ function build(require) {
           ahWarn('[activity-heat] locale inject failed:', error && error.message);
         }
 
-        if (typeof ctx.inject !== 'function') {
-          ahWarn('[activity-heat] ctx.inject unavailable; plugin skipped');
-          return;
-        }
-
-        // slots 用 ctx.inject 等待就绪：重启时客户端插件常常早于 client-modules 执行，
-        // 用 ctx.get 一次性读取会拿到 undefined 并永久放弃（这就是"重启不加载"的原因）。
-        ctx.inject(['slots'], function (scope) {
+        // slots 由插件级 inject（见 return 的 inject 声明）保证就绪，这里直接用；
+        // 仍保留 ctx.get / ctx.inject 兜底，兼容老宿主或服务延迟出现的极端情况。
+        function registerSeats(slots) {
           try {
-            var slots = scope && scope.slots;
             if (!slots || typeof slots.inject !== 'function' || typeof slots.register !== 'function') {
-              ahWarn('[activity-heat] slots scope incomplete; retry on next activation');
+              ahWarn('[activity-heat] slots service incomplete; registration skipped');
               return;
             }
 
@@ -6425,11 +6426,40 @@ function build(require) {
           } catch (error) {
             ahWarn('[activity-heat] seat registration failed:', error && error.message);
           }
-        });
+        }
 
-        registerShortcut(ctx);
-        registerCommands(ctx);
-        registerRightbar(ctx);
+        var slotsService;
+        try {
+          slotsService = typeof ctx.get === 'function' ? ctx.get('slots') : undefined;
+        } catch (error) {
+          slotsService = undefined;
+        }
+        if (slotsService) {
+          registerSeats(slotsService);
+        } else {
+          // 兜底：插件级 inject 正常已保证 slots；仅老宿主 / 服务尚未提供时订阅一次。
+          var canInject = false;
+          try { canInject = typeof ctx.inject === 'function'; } catch (error) { canInject = false; }
+          if (canInject) {
+            try {
+              ctx.inject(['slots'], function (scope) {
+                var s = scope && (scope.slots
+                  || (typeof scope.get === 'function' ? scope.get('slots') : undefined));
+                if (s) registerSeats(s);
+                else ahWarn('[activity-heat] slots still unavailable after inject');
+              });
+            } catch (error) {
+              ahWarn('[activity-heat] slots inject fallback failed:', error && error.message);
+            }
+          } else {
+            ahWarn('[activity-heat] slots unavailable; seats skipped');
+          }
+        }
+
+        // 可选初始化各自隔离：任一服务缺失都不应中断其余，更不能让整插件不激活。
+        try { registerShortcut(ctx); } catch (error) { ahWarn('[activity-heat] shortcut init failed:', error && error.message); }
+        try { registerCommands(ctx); } catch (error) { ahWarn('[activity-heat] commands init failed:', error && error.message); }
+        try { registerRightbar(ctx); } catch (error) { ahWarn('[activity-heat] rightbar init failed:', error && error.message); }
       } catch (error) {
         try { console.error('[activity-heat] apply failed:', error && (error.stack || error.message)); } catch (ignored) {}
       }

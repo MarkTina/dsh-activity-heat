@@ -47,6 +47,8 @@ function assert(ok, label) {
 }
 
 /* ---------- 场景 A：slots 晚于 apply 就绪（重启时的真实情况） ---------- */
+assert(Array.isArray(plugin.inject) && plugin.inject.indexOf('slots') !== -1,
+  '插件声明 inject:["slots"]（重启后自动加载的关键）');
 const seatRegs = [];
 const shortcutRegs = [];
 let slotsReady = false;
@@ -166,6 +168,25 @@ try {
   threw = error;
 }
 assert(threw === null, 'ctx 没有 inject 时静默退出，不抛错');
+
+/* ---------- 场景 D：受控 facade（访问 ctx.inject 会抛错，slots 只能经 ctx.get 拿到） ---------- */
+const seatRegs3 = [];
+const guardedSlots3 = {
+  inject: (k, f) => f(),
+  register: (o, C) => { seatRegs3.push({ o, C }); return () => {}; },
+};
+const facade = new Proxy({}, {
+  get(_t, prop) {
+    if (prop === 'get') return (n) => (n === 'slots' ? guardedSlots3 : undefined);
+    if (prop === 'effect') return runEffect;
+    if (prop === 'inject') throw new Error('service "inject" is not declared by your plugin');
+    return undefined;
+  },
+});
+let threw3 = null;
+try { plugin.apply(facade); } catch (error) { threw3 = error; }
+assert(threw3 === null, '受控 facade（无 ctx.inject）下 apply 不抛错');
+assert(seatRegs3.length === 13, '受控 facade 下仍通过 ctx.get("slots") 注册全部席位');
 
 console.log(failed === 0 ? '\nBOOT-TIMING REGRESSION PASSED' : '\nBOOT-TIMING REGRESSION FAILED (' + failed + ')');
 process.exitCode = failed === 0 ? 0 : 1;
