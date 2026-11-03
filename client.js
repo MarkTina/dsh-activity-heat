@@ -918,16 +918,18 @@ function build(require) {
     '.ah-vpipe-bulb::before{content:"";position:absolute;left:22%;right:22%;bottom:12%;height:22%;border-radius:50%;pointer-events:none;',
     'background:radial-gradient(closest-side, rgba(255,255,255,.42), rgba(255,255,255,0));}',
     '@keyframes ah-vpipe-bulbglow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.06)}}',
-    /* 工作区列：整卡等高的左 rail——左缘色条 + 文件夹图标 + 单行名；与正文用发丝线分隔，形成稳定两栏 */
-    '.ah-ws-tag{display:flex;flex-direction:column;align-items:flex-start;flex:none;align-self:stretch;width:clamp(96px, 15%, 172px);box-sizing:border-box;',
-    'padding:0 10px 0 9px;border-left:3px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.28)) 80%, transparent);',
-    'border-right:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 60%, transparent);}',
-    '.ah-ws-tag-inner{display:inline-flex;align-items:center;gap:5px;min-width:0;max-width:100%;min-height:20px;line-height:20px;color:var(--dsw-alias-label-secondary);}',
-    '.ah-ws-tag-inner svg{flex:none;opacity:.6;}',
-    /* 单行省略，悬停 title 看全名（单行保证整列高度稳定） */
-    '.ah-ws-tag-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.72em;}',
-    /* 无工作区：保留同宽与分隔线，但不显示色条与内容 */
-    '.ah-ws-tag--empty{border-left-color:transparent;}',
+    /* 工作区段（三段式最左）：整卡等高、加宽 + 淡底；左缘 4px 色条 + 图标 + 名（可两行），醒目且与正文用发丝线分隔 */
+    '.ah-ws-tag{display:flex;flex-direction:column;align-items:flex-start;flex:none;align-self:stretch;width:clamp(124px, 20%, 236px);box-sizing:border-box;',
+    'padding:0 12px 0 12px;border-left:4px solid color-mix(in srgb, var(--dsw-alias-label-tertiary, #7f8287) 62%, transparent);',
+    'border-right:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 55%, transparent);',
+    'background:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.08)) 42%, transparent);}',
+    '.ah-ws-tag-inner{display:flex;align-items:flex-start;gap:6px;width:100%;min-width:0;padding-top:1px;color:var(--dsw-alias-label-secondary);}',
+    '.ah-ws-tag-inner svg{flex:none;opacity:.7;margin-top:2px;}',
+    /* 名字最多两行（够宽时一行完整），充分利用这块区域；悬停 title 看全名 */
+    '.ah-ws-tag-text{min-width:0;font-size:.82em;line-height:20px;font-weight:500;color:var(--dsw-alias-label-secondary);',
+    'display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;word-break:break-word;}',
+    /* 无工作区：保留同宽与分隔线，但无淡底/色条 */
+    '.ah-ws-tag--empty{border-left-color:transparent;background:transparent;}',
     '.ah-mini-track{position:relative;display:inline-block;border-radius:999px;overflow:hidden;flex:none;vertical-align:middle;',
     'background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 58%, transparent);',
     'box-shadow:inset 0 1px 1px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.20);}',
