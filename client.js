@@ -2955,7 +2955,7 @@ function build(require) {
   }
 
   /**
-   * 底部活动条（shell.bottom，贴 DSH 底部）：只有存在「运行中 / 等待处理」的会话时才出现。
+   * 底部活跃会话栏（conversation.composer.dock，输入框卡片下方）：只有存在「运行中 / 等待处理」的会话时才出现。
    * 横向列出最多 6 个，点击直接打开；没有活动时返回 null，不预留高度。
    */
   function BottomActivityBar(props) {
@@ -3042,11 +3042,9 @@ function build(require) {
       className: 'ah-bottom-bar',
       style: {
         display: 'flex', alignItems: 'center', gap: 8,
-        padding: '6px 12px', minHeight: 32, boxSizing: 'border-box',
-        borderTop: '1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,0.18)) 70%, transparent)',
-        background: 'color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,0.08)) 88%, transparent)',
-        backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-        overflowX: 'auto', overflowY: 'hidden',
+        padding: '2px 4px 2px', boxSizing: 'border-box',
+        overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap',
+        fontSize: '0.78em', color: 'var(--dsw-alias-label-tertiary)',
       },
     },
       React.createElement('span', {
@@ -6335,32 +6333,20 @@ function build(require) {
             // 右侧栏展开按钮占用（single slot，同优先级重复注册会抛错），这里不再抢。
             // 会话内的入口改由侧栏「更多」菜单与折叠徽章承担。
 
-            // 底部活动条：贴 DSH 底部（shell.bottom single 席位）。该席位被内置
-            // dsh-experimental-inspector 占用；宿主按「后注册优先级更高」shadow，
-            // 故延迟注册以稳定占住底部（会覆盖 inspector 的底部面板）。
-            safeRegister('shell.bottom', function () {
-              var doRegister = function () {
-                try {
-                  slots.register(
-                    {
-                      name: 'shell.bottom',
-                      id: 'heat-bottom',
-                      order: 20,
-                      locale: NS,
-                      label: function () { return tt('bottom.title', { count: 0 }); },
-                      inject: injectProps,
-                    },
-                    BottomActivityBar,
-                  );
-                } catch (err) {
-                  try { console.error('[activity-heat] shell.bottom register failed:', err && err.message); } catch (e) { /* ignore */ }
-                }
-              };
-              // 浏览器里延迟注册以“后注册=更高优先级”占住被 inspector 占用的 single 席位；
-              // 测试环境（无 ResizeObserver）立即注册，便于断言捕获。
-              if (typeof ResizeObserver === 'undefined') doRegister();
-              else if (typeof setTimeout === 'function') setTimeout(doRegister, 250);
-              else doRegister();
+            // 底部活跃会话栏：挂在输入框卡片下方（conversation.composer.dock，list 可叠加），
+            // 稳定显示、无需打开侧栏面板；仅在运行中/等待会话时出现。
+            safeRegister('conversation.composer.dock', function () {
+              return slots.register(
+                {
+                  name: 'conversation.composer.dock',
+                  id: 'heat-bottom',
+                  order: 20,
+                  locale: NS,
+                  label: function () { return tt('bottom.title', { count: 0 }); },
+                  inject: injectProps,
+                },
+                BottomActivityBar,
+              );
             });
 
             safeRegister('sidebar.panellist', function () {
