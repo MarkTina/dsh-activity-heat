@@ -920,7 +920,7 @@ function build(require) {
     '@keyframes ah-vpipe-bulbglow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.06)}}',
     /* 工作区段（三段式最左）：整卡等高、加宽 + 淡底；左缘 4px 色条 + 图标 + 名（可两行），醒目且与正文用发丝线分隔 */
     '.ah-ws-tag{display:flex;flex-direction:column;align-items:flex-start;flex:none;align-self:stretch;width:clamp(124px, 20%, 236px);box-sizing:border-box;',
-    'padding:0 12px 0 12px;border-left:4px solid color-mix(in srgb, var(--dsw-alias-label-tertiary, #7f8287) 62%, transparent);',
+    'padding:0 12px 0 12px;',
     'border-right:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 55%, transparent);',
     'background:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.08)) 42%, transparent);}',
     '.ah-ws-tag-inner{display:flex;align-items:flex-start;gap:6px;width:100%;min-width:0;padding-top:1px;color:var(--dsw-alias-label-secondary);}',
@@ -929,7 +929,7 @@ function build(require) {
     '.ah-ws-tag-text{min-width:0;font-size:.82em;line-height:20px;font-weight:500;color:var(--dsw-alias-label-secondary);',
     'display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;word-break:break-word;}',
     /* 无工作区：保留同宽与分隔线，但无淡底/色条 */
-    '.ah-ws-tag--empty{border-left-color:transparent;background:transparent;}',
+    '.ah-ws-tag--empty{background:transparent;}',
     '.ah-mini-track{position:relative;display:inline-block;border-radius:999px;overflow:hidden;flex:none;vertical-align:middle;',
     'background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 58%, transparent);',
     'box-shadow:inset 0 1px 1px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.20);}',
@@ -4211,11 +4211,7 @@ function build(require) {
             key: 'ws',
             className: AH.wsTag,
             title: workspaceName,
-            style: {
-              marginLeft: 8,
-              borderLeftColor: (session.open || session.primaryState === 'ongoing')
-                ? 'var(--color-blue-500, #3b82f6)' : undefined,
-            },
+            style: { marginLeft: 8 },
           },
             React.createElement('span', { key: 'inner', className: AH.wsTagInner },
               React.createElement('svg', {
