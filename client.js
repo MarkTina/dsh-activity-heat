@@ -923,11 +923,10 @@ function build(require) {
     'padding:0 12px 0 12px;',
     'border-right:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 55%, transparent);',
     'background:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.08)) 42%, transparent);}',
-    '.ah-ws-tag-inner{display:flex;align-items:flex-start;gap:6px;width:100%;min-width:0;color:var(--dsw-alias-label-secondary);}',
-    '.ah-ws-tag-inner svg{flex:none;opacity:.7;margin-top:2px;}',
-    /* 名字最多两行（够宽时一行完整），充分利用这块区域；悬停 title 看全名 */
-    '.ah-ws-tag-text{min-width:0;font-size:.82em;line-height:20px;font-weight:500;color:var(--dsw-alias-label-secondary);',
-    'display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;word-break:break-word;}',
+    '.ah-ws-tag-inner{display:flex;align-items:center;gap:6px;width:100%;min-width:0;color:var(--dsw-alias-label-secondary);}',
+    '.ah-ws-tag-inner svg{flex:none;opacity:.7;}',
+    /* 名字单行省略（太长显示省略号，悬停 title 看全名） */
+    '.ah-ws-tag-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82em;line-height:20px;font-weight:500;color:var(--dsw-alias-label-secondary);}',
     /* 无工作区：保留同宽与分隔线，但无淡底/色条 */
     '.ah-ws-tag--empty{background:transparent;}',
     '.ah-mini-track{position:relative;display:inline-block;border-radius:999px;overflow:hidden;flex:none;vertical-align:middle;',
@@ -4180,7 +4179,9 @@ function build(require) {
     // 组内用圆点分隔，组间用竖线 + 更大留白，让同类信息聚在一起
     var metaRow = renderMetaGroups(groups);
 
-    // 卡片右侧的状态列：主状态 + 可叠加的子智能体
+    // 会话是否有可见状态（归档/空闲不显示）
+    var hasStatus = session.archived !== true && session.primaryState !== 'idle';
+
     var children = [
       props && props.selectMode
         ? React.createElement('span', {
@@ -4199,7 +4200,7 @@ function build(require) {
         key: 'ws',
         className: AH.wsTag + (workspaceName ? '' : ' ah-ws-tag--empty'),
         title: workspaceName || undefined,
-        style: { marginLeft: 8 },
+        style: { marginLeft: 8, justifyContent: hasStatus ? 'flex-start' : 'center' },
       },
         workspaceName
           ? React.createElement('span', { key: 'inner', className: AH.wsTagInner },
@@ -4211,7 +4212,7 @@ function build(require) {
               React.createElement('span', { className: AH.wsTagText }, workspaceName))
           : null,
         // 会话状态（原生六态）+ 可叠加的「N 子智能体」，放在工作区名下方；归档/空闲不显示。
-        (session.archived !== true && session.primaryState !== 'idle')
+        hasStatus
           ? React.createElement('span', {
               key: 'st',
               style: { display: 'flex', flexDirection: 'column', gap: 2, marginTop: 4, alignItems: 'flex-start', maxWidth: '100%', minWidth: 0 },
