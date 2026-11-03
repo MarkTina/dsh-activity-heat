@@ -265,7 +265,7 @@ function collect(tree) {
   const withCtx = { ...panelProps, ctx: { get: (n) => b.services[n] } };
 
   const seatNames = b.regs.map((r) => r.o.name);
-  ['sidebar.session.row.leading', 'sidebar.session.row.hover', 'sidebar.toggle.badge',
+  ['sidebar.session.row.leading', 'sidebar.session.row.hover',
     'sidebar.panellist.actions', 'shell.bottom', 'sidebar.panellist', 'main',
     'sidebar.right.pane.tab'].forEach((name) => {
     check(seatNames.indexOf(name) !== -1, '注册 seat ' + name, seatNames.join(','));
@@ -947,23 +947,12 @@ function collect(tree) {
   check(!subLabels.some((l) => l.indexOf('炽热会话') !== -1), '子代理范围不显示常规会话');
 }
 
-/* ================= 17. 轻量触达：徽章 / 更多菜单 / 会话头角落 ================= */
+/* ================= 17. 轻量触达：更多菜单 / 会话头角落 ================= */
 {
   const b = boot(false);
 
   const badgeReg = b.regs.find((r) => r.o.name === 'sidebar.toggle.badge');
-  check(Boolean(badgeReg), '注册折叠徽章 seat');
-  const badgeInj = badgeReg && typeof badgeReg.o.inject === 'function' ? badgeReg.o.inject() : {};
-  const badge = collect(badgeReg.C({
-    ...badgeInj,
-    useSessions: (sel) => sel({ ids: ['run', 'hot'], byId: { run: { id: 'run', running: true }, hot: { id: 'hot' } } }),
-  }));
-  check(badge.texts.join('').indexOf('1') !== -1, '徽章统计运行中会话数', badge.texts.join(''));
-  const emptyBadge = collect(badgeReg.C({
-    ...badgeInj,
-    useSessions: (sel) => sel({ ids: [], byId: {} }),
-  }));
-  check(emptyBadge.texts.length === 0, '无关注会话时徽章不渲染');
+  check(!badgeReg, '不注册 sidebar.toggle.badge（宿主 single 席位，避免启动冲突）');
 
   const moreReg = b.regs.find((r) => r.o.name === 'sidebar.panellist.actions');
   check(Boolean(moreReg), '注册「更多」菜单 seat');

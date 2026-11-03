@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.14 — 2026-11-03
+
+- **修复「重启后插件不加载、要手动禁用/启用才生效」的真正根因：抢占了宿主的 single 席位。** 本插件把折叠徽章注册到 `sidebar.toggle.badge`，而该席位是 **single**、已被内置 `client-ui-settings-general` 的 `DesktopUpdateBadge` 以 priority 0 占用；同优先级重复注册会抛 `single slot "sidebar.toggle.badge" already has a registration at priority 0`。该异常发生在启动的 apply 链路里，会中断本插件其余席位注册，表现为整插件消失，手动开关（重新 apply）后才恢复。**移除 `sidebar.toggle.badge` 注册**（折叠徽章能力取消，入口保留侧栏「更多」菜单与 `/heat`）。
+- 同时给贴底的 `shell.bottom` 显式 `priority: -1000`：它也是 single 席位，被内置 inspector 以 priority 0 占用，同优先级会注册失败（底部条不显示）；按“数值最低者渲染”规则用更低 priority 才能安全 shadow。
+- 保留插件级 `inject: ['slots']` 与 `ctx.get('slots')` 取服务；`npm test` 五项全绿（含单席冲突与无 `ctx.inject` 的回归断言）。
+
 ## 0.7.13 — 2026-11-03
 
 - **修复 DSH 重启后插件不自动加载（必须在插件列表里禁用再启用才生效）。** 根因：`dsh.client.immediately: true` 让客户端模块在重启时常早于 UI 的 `slots` 服务执行，而插件只在 `apply` 内部用 `ctx.inject(['slots'])` 异步等待；宿主的 client 运行时会把这种「apply 已完成但 fiber 仍在等激活」的插件判为 `waiting for activation` 并且不再重试，于是整插件不挂载，只有重新 apply（禁用/启用）才激活。改为**插件级 `inject: ['slots']`**，由 cordis 在槽位服务就绪后再调度 `apply`；`apply` 内直接使用 `ctx.slots` / `ctx.get('slots')`，并保留 `ctx.inject` 兜底以兼容老宿主。这同时也是 DSH facade 报错里给出的官方写法（`return { inject: ['slots'], apply(ctx) { ctx.slots.… } }`）。

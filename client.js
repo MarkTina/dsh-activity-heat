@@ -6302,20 +6302,11 @@ function build(require) {
               );
             });
 
-            // 折叠态徽章：只做状态提示（需要你关注的会话数）
-            safeRegister('sidebar.toggle.badge', function () {
-              return slots.register(
-                {
-                  name: 'sidebar.toggle.badge',
-                  id: 'heat-badge',
-                  order: 20,
-                  locale: NS,
-                  label: function () { return tt('nav'); },
-                  inject: injectProps,
-                },
-                ToggleBadge,
-              );
-            });
+            // 注意：不要再注册 `sidebar.toggle.badge`。它是宿主 **single** 席位，
+            // 已被内置 `client-ui-settings-general` 的 DesktopUpdateBadge 占用；
+            // 同优先级重复注册会抛 “single slot ... already has a registration”，
+            // 在启动链路里会让本插件的 apply 中断 → 表现为「重启后插件不加载、
+            // 手动禁用/启用才恢复」。折叠态徽章能力因此移除，入口改由「更多」菜单承担。
 
             // 「更多」菜单里的一行入口
             safeRegister('sidebar.panellist.actions', function () {
@@ -6349,6 +6340,10 @@ function build(require) {
                       name: 'shell.bottom',
                       id: 'heat-bottom',
                       order: 20,
+                      // shell.bottom 是 single 席位，内置 inspector 以 priority 0 占用；
+                      // 用更低的 priority 才能 shadow 它（slot 规则：数值最低者渲染），
+                      // 同优先级会抛 “already has a registration”。
+                      priority: -1000,
                       locale: NS,
                       label: function () { return tt('bottom.title', { count: 0 }); },
                       inject: injectProps,
