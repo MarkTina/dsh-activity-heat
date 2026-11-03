@@ -919,11 +919,11 @@ function build(require) {
     'background:radial-gradient(closest-side, rgba(255,255,255,.42), rgba(255,255,255,0));}',
     '@keyframes ah-vpipe-bulbglow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.06)}}',
     /* 工作区段（三段式最左）：整卡等高、加宽 + 淡底；左缘 4px 色条 + 图标 + 名（可两行），醒目且与正文用发丝线分隔 */
-    '.ah-ws-tag{display:flex;flex-direction:column;align-items:flex-start;flex:none;align-self:stretch;width:clamp(124px, 20%, 236px);box-sizing:border-box;',
+    '.ah-ws-tag{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;flex:none;align-self:stretch;width:clamp(124px, 20%, 236px);box-sizing:border-box;',
     'padding:0 12px 0 12px;',
     'border-right:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 55%, transparent);',
     'background:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.08)) 42%, transparent);}',
-    '.ah-ws-tag-inner{display:flex;align-items:flex-start;gap:6px;width:100%;min-width:0;padding-top:1px;color:var(--dsw-alias-label-secondary);}',
+    '.ah-ws-tag-inner{display:flex;align-items:flex-start;gap:6px;width:100%;min-width:0;color:var(--dsw-alias-label-secondary);}',
     '.ah-ws-tag-inner svg{flex:none;opacity:.7;margin-top:2px;}',
     /* 名字最多两行（够宽时一行完整），充分利用这块区域；悬停 title 看全名 */
     '.ah-ws-tag-text{min-width:0;font-size:.82em;line-height:20px;font-weight:500;color:var(--dsw-alias-label-secondary);',
@@ -4264,11 +4264,11 @@ function build(require) {
           style: {
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
+            gap: 5,
             color: UI.textSecondary,
-            // 整行统一一个字号，chip 全部继承，不再各自覆盖
-            fontSize: '0.88em',
-            lineHeight: '23px',
+            // 整行统一一个字号，chip 全部继承，不再各自覆盖；小一号避免半屏换行
+            fontSize: '0.8em',
+            lineHeight: '22px',
             flexWrap: 'wrap',
           },
         }, metaRow),
@@ -4534,10 +4534,10 @@ function build(require) {
           style: {
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
+            gap: 5,
             color: UI.textSecondary,
-            fontSize: '0.88em',
-            lineHeight: '23px',
+            fontSize: '0.8em',
+            lineHeight: '22px',
             flexWrap: 'wrap',
           },
         }, metaRow),
