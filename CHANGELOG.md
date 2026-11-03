@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.10 — 2026-11-03
+
+- **撤回悬浮方案，底部活动条改回贴底 `shell.bottom`。** 0.7.9 挂 `shell.overlay` 会浮在输入框 / 其它插件之上造成遮挡。现改回 `shell.bottom` 并**延迟 250ms 注册**，利用宿主「后注册优先级更高」的 shadow 规则抢占该 single 席位（**会覆盖内置 `dsh-experimental-inspector` 的底部面板**），渲染为贴底整条；仍仅「运行中/等待」时出现。
+- design.md §9、README 中英同步；`npm test` 五项全绿。
+
 ## 0.7.9 — 2026-11-03
 
 - **修复底部活动条不显示：改挂全局 `shell.overlay`。** 定位到宿主 `shell.bottom` 是 single 唯一席位、已被内置 `dsh-experimental-inspector` 占用，我们的注册被静默跳过。现在把底部活动条挂到全局可叠加的 `shell.overlay`，渲染为底部居中悬浮条——**不打开面板也能在底部点击切换**，仍只在有「运行中/等待」会话时出现。

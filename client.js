@@ -2955,7 +2955,7 @@ function build(require) {
   }
 
   /**
-   * 底部活动条（全局 shell.overlay 浮层）：只有存在「运行中 / 等待处理」的会话时才出现。
+   * 底部活动条（shell.bottom，贴 DSH 底部）：只有存在「运行中 / 等待处理」的会话时才出现。
    * 横向列出最多 6 个，点击直接打开；没有活动时返回 null，不预留高度。
    */
   function BottomActivityBar(props) {
@@ -3041,15 +3041,12 @@ function build(require) {
     return React.createElement('div', {
       className: 'ah-bottom-bar',
       style: {
-        position: 'absolute', left: '50%', bottom: 12, transform: 'translateX(-50%)',
         display: 'flex', alignItems: 'center', gap: 8,
-        padding: '6px 12px', minHeight: 32, maxWidth: 'min(960px, calc(100vw - 32px))',
-        boxSizing: 'border-box', borderRadius: 12,
-        border: '1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,0.18)) 70%, transparent)',
-        background: 'color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,0.12)) 92%, transparent)',
-        boxShadow: '0 8px 28px -10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12)',
-        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-        pointerEvents: 'auto', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap',
+        padding: '6px 12px', minHeight: 32, boxSizing: 'border-box',
+        borderTop: '1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,0.18)) 70%, transparent)',
+        background: 'color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,0.08)) 88%, transparent)',
+        backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+        overflowX: 'auto', overflowY: 'hidden',
       },
     },
       React.createElement('span', {
@@ -6338,20 +6335,32 @@ function build(require) {
             // 右侧栏展开按钮占用（single slot，同优先级重复注册会抛错），这里不再抢。
             // 会话内的入口改由侧栏「更多」菜单与折叠徽章承担。
 
-            // 底部活动条：挂在全局 frame 浮层（shell.overlay，list 可叠加），
-            // 不打开面板也能在底部点击切换；仅在运行中/等待会话时出现。
-            safeRegister('shell.overlay', function () {
-              return slots.register(
-                {
-                  name: 'shell.overlay',
-                  id: 'heat-bottom',
-                  order: 20,
-                  locale: NS,
-                  label: function () { return tt('bottom.title', { count: 0 }); },
-                  inject: injectProps,
-                },
-                BottomActivityBar,
-              );
+            // 底部活动条：贴 DSH 底部（shell.bottom single 席位）。该席位被内置
+            // dsh-experimental-inspector 占用；宿主按「后注册优先级更高」shadow，
+            // 故延迟注册以稳定占住底部（会覆盖 inspector 的底部面板）。
+            safeRegister('shell.bottom', function () {
+              var doRegister = function () {
+                try {
+                  slots.register(
+                    {
+                      name: 'shell.bottom',
+                      id: 'heat-bottom',
+                      order: 20,
+                      locale: NS,
+                      label: function () { return tt('bottom.title', { count: 0 }); },
+                      inject: injectProps,
+                    },
+                    BottomActivityBar,
+                  );
+                } catch (err) {
+                  try { console.error('[activity-heat] shell.bottom register failed:', err && err.message); } catch (e) { /* ignore */ }
+                }
+              };
+              // 浏览器里延迟注册以“后注册=更高优先级”占住被 inspector 占用的 single 席位；
+              // 测试环境（无 ResizeObserver）立即注册，便于断言捕获。
+              if (typeof ResizeObserver === 'undefined') doRegister();
+              else if (typeof setTimeout === 'function') setTimeout(doRegister, 250);
+              else doRegister();
             });
 
             safeRegister('sidebar.panellist', function () {
