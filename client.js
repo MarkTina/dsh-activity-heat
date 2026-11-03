@@ -919,11 +919,11 @@ function build(require) {
     'background:radial-gradient(closest-side, rgba(255,255,255,.42), rgba(255,255,255,0));}',
     '@keyframes ah-vpipe-bulbglow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.06)}}',
     /* 工作区段（三段式最左）：整卡等高、加宽 + 淡底；左缘 4px 色条 + 图标 + 名（可两行），醒目且与正文用发丝线分隔 */
-    '.ah-ws-tag{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;flex:none;align-self:stretch;width:clamp(124px, 20%, 236px);box-sizing:border-box;',
+    '.ah-ws-tag{display:flex;flex-direction:column;justify-content:center;align-items:center;flex:none;align-self:stretch;width:clamp(104px, 16%, 196px);box-sizing:border-box;',
     'padding:0 12px 0 12px;',
     'border-right:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 55%, transparent);',
     'background:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.08)) 42%, transparent);}',
-    '.ah-ws-tag-inner{display:flex;align-items:center;gap:6px;width:100%;min-width:0;color:var(--dsw-alias-label-secondary);}',
+    '.ah-ws-tag-inner{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-width:0;color:var(--dsw-alias-label-secondary);}',
     '.ah-ws-tag-inner svg{flex:none;opacity:.7;}',
     /* 名字单行省略（太长显示省略号，悬停 title 看全名） */
     '.ah-ws-tag-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82em;line-height:20px;font-weight:500;color:var(--dsw-alias-label-secondary);}',
@@ -4126,6 +4126,26 @@ function build(require) {
     // 入场错峰：同一批渲染的卡片依次淡入，最多累加到 160ms
     var enterDelay = (typeof props.index === 'number' ? Math.min(props.index, 8) : 0) * 20;
 
+    // 量卡片宽度：宽时状态放右侧（2 号位），窄时放左侧工作区段（1 号位）
+    var cardRef = React.useRef ? React.useRef(null) : { current: null };
+    var cardWidthState = React.useState(0);
+    var cardW = cardWidthState[0];
+    var setCardW = cardWidthState[1];
+    React.useEffect(function () {
+      if (typeof ResizeObserver === 'undefined' || !cardRef.current) return undefined;
+      try {
+        var ro = new ResizeObserver(function (entries) {
+          for (var i = 0; i < entries.length; i += 1) {
+            var w = entries[i].contentRect && entries[i].contentRect.width;
+            if (w) setCardW(w);
+          }
+        });
+        ro.observe(cardRef.current);
+        return function () { try { ro.disconnect(); } catch (e) { /* ignore */ } };
+      } catch (e) { return undefined; }
+    }, []);
+    var showStatusRight = cardW >= 720;
+
     // 所属工作区移到卡片右侧；左侧 meta 只保留时间与用量
     var workspaceName = session.workspace
       ? (session.workspace.title || basenameOf(session.workspace.path) || tt('workspace.untitled'))
@@ -4182,6 +4202,21 @@ function build(require) {
     // 会话是否有可见状态（归档/空闲不显示）
     var hasStatus = session.archived !== true && session.primaryState !== 'idle';
 
+    // 状态栈：主状态（原生六态）+ 可叠加的「N 子智能体」；两处复用同一份
+    var statusStack = function (mt) {
+      if (!hasStatus) return null;
+      return React.createElement('span', {
+        key: 'st',
+        style: { display: 'flex', flexDirection: 'column', gap: 2, marginTop: mt, alignItems: 'center', maxWidth: '100%', minWidth: 0 },
+      },
+        session.statusItems[0].key.indexOf('status.subagentsRunning') === 0
+          ? React.createElement(SubagentTag, { count: session.runningSubagentCount, compact: true, stacked: true })
+          : React.createElement(StatusTag, { items: session.statusItems, stacked: true }),
+        session.statusItems.length > 1
+          ? React.createElement(SubagentTag, { count: session.runningSubagentCount, compact: true, stacked: true })
+          : null);
+    };
+
     var children = [
       props && props.selectMode
         ? React.createElement('span', {
@@ -4211,23 +4246,8 @@ function build(require) {
               }, React.createElement('path', { d: 'M2 4.6c0-.8.6-1.4 1.4-1.4h2.7l1.3 1.6h4.2c.8 0 1.4.6 1.4 1.4v4.4c0 .8-.6 1.4-1.4 1.4H3.4C2.6 11.9 2 11.3 2 10.5z' })),
               React.createElement('span', { className: AH.wsTagText }, workspaceName))
           : null,
-        // 会话状态（原生六态）+ 可叠加的「N 子智能体」，放在工作区名下方；归档/空闲不显示。
-        hasStatus
-          ? React.createElement('span', {
-              key: 'st',
-              style: { display: 'flex', flexDirection: 'column', gap: 2, marginTop: 4, alignItems: 'flex-start', maxWidth: '100%', minWidth: 0 },
-            },
-              session.statusItems[0].key.indexOf('status.subagentsRunning') === 0
-                ? React.createElement(SubagentTag, {
-                    count: session.runningSubagentCount, compact: true, stacked: true,
-                  })
-                : React.createElement(StatusTag, { items: session.statusItems, stacked: true }),
-              session.statusItems.length > 1
-                ? React.createElement(SubagentTag, {
-                    count: session.runningSubagentCount, compact: true, stacked: true,
-                  })
-                : null)
-          : null,
+        // 窄时状态放在工作区名下方（宽时移到右侧 2 号位）
+        (hasStatus && !showStatusRight) ? statusStack(4) : null,
       ),
       React.createElement(
         'span',
@@ -4276,6 +4296,12 @@ function build(require) {
           },
         }, metaRow),
       ),
+      (hasStatus && showStatusRight)
+        ? React.createElement('span', {
+            key: 'status',
+            style: { flex: 'none', width: 66, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', justifyContent: 'center' },
+          }, statusStack(0))
+        : null,
       React.createElement(
         'span',
         {
@@ -4338,6 +4364,7 @@ function build(require) {
       'button',
       {
         type: 'button',
+        ref: cardRef,
         onClick: props && props.selectMode ? props.onToggleSelect : props.onClick,
         // 用 aria-label 而不是 title：原生 tooltip 会在悬停时长胶囊时浮出来挡住耗时卡
         'aria-label': tt('card.openSessionTitle', { title: session.title || session.id }),
