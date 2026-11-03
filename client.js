@@ -4181,17 +4181,6 @@ function build(require) {
     var metaRow = renderMetaGroups(groups);
 
     // 卡片右侧的状态列：主状态 + 可叠加的子智能体
-    var statusColumnStyle = {
-      flex: 'none',
-      width: 66,
-      alignSelf: 'stretch',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 2,
-      alignItems: 'center',
-      justifyContent: 'center',
-    };
-
     var children = [
       props && props.selectMode
         ? React.createElement('span', {
@@ -4206,26 +4195,39 @@ function build(require) {
             },
           }, props.selected ? '✓' : '')
         : null,
-      workspaceName
-        ? React.createElement('span', {
-            key: 'ws',
-            className: AH.wsTag,
-            title: workspaceName,
-            style: { marginLeft: 8 },
-          },
-            React.createElement('span', { key: 'inner', className: AH.wsTagInner },
+      React.createElement('span', {
+        key: 'ws',
+        className: AH.wsTag + (workspaceName ? '' : ' ah-ws-tag--empty'),
+        title: workspaceName || undefined,
+        style: { marginLeft: 8 },
+      },
+        workspaceName
+          ? React.createElement('span', { key: 'inner', className: AH.wsTagInner },
               React.createElement('svg', {
                 viewBox: '0 0 16 16', width: 11, height: 11, fill: 'none',
                 stroke: 'currentColor', strokeWidth: 1.4, strokeLinejoin: 'round', strokeLinecap: 'round',
                 'aria-hidden': 'true', style: { flex: 'none', opacity: 0.6 },
               }, React.createElement('path', { d: 'M2 4.6c0-.8.6-1.4 1.4-1.4h2.7l1.3 1.6h4.2c.8 0 1.4.6 1.4 1.4v4.4c0 .8-.6 1.4-1.4 1.4H3.4C2.6 11.9 2 11.3 2 10.5z' })),
-              React.createElement('span', { className: AH.wsTagText }, workspaceName)))
-        : React.createElement('span', {
-            key: 'ws',
-            className: AH.wsTag + ' ah-ws-tag--empty',
-            style: { marginLeft: 8 },
-            'aria-hidden': 'true',
-          }),
+              React.createElement('span', { className: AH.wsTagText }, workspaceName))
+          : null,
+        // 会话状态（原生六态）+ 可叠加的「N 子智能体」，放在工作区名下方；归档/空闲不显示。
+        (session.archived !== true && session.primaryState !== 'idle')
+          ? React.createElement('span', {
+              key: 'st',
+              style: { display: 'flex', flexDirection: 'column', gap: 2, marginTop: 4, alignItems: 'flex-start', maxWidth: '100%', minWidth: 0 },
+            },
+              session.statusItems[0].key.indexOf('status.subagentsRunning') === 0
+                ? React.createElement(SubagentTag, {
+                    count: session.runningSubagentCount, compact: true, stacked: true,
+                  })
+                : React.createElement(StatusTag, { items: session.statusItems, stacked: true }),
+              session.statusItems.length > 1
+                ? React.createElement(SubagentTag, {
+                    count: session.runningSubagentCount, compact: true, stacked: true,
+                  })
+                : null)
+          : null,
+      ),
       React.createElement(
         'span',
         { key: 'body', style: { display: 'flex', flexDirection: 'column', gap: 3, flex: '1 1 auto', minWidth: 0 } },
@@ -4273,23 +4275,6 @@ function build(require) {
           },
         }, metaRow),
       ),
-      // 状态列：主状态（原生六态之一）+ 可叠加的「N 子智能体」；归档/空闲不显示。
-      session.archived !== true && session.primaryState !== 'idle'
-        ? React.createElement('span', {
-            key: 'status',
-            style: statusColumnStyle,
-          },
-            session.statusItems[0].key.indexOf('status.subagentsRunning') === 0
-              ? React.createElement(SubagentTag, {
-                  count: session.runningSubagentCount, compact: true, stacked: true,
-                })
-              : React.createElement(StatusTag, { items: session.statusItems, stacked: true }),
-            session.statusItems.length > 1
-              ? React.createElement(SubagentTag, {
-                  count: session.runningSubagentCount, compact: true, stacked: true,
-                })
-              : null)
-        : null,
       React.createElement(
         'span',
         {

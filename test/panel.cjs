@@ -381,10 +381,14 @@ function collect(tree) {
   check(all.indexOf('进行中') !== -1, '显示原生「进行中」状态');
   const currentBadges = c.components.filter((x) => x.name === 'CurrentBadge');
   check(currentBadges.length === 1, '「当前」做成标题前徽章');
-  const workingCol = c.nodes.find(
+  const oldStatusCol = c.nodes.find(
     (n) => n.props && n.props.key === 'status' && n.props.style && n.props.style.width === 66,
   );
-  check(Boolean(workingCol), '会话状态落在卡片右侧 66px 留白列');
+  check(!oldStatusCol, '状态不再占独立的右侧 66px 列（已移到工作区段）');
+  const wsRail = c.nodes.find(
+    (n) => String(n.props.className || '').indexOf('ah-ws-tag') !== -1,
+  );
+  check(Boolean(wsRail), '工作区段 rail 承载状态');
   check(
     c.components.some((x) => x.name === 'StatusTag' && x.props.items && x.props.items[0].state === 'ongoing'),
     '进行中用 StatusTag(ongoing)',
