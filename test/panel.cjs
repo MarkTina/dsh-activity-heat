@@ -266,7 +266,7 @@ function collect(tree) {
 
   const seatNames = b.regs.map((r) => r.o.name);
   ['sidebar.session.row.leading', 'sidebar.session.row.hover', 'sidebar.toggle.badge',
-    'sidebar.panellist.actions', 'conversation.composer.dock', 'sidebar.panellist', 'main',
+    'sidebar.panellist.actions', 'shell.bottom', 'sidebar.panellist', 'main',
     'sidebar.right.pane.tab'].forEach((name) => {
     check(seatNames.indexOf(name) !== -1, '注册 seat ' + name, seatNames.join(','));
   });
@@ -986,7 +986,7 @@ function collect(tree) {
 /* ================= 18. 底部活动条 ================= */
 {
   const b = boot(false);
-  const reg = b.regs.find((r) => r.o.name === 'conversation.composer.dock');
+  const reg = b.regs.find((r) => r.o.name === 'shell.bottom');
   check(Boolean(reg), '注册底部活动条 seat（conversation.composer.dock）');
   const inj = reg && typeof reg.o.inject === 'function' ? reg.o.inject() : {};
   const view = collect(reg.C({

@@ -114,7 +114,7 @@ for (const item of waiting) {
 {
   const names = seatRegs.map((r) => r.o.name);
   ['sidebar.session.row.leading', 'sidebar.session.row.hover', 'sidebar.toggle.badge',
-    'sidebar.panellist.actions', 'conversation.composer.dock', 'sidebar.panellist', 'main',
+    'sidebar.panellist.actions', 'shell.bottom', 'sidebar.panellist', 'main',
     'sidebar.right.pane.tab'].forEach((name) => {
     assert(names.includes(name), 'slots 就绪后注册 ' + name);
   });

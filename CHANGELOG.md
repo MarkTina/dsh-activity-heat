@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.12 — 2026-11-03
+
+- **修复底部活跃会话栏与「会话信息」重叠：从 `conversation.composer.dock` 回退到贴底的 `shell.bottom`。** 宿主自己的会话统计（`activity` 轮次/步数/速度、`usage` token/缓存命中）就注册在 `conversation.composer.dock`，同挂该 dock 会让活跃会话标签与统计行挤在同一行、视觉重叠。改回**横跨三列下方整行**的 `shell.bottom`（默认组合不占用；被 inspector 占用时延迟 250ms 注册抢占），恢复「整条嵌在最下面、不重叠」；仍仅「运行中/等待」时出现、点击直达。
+- design.md §9、README 中英同步；`npm test` 五项全绿。
+
 ## 0.7.11 — 2026-11-03
 
 - **底部活跃会话栏改挂输入框下方的 `conversation.composer.dock`。** 之前 `shell.bottom` 被内置 inspector 占用、`shell.overlay` 又会悬浮遮挡输入框与其它插件。现挂到 list 可叠加的 `conversation.composer.dock`（定义即"输入框卡片下方的 ambient 条目"）：稳定显示活跃会话、点一下切换，不抢席位、不遮挡；仍仅「运行中/等待」会话时出现。
