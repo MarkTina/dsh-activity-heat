@@ -692,6 +692,7 @@ function build(require) {
     cardGroup: 'ah-card--group',
     chip: 'ah-chip',
     wsTag: 'ah-ws-tag',
+    wsTagInner: 'ah-ws-tag-inner',
     wsTagText: 'ah-ws-tag-text',
     meterTrack: 'ah-meter-track',
     meterFill: 'ah-meter-fill',
@@ -917,17 +918,16 @@ function build(require) {
     '.ah-vpipe-bulb::before{content:"";position:absolute;left:22%;right:22%;bottom:12%;height:22%;border-radius:50%;pointer-events:none;',
     'background:radial-gradient(closest-side, rgba(255,255,255,.42), rgba(255,255,255,0));}',
     '@keyframes ah-vpipe-bulbglow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.06)}}',
-    /* 工作区标签：卡片最左侧玻璃胶囊；宽度随卡片自适应，宽面板尽量完整展示工作区名 */
-    '.ah-ws-tag{display:inline-flex;align-items:center;gap:5px;flex:none;align-self:center;width:clamp(104px, 20%, 208px);box-sizing:border-box;padding:3px 8px;border-radius:8px;',
-    'border:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 66%, transparent);',
-    'background-color:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.10)) 68%, var(--dsw-alias-bg-base, #fff));',
-    'box-shadow:inset 0 1px 0 rgba(255,255,255,.2);',
-    'font-size:.72em;line-height:16px;color:var(--dsw-alias-label-secondary);}',
-    /* 过长自动换行：宽度够时一行完整显示，太长最多两行、超出省略 */
-    '.ah-ws-tag-text{min-width:0;overflow:hidden;white-space:normal;overflow-wrap:anywhere;word-break:break-word;',
-    'display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;max-height:32px;}',
-    /* 无工作区：同宽透明占位，保持整列左对齐 */
-    '.ah-ws-tag--empty{background:transparent;border-color:transparent;box-shadow:none;}',
+    /* 工作区列：整卡等高的左 rail——左缘色条 + 文件夹图标 + 单行名；与正文用发丝线分隔，形成稳定两栏 */
+    '.ah-ws-tag{display:flex;flex-direction:column;align-items:flex-start;flex:none;align-self:stretch;width:clamp(96px, 15%, 172px);box-sizing:border-box;',
+    'padding:0 10px 0 9px;border-left:3px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.28)) 80%, transparent);',
+    'border-right:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 60%, transparent);}',
+    '.ah-ws-tag-inner{display:inline-flex;align-items:center;gap:5px;min-width:0;max-width:100%;min-height:20px;line-height:20px;color:var(--dsw-alias-label-secondary);}',
+    '.ah-ws-tag-inner svg{flex:none;opacity:.6;}',
+    /* 单行省略，悬停 title 看全名（单行保证整列高度稳定） */
+    '.ah-ws-tag-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.72em;}',
+    /* 无工作区：保留同宽与分隔线，但不显示色条与内容 */
+    '.ah-ws-tag--empty{border-left-color:transparent;}',
     '.ah-mini-track{position:relative;display:inline-block;border-radius:999px;overflow:hidden;flex:none;vertical-align:middle;',
     'background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 58%, transparent);',
     'box-shadow:inset 0 1px 1px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.20);}',
@@ -4209,14 +4209,19 @@ function build(require) {
             key: 'ws',
             className: AH.wsTag,
             title: workspaceName,
-            style: { marginLeft: 8 },
+            style: {
+              marginLeft: 8,
+              borderLeftColor: (session.open || session.primaryState === 'ongoing')
+                ? 'var(--color-blue-500, #3b82f6)' : undefined,
+            },
           },
-            React.createElement('svg', {
-              key: 'ico', viewBox: '0 0 16 16', width: 11, height: 11, fill: 'none',
-              stroke: 'currentColor', strokeWidth: 1.4, strokeLinejoin: 'round', strokeLinecap: 'round',
-              'aria-hidden': 'true', style: { flex: 'none', opacity: 0.65 },
-            }, React.createElement('path', { d: 'M2 4.6c0-.8.6-1.4 1.4-1.4h2.7l1.3 1.6h4.2c.8 0 1.4.6 1.4 1.4v4.4c0 .8-.6 1.4-1.4 1.4H3.4C2.6 11.9 2 11.3 2 10.5z' })),
-            React.createElement('span', { className: AH.wsTagText }, workspaceName))
+            React.createElement('span', { key: 'inner', className: AH.wsTagInner },
+              React.createElement('svg', {
+                viewBox: '0 0 16 16', width: 11, height: 11, fill: 'none',
+                stroke: 'currentColor', strokeWidth: 1.4, strokeLinejoin: 'round', strokeLinecap: 'round',
+                'aria-hidden': 'true', style: { flex: 'none', opacity: 0.6 },
+              }, React.createElement('path', { d: 'M2 4.6c0-.8.6-1.4 1.4-1.4h2.7l1.3 1.6h4.2c.8 0 1.4.6 1.4 1.4v4.4c0 .8-.6 1.4-1.4 1.4H3.4C2.6 11.9 2 11.3 2 10.5z' })),
+              React.createElement('span', { className: AH.wsTagText }, workspaceName)))
         : React.createElement('span', {
             key: 'ws',
             className: AH.wsTag + ' ah-ws-tag--empty',

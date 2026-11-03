@@ -750,6 +750,8 @@ function collect(tree) {
   check(meters.length > 0, '热度计仍走组件（视觉由 ah-meter-* 类接管）', meters.length);
   const wsTags = sessionsView.nodes.filter((n) => String(n.props.className || '').indexOf('ah-ws-tag') !== -1);
   check(wsTags.length > 0, '卡片最左侧显示工作区名标签（替代温度计）', wsTags.length);
+  const wsInners = sessionsView.nodes.filter((n) => String(n.props.className || '').indexOf('ah-ws-tag-inner') !== -1);
+  check(wsInners.length > 0, '工作区列含 inner（图标 + 名）', wsInners.length);
   const noPipes = sessionsView.components.filter((x) => x.name === 'VerticalHeatPipe');
   check(noPipes.length === 0, '会话卡片已移除温度计组件', noPipes.length);
 }
