@@ -2955,7 +2955,7 @@ function build(require) {
   }
 
   /**
-   * 底部活动条（shell.bottom）：只有存在「运行中 / 等待处理」的会话时才占位。
+   * 底部活动条（全局 shell.overlay 浮层）：只有存在「运行中 / 等待处理」的会话时才出现。
    * 横向列出最多 6 个，点击直接打开；没有活动时返回 null，不预留高度。
    */
   function BottomActivityBar(props) {
@@ -3041,11 +3041,15 @@ function build(require) {
     return React.createElement('div', {
       className: 'ah-bottom-bar',
       style: {
+        position: 'absolute', left: '50%', bottom: 12, transform: 'translateX(-50%)',
         display: 'flex', alignItems: 'center', gap: 8,
-        padding: '5px 12px', minHeight: 30, boxSizing: 'border-box',
-        borderTop: '1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,0.18)) 72%, transparent)',
-        background: 'color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,0.08)) 62%, transparent)',
-        overflowX: 'auto', overflowY: 'hidden',
+        padding: '6px 12px', minHeight: 32, maxWidth: 'min(960px, calc(100vw - 32px))',
+        boxSizing: 'border-box', borderRadius: 12,
+        border: '1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,0.18)) 70%, transparent)',
+        background: 'color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,0.12)) 92%, transparent)',
+        boxShadow: '0 8px 28px -10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12)',
+        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+        pointerEvents: 'auto', overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap',
       },
     },
       React.createElement('span', {
@@ -6334,11 +6338,12 @@ function build(require) {
             // 右侧栏展开按钮占用（single slot，同优先级重复注册会抛错），这里不再抢。
             // 会话内的入口改由侧栏「更多」菜单与折叠徽章承担。
 
-            // 底部活动条：只在有运行中/等待处理会话时出现
-            safeRegister('shell.bottom', function () {
+            // 底部活动条：挂在全局 frame 浮层（shell.overlay，list 可叠加），
+            // 不打开面板也能在底部点击切换；仅在运行中/等待会话时出现。
+            safeRegister('shell.overlay', function () {
               return slots.register(
                 {
-                  name: 'shell.bottom',
+                  name: 'shell.overlay',
                   id: 'heat-bottom',
                   order: 20,
                   locale: NS,

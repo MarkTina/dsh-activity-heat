@@ -80,7 +80,7 @@ A workspace card also aggregates everything that can be summed: session count, t
 - **Native-aligned session status**: Waiting for approval / Plan awaiting review / Waiting for answer / Running / Completed / Idle, all drawn with the host `StateDot` from `useSessionStatus`; subagents stack on top of the primary state.
 - **Range views**: the session view switches between Active / Archived / Subagents; archived rows can be restored in place.
 - **Two lightweight entries**: collapsed badge (attention count) and the sidebar “More” menu — reach the panel without opening it. The session-header corner seat belongs to ui-sidebar-right’s panel button, so this plugin no longer contends for it.
-- **Bottom activity bar**: appears only when sessions are running or waiting, click to open.
+- **Global bottom activity bar**: mounted on the frame-wide overlay (`shell.overlay`, usable without opening the panel); when sessions are running or waiting it floats centered at the bottom, click to open; nothing reserved when idle.
 - **Batch actions**: Select mode → Archive selected / Pin selected / Copy IDs; running sessions use stop-and-archive.
 - **Native sidebar row actions**: the row “…” menu gains Open in terminal / Copy title / Copy working directory / Download log, and the row hover gets a terminal button. Both read the same action catalog (`SESSION_ACTION_DEFS`) as the panel.
 - **Stop and archive**: running sessions are no longer just disabled; the dialog lists the running turn / subagents / jobs / schedules and confirms with `stopActivity` (stopping is irreversible).
