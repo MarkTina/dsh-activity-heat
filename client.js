@@ -4144,7 +4144,7 @@ function build(require) {
         return function () { try { ro.disconnect(); } catch (e) { /* ignore */ } };
       } catch (e) { return undefined; }
     }, []);
-    var showStatusRight = cardW >= 720;
+    var showStatusRight = cardW >= 960;
 
     // 所属工作区移到卡片右侧；左侧 meta 只保留时间与用量
     var workspaceName = session.workspace
@@ -4235,7 +4235,7 @@ function build(require) {
         key: 'ws',
         className: AH.wsTag + (workspaceName ? '' : ' ah-ws-tag--empty'),
         title: workspaceName || undefined,
-        style: { marginLeft: 8, justifyContent: hasStatus ? 'flex-start' : 'center' },
+        style: { marginLeft: 8, justifyContent: (hasStatus && !showStatusRight) ? 'flex-start' : 'center' },
       },
         workspaceName
           ? React.createElement('span', { key: 'inner', className: AH.wsTagInner },
@@ -4299,7 +4299,7 @@ function build(require) {
       (hasStatus && showStatusRight)
         ? React.createElement('span', {
             key: 'status',
-            style: { flex: 'none', width: 66, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', justifyContent: 'center' },
+            style: { flex: 'none', width: 66, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', justifyContent: 'center', marginRight: 12, marginLeft: 4 },
           }, statusStack(0))
         : null,
       React.createElement(
