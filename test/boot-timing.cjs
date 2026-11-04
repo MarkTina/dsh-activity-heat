@@ -102,7 +102,7 @@ plugin.apply(ctx);
 assert(seatRegs.length === 0, 'slots 未就绪时暂时没有 seat（符合预期，没有崩溃）');
 assert(shortcutRegs.length === 1, '快捷键不等 slots，apply 当场就注册了');
 assert(pendingCallbacks.some((item) => item.deps.includes('slots')), 'slots 的注册被挂起等待，而不是永久放弃');
-assert(pendingCallbacks.some((item) => item.deps.includes('locale')), 'locale 服务未就绪时同样挂起等待');
+assert(!pendingCallbacks.some((item) => item.deps.includes('locale')), '不再用 ctx.inject 等待 locale（改为可选 ctx.get，官方规范）');
 
 /* 服务就绪：宿主补发回调 */
 slotsReady = true;

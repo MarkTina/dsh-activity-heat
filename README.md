@@ -77,7 +77,7 @@ A workspace card also aggregates everything that can be summed: session count, t
 
 ## New in 0.4–0.5 — more than one panel
 
-- **Native-aligned session status**: Waiting for approval / Plan awaiting review / Waiting for answer / Running / Completed / Idle, all drawn with the host `StateDot` from `useSessionStatus`; subagents stack on top of the primary state.
+- **Native-aligned session status**: Waiting for approval / Plan awaiting review / Waiting for answer / Running / Completed / Idle, drawn with a local `StatusDot` that mirrors the host’s, from `useSessionStatus`; subagents stack on top of the primary state.
 - **Range views**: the session view switches between Active / Archived / Subagents; archived rows can be restored in place.
 - **Lightweight entries**: the sidebar “More” menu and the `/heat` command — reach the panel without opening it (the collapsed badge is no longer registered because the host uses that seam for its update badge). The session-header corner seat belongs to ui-sidebar-right’s panel button, so this plugin no longer contends for it.
 - **Bottom active-sessions bar (full-width page bottom)**: mounted on `shell.bottom` (the full-width row below all three columns); appears only when sessions are running or waiting, click to open; nothing reserved when idle. **Do not mount it on `conversation.composer.dock`** — the host’s own session stats (turns/steps/speed, tokens/cache hit) live there and would collide with the stats row.

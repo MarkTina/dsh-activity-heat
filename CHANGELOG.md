@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.15 — 2026-11-04
+
+- **按 DSH 官方插件开发手册整改（`@deepseek-ai/dsh-agent-preset/skills/cordis-plugin-development/`）。** ①**移除 `require('@deepseek-ai/dsh-client-ui-primitives')`**：官方明确禁止加载任何 Harness Client 包，且抛错会把整个 slot 条目打空；状态点改本地 `StatusDot`、侧栏菜单/行按钮改自绘，全部用 `--dsw-alias-*` 主题令牌。②客户端注册形态对齐官方模板：`window.__ModuleLoader__.load({ id: 包名, factory })` 返回 `{ inject: ['slots'], apply(ctx) { ctx.slots.inject(...) } }`，`apply` 主路径直接用 `ctx.slots`。③`locale` 改为可选 `ctx.get('locale')` 探测，不再用 `ctx.inject` 自管依赖。④bundle 结构（`dsh.bundle.patch` + `cordis.patch.yml` 插行）与 `dsh.client` 声明保持官方形态。
+- 同步更新 design.md、AGENTS.md、牢记事项 §一.6；`npm test` 五项全绿。
+
 ## 0.7.14 — 2026-11-03
 
 - **修复「重启后插件不加载、要手动禁用/启用才生效」的真正根因：抢占了宿主的 single 席位。** 本插件把折叠徽章注册到 `sidebar.toggle.badge`，而该席位是 **single**、已被内置 `client-ui-settings-general` 的 `DesktopUpdateBadge` 以 priority 0 占用；同优先级重复注册会抛 `single slot "sidebar.toggle.badge" already has a registration at priority 0`。该异常发生在启动的 apply 链路里，会中断本插件其余席位注册，表现为整插件消失，手动开关（重新 apply）后才恢复。**移除 `sidebar.toggle.badge` 注册**（折叠徽章能力取消，入口保留侧栏「更多」菜单与 `/heat`）。

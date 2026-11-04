@@ -107,7 +107,7 @@ linear-gradient(180deg,
 
 状态模型、语义标签、视觉与数据源全部对齐宿主原生 `useSessionStatus` / `sessionStatuses()`，不再自绘鲸尾状态标。
 
-| 状态 | 视觉（宿主 StateDot） | 判定（原生字段） |
+| 状态 | 视觉（本地 StatusDot，语义对齐宿主） | 判定（原生字段） |
 |---|---|---|
 | 等待审批 | warning 橙点 +「等待审批」 | `pendingInteraction.kind === 'approval'` |
 | 计划待审 | warning 橙点 +「计划待审」 | `pendingInteraction.kind === 'plan-review'` |
@@ -117,7 +117,7 @@ linear-gradient(180deg,
 | 已完成 | done 绿点 +「已完成」 | `completionUnread === true` |
 | 空闲 | idle 灰点；行内不显示点 | 其它 |
 
-- 视觉统一用 `Primitives.StateDot`（转圈/点/对勾与颜色由宿主决定）；拿不到 primitives 时退回同色本地圆点。
+- 视觉用**本地 `StatusDot`**（转圈/点/对勾与颜色语义对齐宿主），颜色一律走 `--dsw-alias-state-*` / `--color-blue-500` 令牌。**不要再 require 宿主 `@deepseek-ai/dsh-client-ui-primitives`**：官方规范禁止加载 Harness Client 包，且其抛错会把整个 slot 条目打空。
 - 数据源以宿主 `useSessionStatus` 为准：`running` / `pendingInteraction` / `completionUnread`。仅当该会话快照缺失时，才退回 `summary.running`、`userQuestions.active`、本地查看水位。
 - 互斥优先级：**等待审批/计划待审/等待回答 > 进行中 > 子智能体 > 已完成 > 空闲**；“子智能体运行中”可与前一状态并列（可叠加），不替代主状态。
 - 等待用户处理 / 已完成卡片**不套运行中外框/跑马灯**；只有“进行中”套。
@@ -222,7 +222,7 @@ linear-gradient(180deg,
 - [ ] `prefers-reduced-motion` 下动效全停。
 - [ ] 右侧列 110 / 列表 padding / 卡片高度都没变；不再有独立状态列（状态在工作区名下方）。
 - [ ] 「等待审批 / 计划待审 / 等待回答 / 进行中 / 已完成 / 空闲」互斥且优先级正确；“N 个子智能体运行中”可叠加。
-- [ ] 状态视觉为宿主 `StateDot`（蓝转圈 / 橙点 / 绿点 / 灰点），无鲸尾状态标。
+- [ ] 状态视觉为本地 `StatusDot`（蓝转圈 / 橙点 / 绿点 / 灰点，令牌取色），语义对齐宿主，无鲸尾状态标。
 - [ ] 顶部工具栏分两行：主行（对象 + 范围 + 数量）、筛选行（热度 chip）；**所有控件共用同一套玻璃表面**，层级只靠蓝色强调强度区分，不出现实心白块 / 裸文字 / 实蓝胶囊混排。
 - [ ] 浮层、菜单、对话框不被列表裁剪。
 - [ ] `npm test` 五项全绿。

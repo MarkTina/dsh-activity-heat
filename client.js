@@ -544,15 +544,9 @@ function build(require) {
     ReactDOM = null;
   }
 
-  // 宿主 UI primitives（Module Loader 的 baseline external）。能拿到就用原生
-  // MenuItemButton，行高/字号/图标槽位/分隔线/悬停与原生菜单完全一致；
-  // 测试或其它加载 lane 拿不到时退回自绘按钮（样式见 AH_CSS 的 ah-side-action）。
-  var Primitives = null;
-  try {
-    Primitives = require('@deepseek-ai/dsh-client-ui-primitives');
-  } catch (error) {
-    Primitives = null;
-  }
+  // 官方规范（practices.md §UI）：不要 require 任何 Harness Client 包
+  // （如 @deepseek-ai/dsh-client-ui-primitives）——它们无预警变更，且抛错会把整个
+  // slot 条目打空。全部 UI 改用本地组件 + 宿主主题令牌（--dsw-alias-*）。
 
   var MINUTE = 60000;
   var HOUR = 60 * MINUTE;
@@ -2794,17 +2788,12 @@ function build(require) {
   }
 
   /**
-   * 状态点：优先用宿主原生的 StateDot（转圈/点/对勾与颜色都由宿主决定），
-   * 拿不到 primitives 时退回本地圆点，仍用宿主主题令牌，保证测试/旧宿主可渲染。
+   * 状态点：本地绘制（用宿主主题令牌），与宿主 StateDot 的形态/颜色语义一致。
+   * 官方规范禁止 require Harness Client 包，因此这里不引用宿主 primitives。
    */
   function StatusDot(props) {
     var state = (props && props.state) || 'idle';
     var size = props && props.size;
-    try {
-      if (Primitives && Primitives.StateDot) {
-        return React.createElement(Primitives.StateDot, { state: state, size: size });
-      }
-    } catch (ignored) { /* primitives 不可用时退回本地圆点 */ }
     var d = size || (state === 'ongoing' ? 14 : 10);
     var color = state === 'warning'
       ? 'var(--dsw-alias-state-warn-primary, #f59e0b)'
@@ -3634,15 +3623,6 @@ function build(require) {
         closeMenu();
         runSidebarSessionAction(actionId, props && props.ctx, props.sessionId, props && props.displayTitle, summary);
       };
-      var HostItem = Primitives && Primitives.MenuItemButton;
-      if (typeof HostItem === 'function') {
-        return React.createElement(HostItem, {
-          icon: SidebarActionIcon(actionId, 16),
-          onSelect: activate,
-          separatorBefore: def.groupStart === true,
-          disabled: disabled,
-        }, tt(def.labelKey));
-      }
       return React.createElement('button', {
         type: 'button',
         role: 'menuitem',
@@ -6227,29 +6207,22 @@ function build(require) {
         if (typeof ctx.effect === 'function') ctx.effect(ensureStyles, 'activity-heat: styles');
         else ensureStyles();
 
-        /* 界面字典注册到宿主 locale 服务；服务缺失时 tt() 自动退回内置中文。 */
+        /* 界面字典注册到宿主 locale 服务；服务缺失时 tt() 自动退回内置中文。
+           官方规范：可选服务用 ctx.get 探测（缺失即跳过），不用 ctx.inject 自管依赖。 */
         try {
-          if (typeof ctx.inject === 'function') {
-            ctx.inject(['locale'], function (scope) {
-              try {
-                var locale = scope && (scope.locale
-                  || (typeof scope.get === 'function' ? scope.get('locale') : undefined));
-                if (!locale || typeof locale.register !== 'function') return;
-                var register = function () { return locale.register(NS, { zh: ZH, en: EN }); };
-                if (typeof ctx.effect === 'function') ctx.effect(register, 'activity-heat: locale');
-                else register();
-                if (typeof locale.bind === 'function') activeT = locale.bind(NS);
-              } catch (error) {
-                ahWarn('[activity-heat] locale registration failed:', error && error.message);
-              }
-            });
+          var locale = typeof ctx.get === 'function' ? ctx.get('locale') : (ctx && ctx.locale);
+          if (locale && typeof locale.register === 'function') {
+            var registerLocale = function () { return locale.register(NS, { zh: ZH, en: EN }); };
+            if (typeof ctx.effect === 'function') ctx.effect(registerLocale, 'activity-heat: locale');
+            else registerLocale();
+            if (typeof locale.bind === 'function') activeT = locale.bind(NS);
           }
         } catch (error) {
-          ahWarn('[activity-heat] locale inject failed:', error && error.message);
+          ahWarn('[activity-heat] locale registration failed:', error && error.message);
         }
 
-        // slots 由插件级 inject（见 return 的 inject 声明）保证就绪，这里直接用；
-        // 仍保留 ctx.get / ctx.inject 兜底，兼容老宿主或服务延迟出现的极端情况。
+        // 官方 UI 插件规范：返回 { inject: ['slots'], apply(ctx) }，cordis 会在
+        // apply 前把 slots 服务注入就绪；这里直接使用 ctx.slots，不再自管依赖。
         function registerSeats(slots) {
           try {
             if (!slots || typeof slots.inject !== 'function' || typeof slots.register !== 'function') {
@@ -6417,22 +6390,21 @@ function build(require) {
               }, SidebarTerminalRowAction);
             });
 
-            ahLog('[activity-heat] seats registered: row.leading + row.hover + badge + more + bottom + panellist + main + rightbar.tab + sidebar.session.actions');
+            ahLog('[activity-heat] seats registered: row.leading + row.hover + more + bottom + panellist + main + rightbar.tab + sidebar.session.actions');
           } catch (error) {
             ahWarn('[activity-heat] seat registration failed:', error && error.message);
           }
         }
 
-        var slotsService;
-        try {
-          slotsService = typeof ctx.get === 'function' ? ctx.get('slots') : undefined;
-        } catch (error) {
-          slotsService = undefined;
+        // 官方 UI 插件规范：cordis 按 inject:['slots'] 先把 slots 注入就绪，主路径直接用
+        // ctx.slots；ctx.get / ctx.inject 仅作为老宿主兼容兜底（受控 facade 不应走到）。
+        var slots = ctx && ctx.slots;
+        if (!slots && typeof ctx.get === 'function') {
+          try { slots = ctx.get('slots'); } catch (error) { slots = undefined; }
         }
-        if (slotsService) {
-          registerSeats(slotsService);
+        if (slots) {
+          registerSeats(slots);
         } else {
-          // 兜底：插件级 inject 正常已保证 slots；仅老宿主 / 服务尚未提供时订阅一次。
           var canInject = false;
           try { canInject = typeof ctx.inject === 'function'; } catch (error) { canInject = false; }
           if (canInject) {
@@ -6441,13 +6413,12 @@ function build(require) {
                 var s = scope && (scope.slots
                   || (typeof scope.get === 'function' ? scope.get('slots') : undefined));
                 if (s) registerSeats(s);
-                else ahWarn('[activity-heat] slots still unavailable after inject');
               });
             } catch (error) {
               ahWarn('[activity-heat] slots inject fallback failed:', error && error.message);
             }
           } else {
-            ahWarn('[activity-heat] slots unavailable; seats skipped');
+            ahWarn('[activity-heat] ctx.slots missing despite inject:["slots"]; seats skipped');
           }
         }
 
