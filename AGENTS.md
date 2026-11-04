@@ -7,6 +7,7 @@ DSH Web 插件：按"距最后一次活动的时间"算热度，标记最近活�
 ```bash
 npm test                 # panel / menu / shortcut / boot-timing / locale 五项自检
 node --check client.js   # 改完先跑这个
+npm run doctor:install   # 检查 profile 是否真的 Junction 到本仓库且版本一致（重启前必查）
 node test/panel.cjs      # 只跑渲染与交互断言
 node test/menu.cjs       # 只跑右键菜单的动作与降级断言
 ```

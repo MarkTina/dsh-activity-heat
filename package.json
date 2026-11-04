@@ -55,7 +55,8 @@
   ],
   "scripts": {
     "check": "node --check index.js && node --check client.js",
-    "test": "node test/panel.cjs && node test/menu.cjs && node test/shortcut.cjs && node test/boot-timing.cjs && node test/locale.cjs"
+    "test": "node test/panel.cjs && node test/menu.cjs && node test/shortcut.cjs && node test/boot-timing.cjs && node test/locale.cjs",
+    "doctor:install": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-plugin-install.ps1"
   },
   "dsh": {
     "bundle": {
