@@ -47,8 +47,8 @@ function assert(ok, label) {
 }
 
 /* ---------- 场景 A：slots 晚于 apply 就绪（重启时的真实情况） ---------- */
-assert(Array.isArray(plugin.inject) && plugin.inject.indexOf('slots') !== -1,
-  '插件声明 inject:["slots"]（重启后自动加载的关键）');
+assert(!plugin.inject || plugin.inject.indexOf('slots') === -1,
+  '不声明 inject:["slots"]（避免冷启动 pending，改用 ctx.get 轮询）');
 const seatRegs = [];
 const shortcutRegs = [];
 let slotsReady = false;

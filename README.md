@@ -250,7 +250,7 @@ node test/boot-timing.cjs  # restart timing: recovery when slots become ready la
 node test/locale.cjs       # locale dictionaries and metadata stay in sync
 ```
 
-`npm test` runs all five.
+`pnpm test` runs all five.
 
 ## Known limitations
 

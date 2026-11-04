@@ -250,7 +250,7 @@ node test/boot-timing.cjs  # 重启时序：slots 晚就绪时能否恢复
 node test/locale.cjs       # locale 字典与元数据是否同步
 ```
 
-`npm test` 会依次跑完这五项。
+`pnpm test` 会依次跑完这五项。
 
 ## 已知限制
 

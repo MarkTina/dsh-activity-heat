@@ -5,9 +5,9 @@ DSH Web 插件：按"距最后一次活动的时间"算热度，标记最近活�
 ## 常用命令
 
 ```bash
-npm test                 # panel / menu / shortcut / boot-timing / locale 五项自检
+pnpm test                # panel / menu / shortcut / boot-timing / locale 五项自检
 node --check client.js   # 改完先跑这个
-npm run doctor:install   # 检查 profile 是否真的 Junction 到本仓库且版本一致（重启前必查）
+pnpm doctor:install      # 检查 profile 是否真的 Junction 到本仓库且版本一致（重启前必查）
 node test/panel.cjs      # 只跑渲染与交互断言
 node test/menu.cjs       # 只跑右键菜单的动作与降级断言
 ```
@@ -35,7 +35,7 @@ test/               五项免依赖自检
 5. 界面文字一律走 `tt()`，字典改动要同时更新 `client.js` 内联字典与 `locale/*.json`。
 6. **右键菜单/对话框必须 portal 到 `document.body`**：列表是 `overflow:auto` 容器，原地渲染会被裁剪。写操作逐项做能力检测（`uiWorkspace.pin/archive/fork`、`sessions.using`），缺方法只禁用对应项，不要让整份菜单消失或抛错。
 7. **改 UI/UX 前先读 [design.md](design.md)**：颜色、动效、布局的红线（§2）不得违反；必须破例时先改纲领并写清理由。任何新偏差补进 §9「偏差记录」，否则同类问题会再次出现。
-8. **严格按 DSH 官方插件规范**（随包手册 `@deepseek-ai/dsh-agent-preset/skills/cordis-plugin-development/`）：bundle 用 `dsh.bundle.patch` 在 `cordis.patch.yml` 插行注册；UI 插件声明 `dsh.client` + `./client`，浏览器侧 `window.__ModuleLoader__.load({ id: 包名, factory })` 返回 `{ inject: ['slots'], apply(ctx) { ctx.slots.inject(...) } }`；**不要 require 任何 Harness Client 包**（如 `@deepseek-ai/dsh-client-ui-primitives`），不要抢宿主 single 席位。详见 [牢记事项](牢记事项.md) §一.6。
+8. **严格按 DSH 官方插件规范**（随包手册 `@deepseek-ai/dsh-agent-preset/skills/cordis-plugin-development/`）：bundle 用 `dsh.bundle.patch`、UI 插件声明 `dsh.client` + `./client`。但本 DSH 版本有两条实测约束：**不要声明插件级 `inject:['slots']`**（profile 静态 entry 会 pending、冷启动不 apply，改用 `ctx.get('slots')` 轮询）；**整个 `client.js` 必须用 IIFE 包裹**——宿主把多个插件的 client.js 拼进同一脚本作用域，顶层函数名（如 `build`）会互相覆盖（envhub 的 `build` 曾覆盖我们的，导致本插件永不 apply）。**禁止 require Harness Client 包**，不要抢宿主 single 席位。详见 [牢记事项](牢记事项.md) §一.6/§一.7。
 
 ## 索引
 

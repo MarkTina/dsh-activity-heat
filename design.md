@@ -205,7 +205,7 @@ linear-gradient(180deg,
 2. 归类：**语义 / 层级 / 质感 / 布局**——只改其中一类，不要一次动三类。
 3. 改 `AH_CSS` 或 `HEAT_TONES`，不要在组件里散落色值；新增颜色先问"它表达什么"。
 4. 明暗主题都看一遍；有条件就出一张对照截图。
-5. 跑 `node --check client.js` + `npm test`（panel 里有视觉断言）。
+5. 跑 `node --check client.js` + `pnpm test`（panel 里有视觉断言）。
 6. 更新 `CHANGELOG.md`，需要时更新 `README`；**产生新偏差就补进 §9**。
 7. 完全退出 DSH 再启动验收（`link:` 安装 + 样式按 id 判重，刷新无效）。
 

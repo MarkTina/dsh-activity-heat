@@ -493,6 +493,13 @@ var AH_I18N = /* AH_I18N_START */ {
  * 硬编码的测试模式。默认 false：所有诊断日志都不输出（正式版行为）。
  * 排查问题时把它改成 true，然后刷新页面，控制台会打印完整链路日志。
  */
+(function () {
+'use strict';
+
+// 整个插件包在 IIFE 里：宿主会把多个插件的 client.js 直接拼进同一个 combo 脚本，
+// 顶层函数名（例如 `build`）会互相覆盖；envhub 也有 `function build()`，曾导致我们的
+// factory 实际调用到 envhub 的 build、本插件永不 apply。IIFE 隔离所有顶层声明。
+
 var ACTIVITY_HEAT_DEBUG = false;
 
 /** 仅测试模式下输出；正式版完全静默。 */
@@ -6195,13 +6202,10 @@ function build(require) {
   }
 
   return {
-    // 插件级 inject：cordis 会等 slots（UI 槽位）服务就绪后再调用 apply。
-    // 这是「重启后插件不自动加载、要手动禁用/启用才生效」的根因修复：
-    // 重启时本模块（dsh.client.immediately: true）常早于 UI 槽位服务执行；若只在
-    // apply 内部用 ctx.inject 异步等 slots，宿主的 client-modules 会把该插件判为
-    // “waiting for activation” 且不再重试，于是整插件不挂载，只有重新 apply 才激活。
-    // 声明为插件级 inject 后，激活时机交给 cordis 统一调度，重启即可自动挂载。
-    inject: ['slots'],
+    // 注意：不要声明插件级 inject:['slots']。实测本 DSH 版本里 profile 静态 client
+    // entry 会在 slots 服务就绪前创建，声明 inject 会让 fiber 停在 pending，冷启动
+    // 永远不调用 apply（只有 HMR/手动开关才恢复）。改为 apply 内用 ctx.get('slots')
+    // 轮询等待（受控 ctx 允许 ctx.get），就绪后注册。
     apply: function apply(ctx) {
       try {
         if (typeof ctx.effect === 'function') ctx.effect(ensureStyles, 'activity-heat: styles');
@@ -6396,31 +6400,49 @@ function build(require) {
           }
         }
 
-        // 官方 UI 插件规范：cordis 按 inject:['slots'] 先把 slots 注入就绪，主路径直接用
-        // ctx.slots；ctx.get / ctx.inject 仅作为老宿主兼容兜底（受控 facade 不应走到）。
-        var slots = ctx && ctx.slots;
-        if (!slots && typeof ctx.get === 'function') {
-          try { slots = ctx.get('slots'); } catch (error) { slots = undefined; }
-        }
-        if (slots) {
-          registerSeats(slots);
-        } else {
-          var canInject = false;
-          try { canInject = typeof ctx.inject === 'function'; } catch (error) { canInject = false; }
-          if (canInject) {
-            try {
-              ctx.inject(['slots'], function (scope) {
-                var s = scope && (scope.slots
-                  || (typeof scope.get === 'function' ? scope.get('slots') : undefined));
-                if (s) registerSeats(s);
-              });
-            } catch (error) {
-              ahWarn('[activity-heat] slots inject fallback failed:', error && error.message);
-            }
-          } else {
-            ahWarn('[activity-heat] ctx.slots missing despite inject:["slots"]; seats skipped');
+        // 官方模板用 inject:['slots']，但在本 DSH 版本里 profile 静态 client entry 会在
+        // slots 服务就绪前创建；声明 inject 会让 fiber 停在 pending，冷启动永不 apply。
+        // 因此不声明 inject，改为用受控 ctx 允许的 ctx.get('slots') 等待就绪；老宿主/
+        // 测试环境没有 ctx.get 时，退回 ctx.inject(['slots']) 订阅一次。
+        var slotsDone = false;
+        function tryRegisterSeats(attempt) {
+          if (slotsDone) return;
+          var s;
+          try { s = typeof ctx.get === 'function' ? ctx.get('slots') : undefined; } catch (error) { s = undefined; }
+          if (s && typeof s.inject === 'function' && typeof s.register === 'function') {
+            slotsDone = true;
+            registerSeats(s);
+            return;
           }
+          if (attempt === 0) {
+            var canInject = false;
+            try { canInject = typeof ctx.inject === 'function'; } catch (error) { canInject = false; }
+            if (canInject) {
+              try {
+                ctx.inject(['slots'], function (scope) {
+                  var s2 = scope && (scope.slots || (typeof scope.get === 'function' ? scope.get('slots') : undefined));
+                  if (!slotsDone && s2 && typeof s2.register === 'function') {
+                    slotsDone = true;
+                    registerSeats(s2);
+                  }
+                });
+              } catch (error) { /* 受控 facade 不暴露 ctx.inject */ }
+            }
+          }
+          if (attempt >= 900) return;
+          var raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : null;
+          if (raf) { raf(function () { tryRegisterSeats(attempt + 1); }); return; }
+          try {
+            if (typeof MessageChannel === 'function') {
+              var ch = new MessageChannel();
+              ch.port1.onmessage = function () { tryRegisterSeats(attempt + 1); };
+              ch.port2.postMessage(0);
+            } else if (typeof setTimeout === 'function') {
+              setTimeout(function () { tryRegisterSeats(attempt + 1); }, 16);
+            }
+          } catch (error) { /* no scheduler */ }
         }
+        tryRegisterSeats(0);
 
         // 可选初始化各自隔离：任一服务缺失都不应中断其余，更不能让整插件不激活。
         try { registerShortcut(ctx); } catch (error) { ahWarn('[activity-heat] shortcut init failed:', error && error.message); }
@@ -6432,3 +6454,5 @@ function build(require) {
     },
   };
 }
+
+})();

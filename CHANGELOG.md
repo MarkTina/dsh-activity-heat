@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.16 — 2026-11-04
+
+- **修复冷启动不加载的真根因：`client.js` 顶层 `build` 被 combo 中其它插件（envhub）同名函数覆盖。** DSH 把同一 profile 的多个 `client.js` 拼进同一脚本作用域；`dsh-envhub` 也有 `function build()` 且排在我们之后，导致我们的 factory 实际调用 envhub 的 `build`、反复注册 envhub，本插件 `apply` 永不执行（探针：`module-loaded → factory` 后无 apply，envhub 日志重复 3 次）。修复：**整个 `client.js` 用 IIFE 包裹**，隔离全部顶层声明。探针复验冷启动：`module-loaded → build-ok → factory → apply → seats`。
+- **不声明插件级 `inject:['slots']`**：本 DSH 版本 profile 静态 client entry 在 slots 服务就绪前创建，声明 inject 会让 fiber 停在 pending、冷启动不 apply；改为 `ctx.get('slots')` 轮询等待（`ctx.inject` 仅老宿主/测试兜底）。
+- **项目统一改用 pnpm**：`package.json` 增加 `packageManager: pnpm@11.28.5`，提交 `pnpm-lock.yaml`；命令统一 `pnpm test` / `pnpm doctor:install`。
+- 同步诊断文档、AGENTS、牢记事项、design、README；`pnpm test` 五项全绿。
+
 ## 0.7.15 — 2026-11-04
 
 - **按 DSH 官方插件开发手册整改（`@deepseek-ai/dsh-agent-preset/skills/cordis-plugin-development/`）。** ①**移除 `require('@deepseek-ai/dsh-client-ui-primitives')`**：官方明确禁止加载任何 Harness Client 包，且抛错会把整个 slot 条目打空；状态点改本地 `StatusDot`、侧栏菜单/行按钮改自绘，全部用 `--dsw-alias-*` 主题令牌。②客户端注册形态对齐官方模板：`window.__ModuleLoader__.load({ id: 包名, factory })` 返回 `{ inject: ['slots'], apply(ctx) { ctx.slots.inject(...) } }`，`apply` 主路径直接用 `ctx.slots`。③`locale` 改为可选 `ctx.get('locale')` 探测，不再用 `ctx.inject` 自管依赖。④bundle 结构（`dsh.bundle.patch` + `cordis.patch.yml` 插行）与 `dsh.client` 声明保持官方形态。
