@@ -224,6 +224,8 @@
     "kitty": "kitty",
     "gnometerminal": "GNOME Terminal",
     "konsole": "Konsole",
+    "gitbash": "Git Bash",
+    "wsl": "WSL",
     "fork": "Fork",
     "sourcetree": "Sourcetree",
     "github": "GitHub Desktop",

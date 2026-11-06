@@ -78,6 +78,8 @@ const R = {
       fn();
     } catch (ignored) { /* 替身忽略 effect 异常（真实环境由组件自身兜底） */ }
   },
+  useMemo: (fn) => fn(),
+  useCallback: (fn) => fn,
 };
 
 /* ---------------- 沙箱 ---------------- */
@@ -105,10 +107,13 @@ const defaultFetch = (url, init) => {
     } catch (ignored) { /* 忽略 */ }
     return Promise.resolve(jsonResponse({ ok: true }));
   }
+  if (target.indexOf('activity-heat/open-with/apps') !== -1) {
+    return Promise.resolve(jsonResponse({ apps: ['explorer', 'vscode', 'windowsterminal', 'gitbash'] }));
+  }
   if (target.indexOf('open-in-app/apps') !== -1) {
     return Promise.resolve(jsonResponse({ apps: ['explorer', 'vscode', 'windowsterminal', 'gitbash'] }));
   }
-  if (target.indexOf('open-in-app/open') !== -1) {
+  if (target.indexOf('activity-heat/open-with/open') !== -1 || target.indexOf('open-in-app/open') !== -1) {
     try {
       openCalls.push(JSON.parse(init && init.body ? init.body : '{}'));
     } catch (ignored) { /* 忽略 */ }
@@ -224,6 +229,8 @@ const workspaceState = {
 const env = createSandbox();
 const regs = [];
 const calls = [];
+/* contextMenus 服务替身：记录登记项与提示 */
+const cmState = { registered: [], notices: [] };
 
 const services = {
   slots: {
@@ -258,7 +265,17 @@ const services = {
       return Promise.resolve();
     },
   },
+  contextMenus: {
+    register: (options) => {
+      cmState.registered.push(options);
+      return () => {};
+    },
+    notify: (text, success) => {
+      cmState.notices.push({ text, success });
+    },
+  },
   sessions: {
+    list: { getSnapshot: () => sessionState },
     using: (id, options, fn) => {
       calls.push(['using', id]);
       const reference = {
@@ -374,6 +391,7 @@ function reset() {
   appended.length = 0;
   openCalls.length = 0;
   terminalCalls.length = 0;
+  cmState.notices.length = 0;
 }
 
 /* ---------------- 断言 ---------------- */
@@ -538,32 +556,51 @@ function reset() {
     services.uiWorkspace.archiveSession = original;
   }
 
-  /* 侧栏原生行菜单动作 */
+  /* 侧栏原生会话菜单：contextMenus 数据动作（UI 与原生同源 + 原生级联） */
   {
-    const termReg = regs.find((entry) => entry.options.id === 'ah-terminal');
-    check(Boolean(termReg), '侧栏行菜单注册「在终端中打开」');
-    const inj = termReg && typeof termReg.options.inject === 'function' ? termReg.options.inject() : {};
-    let menuClosed = false;
-    const node = termReg.Component({
-      ...inj,
-      sessionId: 'hot',
-      displayTitle: '炽热会话',
-      useSessions: (sel) => sel({ byId: { hot: { id: 'hot', cwd: 'D:/p/alpha' } } }),
-      useMenuOpenState: () => [true, (value) => { menuClosed = value === false; }],
-    });
-    check(Boolean(node) && node.type === 'button', '侧栏动作是一个菜单按钮');
-    const childNodes = Array.isArray(node.children) ? node.children.flat(2) : [];
-    check(
-      childNodes.some((child) => child && child.type === 'svg'),
-      '侧栏动作带与原生菜单一致的图标',
-    );
-    check(String(node.props.className || '').indexOf('ah-side-action--group') !== -1,
-      '插件动作分组前有分隔线标记');
-    node.props.onClick();
+    const sessionMenuReg = cmState.registered.find((entry) => entry.id === 'activity-heat.session');
+    check(Boolean(sessionMenuReg), '侧栏会话菜单注册到 contextMenus 服务');
+    check(sessionMenuReg && sessionMenuReg.target === 'session', '菜单目标为 session');
+    check(sessionMenuReg && typeof sessionMenuReg.resolve === 'function', '菜单提供 resolve');
+    check(!regs.some((entry) => entry.options && entry.options.id === 'ah-terminal'),
+      '有 contextMenus 时不再注册旧自绘菜单项');
+    const iconRegs = regs.filter((entry) => entry.options && entry.options.name === 'contextMenu.icon');
+    check(iconRegs.length >= 5, '注册 contextMenu.icon 图标渲染器', iconRegs.length);
+
     await flush();
-    check(terminalCalls.length > 0 && terminalCalls[terminalCalls.length - 1].path === 'D:/p/alpha',
-      '侧栏终端动作打开会话目录', JSON.stringify(terminalCalls));
-    check(menuClosed, '侧栏动作点击后关闭宿主菜单');
+    reset();
+    const actions = sessionMenuReg ? sessionMenuReg.resolve({ sessionId: 'hot', displayTitle: '炽热会话' }) : [];
+    const ids = actions.map((item) => item.id);
+    check(['terminal', 'open-with', 'copy-title', 'copy-cwd', 'download'].every((id) => ids.indexOf(id) !== -1),
+      '菜单包含 5 个插件动作', JSON.stringify(ids));
+    const openWith = actions.find((item) => item.id === 'open-with');
+    check(openWith && Array.isArray(openWith.children), '「在其他应用中打开…」带 children 子菜单');
+    const children = openWith && openWith.children ? openWith.children : [];
+    check(children[0] && children[0].label === '在终端中打开', '子菜单终端固定第一项', children[0] && children[0].label);
+    check(children.some((item) => item.label === '在VS Code中打开'), '子菜单含编辑器项');
+    check(children.some((item) => item.separatorBefore === true), '子菜单按分组加分隔线');
+
+    const terminalAction = actions.find((item) => item.id === 'terminal');
+    terminalAction.run();
+    await flush();
+    check(terminalCalls.some((call) => call.path === 'D:/p/alpha'), '终端动作打开会话目录', JSON.stringify(terminalCalls));
+    check(cmState.notices.some((n) => String(n.text).indexOf('已打开终端') !== -1), '终端动作给出成功提示');
+
+    const vscodeChild = children.find((item) => item.label === '在VS Code中打开');
+    if (vscodeChild) { vscodeChild.run(); await flush(); }
+    check(openCalls.some((call) => call.app === 'vscode' && call.path === 'D:/p/alpha'), '子菜单选应用走自研 open 路由');
+
+    actions.find((item) => item.id === 'copy-title').run();
+    await flush();
+    check(clipboard.indexOf('炽热会话') !== -1, '复制标题动作', clipboard[0]);
+
+    actions.find((item) => item.id === 'copy-cwd').run();
+    await flush();
+    check(clipboard.indexOf('D:/p/alpha') !== -1, '复制工作目录动作');
+
+    actions.find((item) => item.id === 'download').run();
+    await flush();
+    check(clicked.indexOf('a') !== -1, '下载日志动作触发下载');
   }
 
   /* 重命名 */
@@ -762,7 +799,7 @@ function reset() {
   check(pickerLabels[1] === '在文件资源管理器中打开', '文件管理器排在其后', pickerLabels[1]);
   check(pickerLabels.indexOf('在VS Code中打开') !== -1, '编辑器在列表中');
   check(pickerLabels.indexOf('在Windows Terminal中打开') !== -1, '终端在列表中');
-  check(pickerLabels.indexOf('在Git Bash中打开') === -1, 'Git Bash 不作为终端显示');
+  check(pickerLabels.indexOf('在Git Bash中打开') !== -1, 'Git Bash 也作为可选项列出');
   pickerItems.find((item) => item.label === '在终端中打开').onSelect();
   await flush();
   check(terminalCalls.some((call) => call.path === 'D:/p/alpha'), '二级列表的终端项可用');
@@ -795,6 +832,12 @@ function reset() {
     openCalls.some((call) => call.app === 'vscode' && call.path === 'D:/p/alpha'),
     '工作区路径传给 open-in-app/open',
   );
+
+  /* 旧自绘二级浮层已不再注册（改由 contextMenus children 承载） */
+  {
+    check(!regs.some((entry) => entry.options && entry.options.id === 'ah-open-with'),
+      '有 contextMenus 时不再注册旧「打开方式」浮层项');
+  }
 
   console.log(failed === 0 ? '\nMENU CHECK PASSED' : '\nMENU CHECK FAILED (' + failed + ')');
   process.exitCode = failed === 0 ? 0 : 1;

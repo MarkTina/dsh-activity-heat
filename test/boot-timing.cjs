@@ -22,6 +22,9 @@ const R = {
   },
   useState: (v) => [typeof v === 'function' ? v() : v, () => {}],
   useEffect: () => {},
+  useMemo: (fn) => fn(),
+  useCallback: (fn) => fn,
+  useRef: (init) => ({ current: init === undefined ? null : init }),
   Fragment: 'Fragment',
 };
 const sb = { console: { log() {}, warn() {}, error: console.error }, setInterval: () => 0, clearInterval: () => {}, Date };
@@ -120,8 +123,8 @@ for (const item of waiting) {
     'sidebar.right.pane.tab'].forEach((name) => {
     assert(names.includes(name), 'slots 就绪后注册 ' + name);
   });
-  assert(names.filter((n) => n === 'sidebar.workspaces.session.menu.item').length === 4,
-    '侧栏行菜单注册 4 个插件动作');
+  assert(names.filter((n) => n === 'sidebar.workspaces.session.menu.item').length === 5,
+    '侧栏行菜单注册 5 个插件动作');
   assert(names.filter((n) => n === 'sidebar.workspaces.session.row.action').length === 1,
     '侧栏行按钮注册终端动作');
 }
@@ -156,7 +159,7 @@ plugin.apply({
   },
 });
 
-assert(seatRegs2.length === 12, 'slots 就绪时立即注册 7 个核心 seat + 4 个侧栏菜单动作 + 1 个行按钮');
+assert(seatRegs2.length === 13, 'slots 就绪时立即注册 7 个核心 seat + 5 个侧栏菜单动作 + 1 个行按钮');
 assert(shortcutRegs2.length === 1, 'slots 就绪时快捷键也注册');
 assert(shortcutRegs2[0].defaults['web:windows'].code === 'KeyH', '默认组合键为 KeyH（Ctrl+Alt+H）');
 
@@ -186,7 +189,7 @@ const facade = new Proxy({}, {
 let threw3 = null;
 try { plugin.apply(facade); } catch (error) { threw3 = error; }
 assert(threw3 === null, '受控 facade（无 ctx.inject）下 apply 不抛错');
-assert(seatRegs3.length === 12, '受控 facade 下仍通过 ctx.get("slots") 注册全部席位');
+assert(seatRegs3.length === 13, '受控 facade 下仍通过 ctx.get("slots") 注册全部席位');
 
 console.log(failed === 0 ? '\nBOOT-TIMING REGRESSION PASSED' : '\nBOOT-TIMING REGRESSION FAILED (' + failed + ')');
 process.exitCode = failed === 0 ? 0 : 1;

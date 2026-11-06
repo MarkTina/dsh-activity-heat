@@ -1,5 +1,129 @@
 # Changelog
 
+## 0.16.2 — 2026-11-06
+
+- **侧栏原生会话右键菜单改为走宿主 `contextMenus` 菜单服务**：原来通过旧 `sidebar.workspaces.session.menu.item` 插槽自绘 `<button>`（`ah-side-action`），图标/字号/高度/间距/hover 与宿主原生菜单项不一致。现改为 `ctx.contextMenus.register({ target: 'session', order: 510, resolve })`，由宿主同一套 Menu 渲染 → 与内置项（置顶/重命名/分叉/复制 ID/在文件夹显示/归档）完全同源；动作顺序落在「在文件夹显示」之后、「归档」之前。
+- **「在其他应用中打开…」改为原生二级级联**：动作改用 `children` 数组，宿主 `menuEntries` 自动转成原生 `submenu`，**hover 即展开，不再点击后关菜单再弹自绘浮层（二次点击）**。子菜单仍是「在终端中打开」固定第一项 + 文件管理器/编辑器/终端/其他分组。
+- 图标通过 `contextMenu.icon` keyed slot 注册（复用现有内联 SVG，**不 require 任何 Harness Client 包**，符合 DESIGN §2 / PITFALLS 一.6）。老宿主无 `contextMenus` 服务时自动回退旧自绘项（二选一，不重复注册）。
+- 打开动作仍走自研 Host 路由（`open-terminal` / `open-with/open`），提示按真实返回码（VETO D-002）；`pnpm test` 五项全绿。
+
+## 0.16.1 — 2026-11-06
+
+- **修复「在其他应用中打开」对 VS Code 等 Electron 应用永远打不开（却 toast 假成功）。** 根因：本插件运行在 `dsh-desktop-host` 进程内，该进程本身以 `ELECTRON_RUN_AS_NODE=1` 运行（Electron 当 Node 用）；`index.js` 的 `trySpawn` 用默认环境启动 `Code.exe <dir>` 时该变量被子进程继承 → 目标应用以 **Node 模式**运行、把目录当成脚本参数、几十毫秒内报错退出，**根本不开窗口**；但 `spawn` 的 `spawn` 事件已触发 → 路由回 `200` → 前端 toast「已在 VS Code 中打开」= 假成功。
+- 修复：新增 `launcherEnv()`，启动外部应用时从子进程 env 中删除 `ELECTRON_RUN_AS_NODE`（`child_process.spawn` 显式传净环境）。影响全部 Electron 系应用（VS Code / Insiders / Cursor / Windsurf / Zed …）；`explorer` / 终端等非 Electron 项不受影响。
+- 实测对照：同一 spawn 方式下，保留该变量时 `Code.exe` 64ms 退出、Code 进程数 0；清除后 Code 进程数 0→9、VS Code 窗口正常打开。
+- `pnpm test` 五项全绿。
+
+## 0.16.0 — 2026-11-06
+
+- **外部背景支持一键开关**：配置中心新增「启用外部背景」复选框（`bgEnabled`，默认开）。关闭后不渲染背景元素、不加载背景脚本，面板回到纯色底；背景代码输入框置灰。配置持久化并纳入 JSON 导入/导出。
+- `pnpm test` 五项全绿（392 条）。
+
+## 0.15.1 — 2026-11-05
+
+- 移除会话卡最左「工作区书签 rail」的独立淡底背景（`.ah-ws-tag` 的 `background` → `transparent`），与卡片主体融为一体；保留 1px 发丝分隔线与图标/名称，无工作区时同宽无底。
+- `pnpm test` 五项全绿（391 条）。
+
+## 0.15.0 — 2026-11-05
+
+- **配置中心扩展**：设置页显示背景原地址链接（`https://www.kubai.design/pro-threads/`）；新增可调 **卡片间距（0–32px）/ 卡片圆角（0–24px）/ 背景不透明度（0–100%）**，实时生效并持久化（`cardGap`/`cardRadius`/`bgOpacity`）。卡片间距与圆角改由 CSS 变量 `--ah-card-gap` / `--ah-card-radius` 下发。
+- **配置导入 / 导出（JSON）**：导出生成 `{bgEmbed,scrimColor,scrimOpacity,scrimBlur,cardGap,cardRadius,bgOpacity}` 的 JSON（写入文本框并尝试复制）；粘贴 JSON 点「导入」应用（再点保存持久化）。
+- `pnpm test` 五项全绿（391 条）。
+
+## 0.14.0 — 2026-11-05
+
+- **背景与外观配置中心**：顶部右侧（筛选项行最右）新增齿轮入口 → 弹窗可编辑「背景嵌入代码」（粘贴 `script`+自定义标签即可切换场景）与「中间层颜色 / 不透明度 / 模糊度」；配置持久化到 `localStorage`（`bgEmbed`/`scrimColor`/`scrimOpacity`/`scrimBlur`），默认填入 pro-threads `mobius/palette=paper`。
+- **背景与列表之间新增可配置中间层 `.ah-scrim`**：颜色遮罩 + `backdrop-filter: blur(px)`（默认白 45% / 10px），实时预览。
+- **背景脚本缓存**：`ensureEmbedScript` 按 `src` 只注入一次（内存 `__embedLoaded` + 浏览器缓存），不重复下载 `embed.js`。
+- **修复切换插件时的黑屏**：根因是 embed.js 的 `:host{background:#000}` + iframe `opacity:0` 直到场景 ready；现用 `.ah-threads-bg pro-threads{background:#f7f8fa !important}` 覆盖宿主黑底，切回不再闪黑。
+- `pnpm test` 五项全绿（388 条）。
+
+## 0.13.0 — 2026-11-05
+
+- **面板背景嵌入 kubai087/pro-threads 场景（实验）**：新增 `ThreadsBackground`（`.ah-threads-bg` → `<pro-threads scene="mobius" settings="palette=paper" palette="paper">`），一次性加载 `https://cdn.jsdelivr.net/gh/kubai087/pro-threads@main/embed.js`；置于 `z-index:-1`、`pointer-events:none`，不遮挡也不拦截交互；离线 / CSP 拦截 / 加载失败时自动退回纯色底。属外部资源嵌入（VETO D-005 记录），非自绘 CSS 纹理。
+- `pnpm test` 五项全绿（383 条，新增 pro-threads 断言）。
+
+## 0.12.4 — 2026-11-05
+
+- **会话列表 item 间距加大**：会话卡 / 工作区卡 / 运行中卡外框的底部间距由 8–10px 统一为 **12px**，缓解拥挤感（`margin-bottom`）。
+- `pnpm test` 五项全绿（380 条）。
+
+## 0.12.3 — 2026-11-05
+
+- **移除面板渐变流动背景，恢复纯色底（浅色=纯白）。** 用户反馈渐变背景与 DSH 底色边界感重，要求「拿掉、换回纯白」。删除 `.ah-shell::before` 背景层与 `ah-bg-drift` 动画；`.ah-shell` 改为纯色底 `var(--dsw-alias-bg-base, #fff)`（深色主题取各自底色）。同步移除 reduced-motion 里的背景选择器与相关断言，DESIGN/VETO 例外回退（VETO D-003 失效 → D-004）。
+- 保留 0.12.1 性能优化（静态卡不挂 backdrop、仅悬停单卡模糊/折射）。
+- `pnpm test` 五项全绿（380 条）。
+
+## 0.12.2 — 2026-11-05
+
+- **紧急修复：`@keyframes ah-bg-drift` 少写结束花括号，导致注入样式表后半段被整段吞掉。** 表现为主面板卡片失去玻璃/圆角/阴影（发灰）、侧栏入口 HeatRing 图标消失、背景渐变不显示——是性能改动引入的语法错误（不是删 UI）。补齐花括号后恢复。
+- 面板背景改为更明显的浅蓝渐变（蓝 16%–26%）+ 16s `transform` 漂移，流动更可见，且仍是合成层动画。
+- 背景**收拢为中部光晕、四边自然淡出为透明**（不再铺满到边），与 DSH 宿主底色平滑过渡、消除硬边界；漂移幅度收敛保证动画中四角始终透明。
+- 自检新增「注入 CSS 花括号必须平衡」断言（380 条全绿），防止同类语法错误再次静默通过。
+- `pnpm test` 五项全绿。
+
+## 0.12.1 — 2026-11-05
+
+- **修复会话列表滚动卡顿（性能）**：根因 ① 每张卡常驻 `backdrop-filter: … url(#svg)`（三重 `feDisplacementMap` 折射），N 张卡各带合成层；② 面板背景持续动画使每卡每帧重采样；③ 背景层 26px 大范围 `blur` 随 transform 每帧重算。优化：
+  - **静态卡片不挂 `backdrop-filter`**（只保留着色 + 三重边缘光 + 体积投影；面板背景是自绘平滑渐变，透出着色即是玻璃观感）；**仅悬停的单张卡**启用 `blur(2px)+折射`；
+  - 面板背景改为**纯 `transform` 合成动画**（移除 `background-position` 动画与 26px 大范围 `blur`），22s 交替；
+  - 结果：静态/滚动时无卡片 backdrop 合成层、背景走 GPU 合成，列表滚动顺滑。
+- `pnpm test` 五项全绿。
+
+## 0.12.0 — 2026-11-05
+
+- **面板浅色渐变流动背景**（`.ah-shell::before`）：低饱和浅蓝光斑（≤16%）缓慢漂移（30s 交替、blur 26px、`z-index:-1`），给卡片玻璃提供可模糊环境色，让纯白底也能看出透光质感；`prefers-reduced-motion` 下停。属 DESIGN §2 红线的显式例外（记入 VETO D-003），其余自绘背景仍禁止。
+- **级联菜单安全三角区 + 三层延时**（手册 002）：悬停开子菜单 220ms 延时；指针落在「上一刻指针 → 子菜单近边两角」安全三角内时不误切；安全窗口每 80ms 复查、满 1200ms 切换；离开菜单 360ms 关闭；触摸立即；键盘 / ARIA 保持不变。
+- **按钮按压手感**（手册 001 子集）：控件 / 菜单项 / 对话框 / 批量按钮按下整体下沉 1px（不新增变体、不用品牌色，遵循 VETO「统一玻璃控件」）。
+- **观感修正（同 0.12.0）**：`.ah-shell` 撑满高度（`flex/height:100%`），背景**全覆盖**、会话列表下方不再纯白；背景改为 `background-position` + `transform` 双驱动、18s 交替，流动更明显；**运行中 / 活跃会话卡片也改为液态玻璃**，跑马灯光带用 `mask` 镂空成只描边框的环，不再透进卡内。
+- `pnpm test` 五项全绿（新增背景层 / 流动关键帧 / 按压 / 安全三角等断言）。
+
+## 0.11.0 — 2026-11-05
+
+- **参照《999 个小技巧，让你 Vibe 的产品更有质感》设计手册做质感整改（010 / 011 / 007 / 004）**：
+  - **010 液态玻璃对齐手册**：边宽改 `rim=max(4, min(44, 短边/3.5))`；边缘位移由线性改为 `1.1×rim×(1-d/rim)^2.6` 非线性衰减（边硬、内缘平滑归零）；深色玻璃亮度 `.92→.8`；文字着色深色由 `screen` 改 `plus-lighter`，并由材质显式给 `--ah-ink`（浅玻璃深墨 / 深玻璃浅墨）；hover 改为着色提亮约 14%（保留 ≤1px 位移、去掉大外发光）；新增 `@property` 颜色令牌过渡、`prefers-reduced-transparency`/`forced-colors` 实底回退、对比度「密度守卫」（不足加密度、不降墨色，目标 4.5:1）。
+  - **明暗判定偏离手册第 7 条**：手册「<0.5 切浅色」在纯白/纯黑主题会生成「反相卡」（白底深卡、黑底亮卡），改为「背景亮 ≥0.5→浅色、暗 <0.5→深色」的保对比同向映射（记入 VETO-LIST）。
+  - **011 动效曲线**：新增 `--ah-ease-out/-in/-overshoot`；卡片/菜单/对话框/toast 入场改 ease-out，浮层退场 ease-in，当前徽章 overshoot。
+  - **004 圆角**：全站圆角对齐 4px 网格（4/8/12/16），`@supports corner-shape:superellipse(1.25)` 渐进增强（胶囊/圆形保持 round）。
+  - **007 排版**：工作区两行标题加 `text-wrap: balance`，其余数字 `tabular-nums` / 省略已合规。
+  - 运行中卡片仍保持实底、不套玻璃。
+- `pnpm test` 五项全绿（panel 新增 plus-lighter、brightness .8、@property、无障碍媒体查询、rim `/3.5`、`^2.6`、阈值等断言）。
+
+## 0.10.0 — 2026-11-05
+
+- **活跃对话的 item 卡片改为「液态玻璃」材质**（会话卡 + 工作区卡共用 `.ah-card`；运行中卡片仍保持实底 + 自家动效语言，不套玻璃）。按需求的七个层次落地：
+  - **投影**：多层体积投影（`0 10px 26px -12px` / `0 2px 6px`）+ 顶部受光，撑起卡片厚度。
+  - **模糊与提亮**：`backdrop-filter: blur(2px) saturate(180%) brightness(1.06)`（浅色玻璃）/ `saturate(160%) brightness(.92)`（深色玻璃）。
+  - **边缘折射**：浏览器侧用 canvas 生成「边缘一圈往内压、越靠边压得越狠、中间平整」的位移贴图，注入 SVG `feDisplacementMap`；三通道分别位移（R 比 B 多弯 `±15%` 形成色散）再 `feBlend screen` 合成；`backdrop-filter: url(#…)` 仅 Chrome/Edge 支持，用 `CSS.supports` 探到才启用，否则退回纯 blur。
+  - **着色**：半透明色彩遮罩，透明度随背景复杂度在浅色 6%–22% / 深色 16%–38% 间自动调整。
+  - **边缘光**：左上、右下各一道 + 再往内侧缩进一道（多层 inset box-shadow）。
+  - **文字着色**：浅色玻璃用 `mix-blend-mode: multiply`（正片叠底）；深色玻璃用 `screen` 提亮（实测暗底上 `overlay` 会把浅色字压暗、不可读，故改用滤色，见 VETO-LIST 偏差记录）。
+  - **亮度采样**：`elementsFromPoint` 读取卡片背后多个采样点的平均亮度与方差，`≥0.5` 切浅色玻璃、`<0.5` 切深色玻璃；`ResizeObserver` 随尺寸重建贴图，`MutationObserver` 随主题切换重算。
+  - 参数：边宽 44px 在卡片上按每轴 ≤28% 收敛（否则 64px 高的小卡上下边带重叠、没有平整中心），边缘偏移 1.1×边宽，色散 ±15%。
+  - 全链路 try/catch 降级：能力缺失 / 测试沙箱退回纯 CSS 玻璃，绝不向 factory 抛错。
+- `pnpm test` 五项全绿（panel 新增材质、折射滤镜、文字着色、边缘光、明暗切换等断言）。
+
+## 0.9.0 — 2026-11-05
+
+- **重做「在其他应用中打开…」：改为自研 Host 路由，修复 VS Code 打开不生效。** 旧实现依赖宿主 `open-in-app` catalog：`vscode` 的启动参数只有 `appPaths('Code.exe')`、缺 `{path}`，只激活/启动 Code 而不打开工作目录，但路由仍回 200 → 前端误报「已在 VS Code 中打开」。
+  - `index.js` 新增 `GET /activity-heat/open-with/apps`：Windows 读 `App Paths` 注册表（HKLM+HKCU，本地化默认值标签兼容）+ 常见安装路径 + PATH（只认 `.EXE`），JetBrains 扫 `%ProgramFiles%\JetBrains`；macOS 扫 `/Applications`、`/System/Applications/Utilities`、`~/Applications` 的 `.app`；Linux 用 `xdg-open` + PATH。结果缓存 60s。
+  - 新增 `POST /activity-heat/open-with/open`：按应用 + 目录解析**带目标目录**的 argv（`Code.exe <path>`、`pycharm64.exe <path>`、`explorer.exe <path>`、`wt.exe -d <path>`、`git-bash.exe --cd=<path>`、`wsl.exe --cd /mnt/c/...`、macOS `open -a "<App>" <path>`），用 `spawn` 的 `spawn`/`error` 事件判定真实成败，失败回非 2xx。
+  - 客户端：面板「在其他应用中打开…」与**侧栏会话右键新增的同款入口**共用 `buildOpenWithMenuItems`；侧栏用自绘浮层（模块级 store + 常驻 HeatRing 宿主），二级菜单在宿主菜单关闭后仍可用；应用列表优先新路由、404/空回退旧 `open-in-app/apps`；toast 依据真实返回码（成功才说「已在 X 中打开」）。
+  - 打开列表新增 `Git Bash` / `WSL`（归入终端类）；测试新增侧栏 open-with 断言，侧栏插件动作数 4→5。
+- `pnpm test` 五项全绿。
+
+## 0.8.0 — 2026-11-05（性能优化，进行中）
+
+- **`buildModel` 走 `useMemo` 缓存**（面板 / 右栏 / 悬停卡）：deps（会话/工作区/状态/数量/范围/分钟节拍）不变就不重算，消除「任何 state 变化都全量建模」。
+- **分钟节拍改全局单例 ticker**：面板、侧栏每一行、悬停卡共享一个 60s `setInterval`（原为每行一个），定时器数量 N → 1。
+- **标题圆点样式写入合并到 rAF**：一帧只重写一次 `<style>`，消除 N 行触发的 O(n²) 字符串拼接；无 `requestAnimationFrame` 的测试环境同步写，输出不变。
+- **`selectedSessionIds` 加 100ms 同帧微缓存**：面板 / 右栏 / 悬停同帧只查一次 `[data-row-key]` DOM。
+- **卡片宽度观测改为全页共享一个 `ResizeObserver`**（原为每张卡一个），测试环境无 RO 时安全降级。
+- **筛选计数改单次遍历分桶**（原每个热度档位各扫一遍 `allRows`，O(F×N) → O(N)）。
+- **面板偏好持久化**：视图 / 数量 / 筛选 / 范围写入 `localStorage['activity-heat:prefs']`，重开面板保留；无 storage（隐私模式 / 测试）时静默回默认值。
+- **F4 侧栏入口「已完成未查看」计数角标**：`sidebar.panellist` 的 HeatRing 右上角显示 `completionUnread` 会话数（0 隐藏、>99 显示 `99+`，蓝底白字；不新增面板区块）。
+- 无布局 / 视觉分区改动（仅入口叠加小角标，不触发 DESIGN 红线）；`pnpm test` 五项全绿。
+
 ## 0.7.16 — 2026-11-04
 
 - **修复冷启动不加载的真根因：`client.js` 顶层 `build` 被 combo 中其它插件（envhub）同名函数覆盖。** DSH 把同一 profile 的多个 `client.js` 拼进同一脚本作用域；`dsh-envhub` 也有 `function build()` 且排在我们之后，导致我们的 factory 实际调用 envhub 的 `build`、反复注册 envhub，本插件 `apply` 永不执行（探针：`module-loaded → factory` 后无 apply，envhub 日志重复 3 次）。修复：**整个 `client.js` 用 IIFE 包裹**，隔离全部顶层声明。探针复验冷启动：`module-loaded → build-ok → factory → apply → seats`。

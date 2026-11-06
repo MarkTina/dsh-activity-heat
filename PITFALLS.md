@@ -1,6 +1,6 @@
-# 牢记事项
+# PITFALLS.md — 错误谨记清单
 
-这个文件只记录**已经踩过的坑**：现象 → 根因 → 正确做法。新增问题请追加到对应章节，不要写成通用教程。
+> 本文件记录**已经踩过的坑**：症状（现象）→ 根因 → 规避（正确做法）→ 验证。新增问题请追加到对应章节，不要写成通用教程。
 
 ---
 
@@ -211,14 +211,16 @@ emoji 带彩色和不同字重，和文字不在一个体系。统一用 13px、
   **根因**：会话写操作分散在 `uiWorkspace`（pin/unpin/archive/unarchive/fork/startSession）与 `sessions.using(...).binding.session.rename(title)`，没有统一 CRUD 服务。
   **做法**：`capabilitiesOf()` 逐方法 `typeof` 检测，缺哪个只禁用哪个菜单项并显示「当前宿主不支持」；不要让整份菜单消失或抛错。归档前先看 `running`；宿主仍拒绝时按错误 message 里的 `active / running / busy` 映射到「会话仍在运行」。**宿主没有删除会话**，菜单里不要放删除。
 
-### 12. 「在其他应用打开」复用宿主 open-in-app，不要自己 spawn
+### 12. 「在其他应用打开」改为自研 Host 路由（2026-11-05 用户决策，覆盖旧「复用宿主 open-in-app」方案）
 
-- **现象**：想做"在 VS Code / 终端 / 文件管理器打开"，第一反应是在 Host 半侧 exec `code` / `explorer`。
-  **事实**：宿主 `dsh-host-open-in-app` 已注册三条路由：`GET /open-in-app/apps`（返回 `{ apps: [...] }`，只含本机验证过的启动器）、`POST /open-in-app/open`（body `{ app, path }`，path 必须绝对且目录存在）、`GET /open-in-app/icon/<id>`。catalog id 固定：`explorer` / `finder` / `filemanager` / `vscode` / `windowsterminal` / `terminal` / `gitbash` 等。
-  **做法**：客户端同源 `fetch` 这两条路由；`apps` 为空或 404 时禁用菜单项（宿主没挂载 / SSH / 平台无可用应用），不要显示空菜单。应用名称用插件自己的 `app.<id>` 字典，未知 id 原样显示——插件的 locale 命名空间与宿主 `open-in-app` 不同，拿不到宿主字典。
-- **注意**：`gitbash` 是 shell，不是终端模拟器；插件把它从「打开方式」里过滤掉，终端组只收 `windowsterminal` / `terminal` / `iterm` / `warp` 等。不要因为 catalog 里出现它就当成终端。
-- **补充**：宿主 catalog 可能解析不到 `windowsterminal`（`wt.exe` 是 0 字节 App Execution Alias，`cli('wt')` 依赖 PATH stat）。所以插件另加一条 Host 路由 `POST /activity-heat/open-terminal`：Windows 上依次 `wt.exe` → `pwsh.exe` → `powershell.exe`，用 `spawn` argv 启动、不拼 shell；只接受绝对且存在的目录。客户端菜单「在终端中打开」不依赖 `open-in-app` apps。
+- **背景（旧方案为何失败）**：旧做法复用宿主 `dsh-host-open-in-app`（`/open-in-app/apps` + `/open-in-app/open`）。用户实测 **VS Code 打开不生效**：宿主 catalog 里 `vscode` 启动参数只有 `appPaths('Code.exe')`、**没带 `{path}`**，只激活/启动 Code 而不打开工作目录；但路由仍返回 200（launched），前端据此 toast「已在 VS Code 中打开」→ **假成功**。
+- **决策**：本插件自己探测 + 打开，不再依赖宿主 catalog：
+  - `GET /activity-heat/open-with/apps`：Windows 读 `App Paths` 注册表（HKLM+HKCU；本地化默认值标签形如 `(Ĭ��)`，正则用 `^\([^)]*\)\s+REG_SZ`）+ 常见安装路径 + PATH（**只认 `.EXE`**：`.cmd/.bat` 壳如 `code.CMD` 无法被 detached spawn 直接执行）；JetBrains 另扫 `%ProgramFiles%\JetBrains\<Product> <ver>\bin`；macOS 扫 `/Applications`、`/System/Applications/Utilities`、`~/Applications` 的 `.app`；Linux 用 `xdg-open` + PATH。探测结果缓存 60s，失败回退旧 `open-in-app/apps`（不退化）。
+  - `POST /activity-heat/open-with/open`：body `{app, path}`，按应用解析出**带目标目录**的 argv（`Code.exe <path>`、`pycharm64.exe <path>`、`explorer.exe <path>`、`wt.exe -d <path>`、`git-bash.exe --cd=<path>`、`wsl.exe --cd /mnt/c/...`、macOS `open -a "<App>" <path>`），用 `spawn` 的 `spawn`/`error` 事件判定真实成败，失败回非 2xx。客户端 toast 依据真实返回码，成功才说「已在 X 中打开」。
+- **注意**：`gitbash` / `wsl` 现在作为「终端」类列出（能在目录开 shell），不再过滤；终端项仍固定第一项，走 `POST /activity-heat/open-terminal`。
+- **注意（2026-11-06 更新）**：侧栏会话右键已改用宿主 `contextMenus` 服务注册数据动作，`children` 自动成为原生二级级联（hover 展开，无需二次点击），不再用「模块级 store + 常驻 HeatRing 自绘浮层」；仅老宿主无 `contextMenus` 服务时回退旧自绘项。面板子菜单仍用 `ContextMenu` 的嵌套 submenu。两者共用 `buildOpenWithMenuItems` 构建器与分组排序，避免漂移。**旧「自绘浮层」说明仅作历史记录**（见 VETO D-006）。
 - **注意**：菜单内部滚动不能触发"滚动关闭"；`ContextMenu` 的 scroll 监听要判断 `event.target` 是否在菜单里，否则应用多时一滚就关。
+- **注意（0.16.1 真根因）**：宿主 `dsh-desktop-host` 自身以 `ELECTRON_RUN_AS_NODE=1` 运行（Electron 当 Node 用）。spawn 外部应用时若继承该变量，`Code.exe <dir>` 会以 **Node 模式**把目录当脚本执行、约 64ms 报错退出、**不开窗口**，但 `spawn` 的 `spawn` 事件已成功 → 路由 200 → 前端 toast 假成功（用户「一次都没打开成功过」的真因）。**`index.js` 必须用 `launcherEnv()`（复制 `process.env` 后 `delete ELECTRON_RUN_AS_NODE`）作为子进程 env**，禁止裸 `spawn` 继承默认环境。判断依据：宿主进程是 `DeepSeek Harness.exe --expose-internals .../dsh-desktop-host/lib/index.js`（监听 Web 端口），其环境块含该变量；GUI 主进程不含。
 
 ### 13. 宿主行悬停卡是固定深色，插件内容会低对比
 

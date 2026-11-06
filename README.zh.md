@@ -45,7 +45,7 @@ DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话�
 |---|---|
 | 打开会话 | 与单击一致 |
 | 在终端中打开 | 用系统终端打开当前会话 / 工作区目录：Windows 依次尝试 Windows Terminal → PowerShell 7 → Windows PowerShell；macOS 用 Terminal；Linux 用 x-terminal-emulator |
-| 在其他应用中打开… | 悬停自动展开二级菜单，第一项固定「在终端中打开」；其余列出宿主检测到的文件管理器 / 编辑器 / 终端 / Git 客户端，点选后在对应应用中打开当前会话的工作目录 |
+| 在其他应用中打开… | 二级级联菜单（面板与侧栏原生会话右键都是**悬停展开**，无需二次点击）。第一项固定「在终端中打开」；其余列出本插件探测到的文件管理器 / 编辑器 / 终端（含 Git Bash、WSL），点选后在对应应用中打开当前会话 / 工作区目录 |
 | 复制会话 ID / 标题 / 最近提示词 / 工作目录 | 最近提示词取完整原文；剪贴板不可用时提示失败 |
 | 置顶 / 取消置顶 | 写宿主侧栏顺序，本面板仍按热度排序 |
 | 重命名… | 预填当前标题，空标题不可保存 |
@@ -82,7 +82,7 @@ DSH 的侧栏里会话越攒越多，分区一层套一层。刚聊过的会话�
 - **轻量入口**：侧栏「更多」菜单与 `/heat` 命令——不打开面板也能进入最近活跃（折叠态徽章不再注册，因宿主已把它用作更新徽章）。会话头角落位归 ui-sidebar-right 的右侧栏按钮所有，本插件不再争用。
 - **底部活跃会话栏（整页最底部）**：挂在 `shell.bottom`（横跨三列下方的整条），有运行中 / 等待处理会话时出现，点一下直达；没有活动时不占高度。**不要挂 `conversation.composer.dock`**——宿主自己的会话统计（轮次/步数/速度、token/缓存命中）就在那里，会与统计行挤在同一行、视觉重叠。
 - **批量操作**：会话视图「选择」→ 归档所选 / 置顶所选 / 复制 ID；运行中会话走「停止并归档」。
-- **侧栏原生行动作**：会话行「…」菜单新增 在终端中打开 / 复制标题 / 复制工作目录 / 下载日志；行尾悬停另有终端按钮。这些动作与面板共用同一张动作目录（`SESSION_ACTION_DEFS`）。
+- **侧栏原生行动作**：会话行「…」菜单新增 在终端中打开 / 在其他应用中打开… / 复制标题 / 复制工作目录 / 下载日志；行尾悬停另有终端按钮。这些动作通过宿主 `contextMenus` 菜单服务注册，由宿主同一套原生菜单渲染（图标 / 字号 / 间距 / hover / 键盘导航与内置项一致），「在其他应用中打开…」的二级子菜单也是原生级联展开。动作 id / 文案仍与面板共用同一张目录（`SESSION_ACTION_DEFS`）。
 - **停止并归档**：运行中的会话不再只是禁用归档；确认框会列出仍在跑的回合 / 子代理 / 后台任务 / 定时提醒，确认后以 `stopActivity` 停止并归档（停止不可逆）。
 - **右侧栏常驻**：右侧栏引导页选「最近活跃会话」即可把列表停靠在右栏。
 - **`/heat` 命令**：输入 `/heat` 直接打开面板。
@@ -214,7 +214,7 @@ pnpm add link:/绝对路径/dsh-activity-heat
 dsh-activity-heat/
 ├── index.js            Host 半侧——open-terminal 路由（启动系统终端），其余只负责挂载
 ├── client.js           Web 半侧——ModuleLoader factory、slots、locale
-├── design.md           视觉与交互纲领——改 UI 前必读的红线与偏差记录
+├── DESIGN.md           设计准则——改 UI 前必读；偏差记录见 VETO-LIST.md
 ├── cordis.patch.yml    Bundle patch——插入 activity-heat 行与默认配置
 ├── locale/
 │   ├── zh.json         插件元数据 + UI 字典（中文）
@@ -261,9 +261,8 @@ node test/locale.cjs       # locale 字典与元数据是否同步
 - 「下载会话日志」依赖宿主挂载 `dsh-session-log-export`；未挂载时点击只提示不可用，不会打开 404 页面。
 - 宿主侧栏原生会话行没有右键事件，但提供 `sidebar.workspaces.session.menu.item` / `.row.action` 两个扩展席位；本插件的终端 / 复制 / 下载动作挂在这里，置顶 / 重命名 / 分叉 / 归档仍用宿主自带项，中央面板卡片右键保留全部动作。
 - `updatedAt` 是宿主「最后一次活动」快照，运行中的会话不会随工具步骤/流式输出实时刷新；面板因此把运行中视为最高热度，但这不代表它刚刚有新消息。
-- 「在其他应用中打开」依赖宿主挂载 `dsh-host-open-in-app`（`/open-in-app/apps` 与 `/open-in-app/open`）；未挂载、SSH 部署或目录不存在时菜单项禁用或提示失败。可用应用由宿主在启动时探测，新装应用需重启 DSH 才出现。
-- 终端只列终端模拟器（Windows Terminal / Terminal / iTerm2 / Warp 等）；Git Bash 这类 shell 不算「终端」，不会出现在列表里。
-- 「在终端中打开」由插件自己的 Host 路由 `POST /activity-heat/open-terminal` 实现，不依赖 `open-in-app` 应用目录；Windows 依次尝试 Windows Terminal → PowerShell 7 → Windows PowerShell，均不可用时提示失败。
+- 「在其他应用中打开」由插件自己的 Host 路由实现：`GET /activity-heat/open-with/apps` 探测本机能打开目录的应用（Windows 读 `App Paths` 注册表 + 常见安装路径 + PATH；macOS 扫描 `.app`；Linux 用 `xdg-open`），`POST /activity-heat/open-with/open` 带目标目录启动并回报真实成败。应用列表缓存 60s；探测失败时回退宿主 `open-in-app/apps`。
+- Windows 上 Git Bash / WSL 归入「终端」类（它们能在该目录开 shell）；「在终端中打开」由 `POST /activity-heat/open-terminal` 实现，Windows 依次尝试 Windows Terminal → PowerShell 7 → Windows PowerShell，均不可用时提示失败。
 
 - 等待审批 / 计划待审依赖宿主的 `pendingInteraction`；旧宿主只提供 `userQuestions`，两者会统一显示为「等待回答」。
 - 右侧栏常驻面板与 `/heat` 命令依赖宿主挂载 `sidebarRightTabs` / `commandUi`；未挂载时对应入口不出现，不影响其他功能。

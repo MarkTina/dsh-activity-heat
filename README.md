@@ -45,7 +45,7 @@ Right-click a session card (or focus it and press `Shift+F10` / the Menu key):
 |---|---|
 | Open session | Same as clicking the card |
 | Open in terminal | Opens the session/workspace directory in the system terminal: Windows tries Windows Terminal → PowerShell 7 → Windows PowerShell; macOS uses Terminal; Linux uses x-terminal-emulator |
-| Open in… | Expands a submenu on hover (first row is always "Open in terminal"), then lists the host's probed file managers, editors, terminals and Git GUIs; picking one opens the session's working directory there |
+| Open in… | Two-level cascading menu (hover submenu in the panel; the native sidebar row menu expands the same submenu on hover — no second click). The first row is always "Open in terminal"; the rest list locally probed file managers / editors / terminals (including Git Bash and WSL); picking one opens the session/workspace directory there |
 | Copy session ID / title / latest prompt / working directory | The latest prompt is copied in full; clipboard failures are reported |
 | Pin / unpin | Writes the host sidebar order; this panel keeps sorting by heat |
 | Rename… | Prefilled with the current title; an empty title cannot be saved |
@@ -82,7 +82,7 @@ A workspace card also aggregates everything that can be summed: session count, t
 - **Lightweight entries**: the sidebar “More” menu and the `/heat` command — reach the panel without opening it (the collapsed badge is no longer registered because the host uses that seam for its update badge). The session-header corner seat belongs to ui-sidebar-right’s panel button, so this plugin no longer contends for it.
 - **Bottom active-sessions bar (full-width page bottom)**: mounted on `shell.bottom` (the full-width row below all three columns); appears only when sessions are running or waiting, click to open; nothing reserved when idle. **Do not mount it on `conversation.composer.dock`** — the host’s own session stats (turns/steps/speed, tokens/cache hit) live there and would collide with the stats row.
 - **Batch actions**: Select mode → Archive selected / Pin selected / Copy IDs; running sessions use stop-and-archive.
-- **Native sidebar row actions**: the row “…” menu gains Open in terminal / Copy title / Copy working directory / Download log, and the row hover gets a terminal button. Both read the same action catalog (`SESSION_ACTION_DEFS`) as the panel.
+- **Native sidebar row actions**: the row “…” menu gains Open in terminal / Open in… / Copy title / Copy working directory / Download log, and the row hover gets a terminal button. They register through the host `contextMenus` service, so the host renders them with the same native menu as built-in rows (identical icon / type scale / spacing / hover / keyboard navigation); the "Open in…" submenu cascades natively on hover. They still read the same action catalog (`SESSION_ACTION_DEFS`) as the panel.
 - **Stop and archive**: running sessions are no longer just disabled; the dialog lists the running turn / subagents / jobs / schedules and confirms with `stopActivity` (stopping is irreversible).
 - **Right-sidebar dock**: pick “Recent Activity” in the right sidebar guide to dock the list.
 - **`/heat` command**: type `/heat` to open the panel.
@@ -214,7 +214,7 @@ The package follows the DSH bundle layout: a Host entry, a Web client entry, one
 dsh-activity-heat/
 ├── index.js            Host half — open-terminal route (launches the system terminal); otherwise mount-only
 ├── client.js           Web half — ModuleLoader factory, slots, locale
-├── design.md           Visual/interaction charter — red lines and deviation log
+├── DESIGN.md           Design charter — red lines; deviations in VETO-LIST.md
 ├── cordis.patch.yml    Bundle patch — inserts the activity-heat row + defaults
 ├── locale/
 │   ├── zh.json         Plugin metadata + UI dictionary (Chinese)
@@ -261,9 +261,8 @@ node test/locale.cjs       # locale dictionaries and metadata stay in sync
 - "Download session log" requires the host to mount `dsh-session-log-export`; without it the item reports unavailability instead of opening a 404 page.
 - The host's native sidebar rows expose no right-click event, but they do expose `sidebar.workspaces.session.menu.item` / `.row.action` seats; the plugin's terminal / copy / download actions live there, while pin / rename / fork / archive use the host's own items and the central panel keeps the full menu.
 - `updatedAt` is the host's last-activity snapshot and does not refresh with tool steps or streaming output; the panel treats running sessions as maximum heat, which does not mean they just received a message.
-- "Open in…" requires the host to mount `dsh-host-open-in-app` (`/open-in-app/apps` and `/open-in-app/open`); without it, over SSH, or when the directory is gone, the item is disabled or reports a failure. The host probes installed apps once at startup, so newly installed apps appear after a DSH restart.
-- Terminals list terminal emulators only (Windows Terminal / Terminal / iTerm2 / Warp…); Git Bash is a shell, not a terminal emulator, so it is not shown.
-- "Open in terminal" is implemented by the plugin's own Host route `POST /activity-heat/open-terminal`, independent of the host open-in-app catalog; Windows tries Windows Terminal → PowerShell 7 → Windows PowerShell, and reports a failure when none is available.
+- "Open in…" is implemented by the plugin's own Host routes: `GET /activity-heat/open-with/apps` probes installed apps that can open a directory (Windows: `App Paths` registry + common install paths + PATH; macOS: `.app` bundles; Linux: `xdg-open`), and `POST /activity-heat/open-with/open` launches with the target directory and reports the real outcome. The list is cached for 60s; if probing fails it falls back to the host `open-in-app/apps`.
+- On Windows, Git Bash / WSL are grouped as terminals (they open a shell in that directory). "Open in terminal" is implemented by `POST /activity-heat/open-terminal`; Windows tries Windows Terminal → PowerShell 7 → Windows PowerShell and reports a failure when none is available.
 
 - Waiting-for-approval / plan-review rely on the host `pendingInteraction`; older hosts expose only `userQuestions`, so both fall back to “Waiting”.
 - The right-sidebar dock and `/heat` require the host to mount `sidebarRightTabs` / `commandUi`; otherwise the entry is simply absent.

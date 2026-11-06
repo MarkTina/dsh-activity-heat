@@ -246,6 +246,8 @@ var AH_I18N = /* AH_I18N_START */ {
       kitty: 'kitty',
       gnometerminal: 'GNOME Terminal',
       konsole: 'Konsole',
+      gitbash: 'Git Bash',
+      wsl: 'WSL',
       fork: 'Fork',
       sourcetree: 'Sourcetree',
       github: 'GitHub Desktop',
@@ -477,6 +479,8 @@ var AH_I18N = /* AH_I18N_START */ {
       kitty: 'kitty',
       gnometerminal: 'GNOME Terminal',
       konsole: 'Konsole',
+      gitbash: 'Git Bash',
+      wsl: 'WSL',
       fork: 'Fork',
       sourcetree: 'Sourcetree',
       github: 'GitHub Desktop',
@@ -668,7 +672,7 @@ function build(require) {
 
   var UI = {
     padX: 18,
-    radius: 10,
+    radius: 12,
     textPrimary: 'var(--dsw-alias-label-primary)',
     textSecondary: 'var(--dsw-alias-label-secondary)',
     textTertiary: 'var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary))',
@@ -757,7 +761,7 @@ function build(require) {
    * 关键取舍：
    * - 卡片静态不做 backdrop-filter（50 张卡同时模糊会掉帧），只在 ::before 里
    *   淡入磨砂层，悬停时才真正消耗 GPU；
-   * - 运行中卡片（ah-card--running）保持不透明底，否则跑马灯光带会从卡片里透出来；
+   * - 运行中卡片（ah-card--running）同样走玻璃；跑马灯光带用环形 mask 限制在边框，不会透进卡内；
    * - 入场动画只动 opacity，不动 transform，避免盖掉悬停的 translateY。
    */
   var AH_CSS = [
@@ -766,52 +770,147 @@ function build(require) {
     '--ah-hi:rgba(255,255,255,.10);',
     '--ah-blur:blur(16px) saturate(130%);',
     '--ah-ease:var(--ds-ease-in-out, cubic-bezier(.4,0,.2,1));',
-    'position:relative;isolation:isolate;',
-    'animation:ah-shell-in 200ms ease both;',
+    /* 按用途分曲线：入场 ease-out / 退场 ease-in / 原地 ease-in-out / 小确认 overshoot */
+    '--ah-ease-out:cubic-bezier(.2,.8,.2,1);',
+    '--ah-ease-in:cubic-bezier(.4,0,1,1);',
+    '--ah-ease-overshoot:cubic-bezier(.34,1.56,.64,1);',
+    'position:relative;isolation:isolate;overflow:hidden;',
+    'display:flex;flex-direction:column;flex:1 1 auto;height:100%;min-height:100%;box-sizing:border-box;',
+    'background-color:var(--dsw-alias-bg-base, #fff);',
+    'animation:ah-shell-in 200ms var(--ah-ease-out) both;',
     '}',
-    'body[data-ds-dark-theme] .ah-shell{--ah-hi:rgba(255,255,255,.06);}',
+    'body[data-ds-dark-theme] .ah-shell{--ah-hi:rgba(255,255,255,.06);background-color:var(--dsw-alias-bg-base, #1c1c1e);}',
 
-    /* ---------- 面板外壳：不加背景渐变，直接叠在宿主底色上 ---------- */
+    /* 背景层(z-index:-2) / 中间层(z-index:-1)：都在内容之下、底色之上，不挡交互 */
+    '.ah-threads-bg{position:absolute;inset:0;z-index:-2;overflow:hidden;pointer-events:none;}',
+    '.ah-threads-bg pro-threads{display:block;width:100%;height:100%;pointer-events:none;background:#f7f8fa !important;}',
+    '.ah-scrim{position:absolute;inset:0;z-index:-1;pointer-events:none;}',
+    'body[data-ds-dark-theme] .ah-threads-bg{opacity:.6;}',
+
     '@keyframes ah-shell-in{from{opacity:0}to{opacity:1}}',
 
-    /* ---------- 卡片：玻璃表面 ---------- */
+    /* ---------- 卡片：液态玻璃表面 ----------
+       分层：① 体积投影 ② 背景模糊+提亮(backdrop-filter) ③ 半透明着色(--ah-tint)
+       ④ 边缘光：左上 / 右下 / 内侧缩进 ⑤ 文字着色(mix-blend-mode) ⑥ SVG 折射(JS 注入 url())
+       明暗由 JS 采样真实背景亮度切 class；此处是纯 CSS 兜底（无 JS 也有玻璃）。
+       颜色只走 var()/color-mix，硬编码色值仅作 fallback。 */
+    /* @property：注册材质颜色令牌，让明暗 / hover 切换平滑过渡（不支持则被忽略） */
+    '@property --ah-tint{syntax:"<color>";inherits:false;initial-value:transparent;}',
+    '@property --ah-tint-hover{syntax:"<color>";inherits:false;initial-value:transparent;}',
+    '@property --ah-ink{syntax:"<color>";inherits:true;initial-value:#14141a;}',
+    '@property --ah-edge-tl{syntax:"<color>";inherits:false;initial-value:rgba(255,255,255,.6);}',
+    '@property --ah-edge-br{syntax:"<color>";inherits:false;initial-value:rgba(0,0,0,.2);}',
     '.ah-card{',
+    '--ah-glass-white:var(--dsw-alias-bg-base, #fff);',
+    '--ah-glass-ink:#14141a;',
+    /* 墨色（ink）：默认跟随主题；浅/深玻璃各自覆盖，让文字带背景色又保证可读 */
+    '--ah-ink:var(--dsw-alias-label-primary);',
+    '--ah-ink-soft:var(--dsw-alias-label-secondary);',
+    '--ah-ink-faint:var(--dsw-alias-label-tertiary, var(--dsw-alias-label-secondary));',
+    '--ah-tint:color-mix(in srgb, var(--ah-glass-white, #fff) 16%, transparent);',
+    '--ah-tint-hover:color-mix(in srgb, var(--ah-glass-white, #fff) 30%, transparent);',
+    '--ah-glass-filter:blur(2px) saturate(180%) brightness(1.06);',
+    '--ah-edge-tl:color-mix(in srgb, #fff 72%, transparent);',
+    '--ah-edge-br:color-mix(in srgb, #000 14%, transparent);',
+    '--ah-edge-in:color-mix(in srgb, var(--ah-glass-white, #fff) 12%, transparent);',
     'position:relative;z-index:1;overflow:hidden;',
     'border:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.30)) 92%, transparent);',
-    'background-color:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.10)) 70%, var(--dsw-alias-bg-base, #fff));',
-    'background-image:linear-gradient(180deg, var(--ah-hi, rgba(255,255,255,.10)), transparent 46%);',
-    'box-shadow:0 1px 2px rgba(0,0,0,.03);',
+    'background-color:var(--ah-tint);',
+    'background-image:none;',
+    'color:var(--ah-ink);',
+    'box-shadow:',
+    '0 10px 26px -12px color-mix(in srgb, #000 42%, transparent),',
+    '0 2px 6px color-mix(in srgb, #000 10%, transparent),',
+    'inset 1px 1px 0 var(--ah-edge-tl),',
+    'inset -1px -1px 0 var(--ah-edge-br),',
+    'inset 0 0 0 1px var(--ah-edge-in),',
+    'inset 0 1px 16px color-mix(in srgb, var(--ah-glass-white, #fff) 7%, transparent);',
     'transition:border-color 200ms var(--ah-ease), box-shadow 240ms var(--ah-ease),',
-    'background-color 200ms var(--ah-ease), transform 180ms var(--ah-ease);',
-    'animation:ah-card-in 240ms ease both;',
+    'background-color 220ms var(--ah-ease), transform 180ms var(--ah-ease);',
+    'animation:ah-card-in 240ms var(--ah-ease-out, cubic-bezier(.2,.8,.2,1)) both;',
     '}',
     '.ah-card>*{position:relative;z-index:1;}',
-    /* 磨砂层：悬停时淡入，静态零开销 */
+    /* 深色主题（暗背景）兜底 → 深色玻璃（亮度 0.8，边缘光约三分之一强度，描边更深） */
+    'body[data-ds-dark-theme] .ah-card{',
+    '--ah-tint:color-mix(in srgb, var(--ah-glass-ink, #14141a) 30%, transparent);',
+    '--ah-tint-hover:color-mix(in srgb, var(--ah-glass-ink, #14141a) 44%, transparent);',
+    '--ah-glass-filter:blur(2px) saturate(160%) brightness(.8);',
+    '--ah-edge-tl:color-mix(in srgb, #fff 30%, transparent);',
+    '--ah-edge-br:color-mix(in srgb, #000 30%, transparent);',
+    '--ah-ink:#f5f5f7;',
+    '--ah-ink-soft:color-mix(in srgb,#f5f5f7 80%,transparent);',
+    '--ah-ink-faint:color-mix(in srgb,#f5f5f7 62%,transparent);',
+    '}',
+    /* JS 采样后按真实背景亮度覆盖（优先于主题兜底） */
+    '.ah-card--glass-light{',
+    '--ah-tint:color-mix(in srgb, var(--ah-glass-white, #fff) 16%, transparent);',
+    '--ah-tint-hover:color-mix(in srgb, var(--ah-glass-white, #fff) 30%, transparent);',
+    '--ah-glass-filter:blur(2px) saturate(180%) brightness(1.06);',
+    '--ah-edge-tl:color-mix(in srgb, #fff 72%, transparent);',
+    '--ah-edge-br:color-mix(in srgb, #000 14%, transparent);',
+    '--ah-ink:#14141a;',
+    '--ah-ink-soft:color-mix(in srgb,#14141a 76%,transparent);',
+    '--ah-ink-faint:color-mix(in srgb,#14141a 58%,transparent);',
+    '}',
+    '.ah-card--glass-dark{',
+    '--ah-tint:color-mix(in srgb, var(--ah-glass-ink, #14141a) 32%, transparent);',
+    '--ah-tint-hover:color-mix(in srgb, var(--ah-glass-ink, #14141a) 46%, transparent);',
+    '--ah-glass-filter:blur(2px) saturate(160%) brightness(.8);',
+    '--ah-edge-tl:color-mix(in srgb, #fff 30%, transparent);',
+    '--ah-edge-br:color-mix(in srgb, #000 30%, transparent);',
+    '--ah-ink:#f5f5f7;',
+    '--ah-ink-soft:color-mix(in srgb,#f5f5f7 80%,transparent);',
+    '--ah-ink-faint:color-mix(in srgb,#f5f5f7 62%,transparent);',
+    '}',
+    /* 文字着色：浅色玻璃用正片叠底（multiply）；深色玻璃用叠加提亮（plus-lighter） */
+    '.ah-card--glass-light .ah-card-title,.ah-card--glass-light .ah-card-sub,',
+    '.ah-card--glass-light .ah-card-meta,.ah-card--glass-light .ah-card-time{mix-blend-mode:multiply;}',
+    '.ah-card--glass-dark .ah-card-title,.ah-card--glass-dark .ah-card-sub,',
+    '.ah-card--glass-dark .ah-card-meta,.ah-card--glass-dark .ah-card-time{mix-blend-mode:plus-lighter;}',
+    /* 顶部受光：静态一层，非扫光（VETO：禁止悬浮扫光） */
     '.ah-card::before{',
     'content:"";position:absolute;inset:0;border-radius:inherit;z-index:0;pointer-events:none;',
-    'background-image:linear-gradient(180deg, var(--ah-hi, rgba(255,255,255,.10)), transparent 60%);',
-    'backdrop-filter:var(--ah-blur);-webkit-backdrop-filter:var(--ah-blur);',
-    'opacity:0;transition:opacity 220ms var(--ah-ease);',
+    'background-image:linear-gradient(180deg, var(--ah-edge-tl, rgba(255,255,255,.5)), transparent 42%);',
+    'opacity:.35;transition:opacity 220ms var(--ah-ease);',
     '}',
-    /* 斜向扫光已移除：悬停只保留轻微上浮、外发光与磨砂淡入 */
     '@media (hover: hover){',
-    '.ah-card:hover{border-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 28%, var(--dsw-alias-border-l1, rgba(127,127,127,.18)));',
-    'box-shadow:0 8px 20px -10px color-mix(in srgb, var(--color-blue-500, #3b82f6) 34%, transparent), inset 0 1px 0 var(--ah-hi, rgba(255,255,255,.10));',
-    'transform:translateY(-1px);}',
-    '.ah-card:hover::before{opacity:1;}',
+    '.ah-card:hover{border-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 26%, var(--dsw-alias-border-l1, rgba(127,127,127,.18)));',
+    'background-color:var(--ah-tint-hover, var(--ah-tint));',
+    'box-shadow:0 8px 22px -16px color-mix(in srgb, #000 34%, transparent),0 2px 6px color-mix(in srgb, #000 10%, transparent),inset 1px 1px 0 var(--ah-edge-tl),inset -1px -1px 0 var(--ah-edge-br),inset 0 0 0 1px var(--ah-edge-in);',
+    'transform:translateY(-1px);-webkit-backdrop-filter:var(--ah-glass-filter);backdrop-filter:var(--ah-glass-filter);}',
+    '.ah-card:hover::before{opacity:.55;}',
+    /* 悬停的单张卡才启用「模糊 + 边缘折射」，静态列表零 backdrop 开销（滚动不卡） */
+    '.ah-card--refract:hover{-webkit-backdrop-filter:var(--ah-glass-filter);backdrop-filter:var(--ah-glass-filter) var(--ah-lg-url, blur(0px));}',
     '.ah-card:active{transform:translateY(0) scale(.995);}',
     '}',
     '.ah-card:focus-visible{outline:2px solid var(--dsw-focus-ring-color, var(--color-blue-500, #3b82f6));outline-offset:1px;}',
     '@keyframes ah-card-in{from{opacity:0}to{opacity:1}}',
+    /* 连续圆角（超椭圆）渐进增强：Chrome/Edge 139+ 生效，其它浏览器忽略并保留普通圆角 */
+    '@supports (corner-shape: superellipse(1.25)){',
+    '.ah-card,.ah-popover,.ah-menu,.ah-dialog,.ah-toast,.ah-seg,.ah-count,.ah-chip,.ah-menu-item,.ah-dialog-input,.ah-dialog-button,.ah-current-badge{corner-shape:superellipse(1.25);}',
+    '.ah-tab,.ah-meter-track,.ah-meter-fill,.ah-water-head,.ah-water-head::after,.ah-mini-track,.ah-mini-fill,.ah-status-dot{corner-shape:round;}',
+    '}',
 
-    /* 运行中卡片：实底遮住跑马灯，取消玻璃 */
+    /* 运行中卡片：也走液态玻璃（跑马灯光带已用环形遮罩限制在边框，不会透进卡内） */
     '.ah-card--running{',
-    'background-color:var(--dsw-alias-bg-base, #fff);',
+    'background-color:var(--ah-tint);',
     'background-image:none;border:none;box-shadow:none;',
     'animation:none;transition:none;transform:none;',
     '}',
     '.ah-card--running::before{display:none;}',
     '.ah-card--running:hover{transform:none;box-shadow:none;}',
+    /* 无障碍回退：减少透明 / 强制颜色时，玻璃退化为同色不透明实底 */
+    '@media (prefers-reduced-transparency: reduce){',
+    '.ah-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}',
+    '.ah-card--glass-light{background-color:color-mix(in srgb, var(--ah-glass-white, #fff) 94%, transparent);}',
+    '.ah-card--glass-dark{background-color:color-mix(in srgb, var(--ah-glass-ink, #14141a) 94%, transparent);}',
+    'body[data-ds-dark-theme] .ah-card{background-color:color-mix(in srgb, var(--ah-glass-ink, #14141a) 94%, transparent);}',
+    '}',
+    '@media (forced-colors: active){',
+    '.ah-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border:1px solid ButtonBorder;background-color:Canvas;color:CanvasText;}',
+    '.ah-card::before{display:none;}',
+    '.ah-card--glass-light,.ah-card--glass-dark{background-color:Canvas;color:CanvasText;}',
+    '}',
     /* 运行中卡片底部：DeepSeek 鲸鱼群——沿底边左右往复游动，靠划出画面外进出，每分钟多一只 */
     '.ah-whale{position:absolute;bottom:-6px;left:-40px;width:30px;height:26px;z-index:3;pointer-events:none;',
     'will-change:left;animation-iteration-count:infinite;animation-timing-function:linear;animation-fill-mode:both;}',
@@ -824,7 +923,6 @@ function build(require) {
     '92%{left:-40px;transform:scaleX(1)}',
     '92.001%{left:-40px;transform:scaleX(-1)}',
     '100%{left:-40px;transform:scaleX(-1)}}',
-    'body[data-ds-dark-theme] .ah-card{background-image:linear-gradient(180deg, rgba(255,255,255,.06), transparent 46%);}',
 
     /* ---------- 热度条：管道水流 + 挡板涌浪（无刻度） ---------- */
     /* 管道（轨道）：上下压暗、中间提亮，像一根圆柱管 */
@@ -919,16 +1017,16 @@ function build(require) {
     '.ah-vpipe-bulb::before{content:"";position:absolute;left:22%;right:22%;bottom:12%;height:22%;border-radius:50%;pointer-events:none;',
     'background:radial-gradient(closest-side, rgba(255,255,255,.42), rgba(255,255,255,0));}',
     '@keyframes ah-vpipe-bulbglow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.06)}}',
-    /* 工作区段（三段式最左）：整卡等高、加宽 + 淡底；左缘 4px 色条 + 图标 + 名（可两行），醒目且与正文用发丝线分隔 */
+    /* 工作区段（三段式最左）：整卡等高、加宽；图标 + 名，与正文用发丝线分隔（无独立底色，融入卡片主体） */
     '.ah-ws-tag{display:flex;flex-direction:column;justify-content:center;align-items:center;flex:none;align-self:stretch;width:clamp(104px, 16%, 196px);box-sizing:border-box;',
     'padding:0 12px 0 12px;',
     'border-right:1px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 55%, transparent);',
-    'background:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.08)) 42%, transparent);}',
+    'background:transparent;}',
     '.ah-ws-tag-inner{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-width:0;color:var(--dsw-alias-label-secondary);}',
     '.ah-ws-tag-inner svg{flex:none;opacity:.7;}',
     /* 名字单行省略（太长显示省略号，悬停 title 看全名） */
     '.ah-ws-tag-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82em;line-height:20px;font-weight:500;color:var(--dsw-alias-label-secondary);}',
-    /* 无工作区：保留同宽与分隔线，但无淡底/色条 */
+    /* 无工作区：保留同宽与分隔线 */
     '.ah-ws-tag--empty{background:transparent;}',
     '.ah-mini-track{position:relative;display:inline-block;border-radius:999px;overflow:hidden;flex:none;vertical-align:middle;',
     'background:color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 58%, transparent);',
@@ -986,28 +1084,34 @@ function build(require) {
     '.ah-tab[data-active="true"] .ah-tab-count{opacity:.9;}',
     '.ah-tab[data-empty="true"]{opacity:.55;}',
     '.ah-count-label{font-size:0.76em;color:var(--dsw-alias-label-tertiary);flex:none;}',
+    /* 配置中心入口（顶部右侧齿轮） */
+    '.ah-settings-btn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;margin-left:4px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--dsw-alias-label-tertiary);cursor:pointer;font-size:14px;line-height:1;}',
+    '@media (hover:hover){.ah-settings-btn:hover{background-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 8%, transparent);border-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 16%, transparent);color:var(--dsw-alias-label-primary);}}',
     '.ah-count-group,.ah-seg-group{display:inline-flex;align-items:center;gap:4px;flex:none;}',
 
     /* ---------- 徽章 / 芯片 ---------- */
     '.ah-current-badge{border:1px solid color-mix(in srgb, var(--color-blue-500, #3b82f6) 40%, transparent);',
     'background-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 10%, transparent);',
     'background-image:linear-gradient(135deg, rgba(255,255,255,.18), transparent 62%);',
-    'box-shadow:inset 0 1px 0 rgba(255,255,255,.22);color:var(--color-blue-500, #3b82f6);}',
+    'box-shadow:inset 0 1px 0 rgba(255,255,255,.22);color:var(--color-blue-500, #3b82f6);animation:ah-badge-pop 240ms var(--ah-ease-overshoot, cubic-bezier(.34,1.56,.64,1)) both;}',
+    '@keyframes ah-badge-pop{0%{opacity:0;transform:scale(.6)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}',
     /* 状态点 / 状态标签：颜色与形态交给宿主 StateDot，这里只提供布局 */
     '.ah-status-dot{display:inline-flex;align-items:center;justify-content:center;flex:none;border-radius:50%;corner-shape:round;}',
     '.ah-status-tag{display:inline-flex;align-items:center;justify-content:center;gap:5px;font-weight:700;line-height:16px;white-space:nowrap;flex:none;}',
-    '.ah-chip{border:1px solid transparent;border-radius:6px;padding:1px 5px;margin:-1px -1px;',
+    '.ah-chip{border:1px solid transparent;border-radius:8px;padding:1px 5px;margin:-1px -1px;',
     'color:var(--dsw-alias-label-secondary);',
     'transition:background-color 160ms var(--ah-ease), border-color 160ms var(--ah-ease), color 160ms var(--ah-ease);}',
     '@media (hover: hover){',
     '.ah-chip:hover{background-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 8%, transparent);',
     'border-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 16%, transparent);color:var(--dsw-alias-label-primary);}',
     '}',
+    /* 按压手感（手册 001 子集）：控件 / 菜单 / 对话框 / 批量按钮按下整体下沉 1px（不新增变体、不用品牌色） */
+    '.ah-seg:active,.ah-count:active,.ah-tab:active,.ah-menu-item:active,.ah-dialog-button:active,.ah-chip:active,.ah-batch button:active{transform:translateY(1px);}',
 
     /* ---------- 悬浮浮层 ---------- */
     '.ah-popover{',
     'border:.5px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 80%, transparent);',
-    'border-radius:var(--dsw-radius-lg, 14px);',
+    'border-radius:var(--dsw-radius-lg, 16px);',
     'background-color:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.12)) 88%, var(--dsw-alias-bg-base, #fff));',
     'backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
     '-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
@@ -1032,11 +1136,11 @@ function build(require) {
     'backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
     '-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
     'box-shadow:var(--dsw-shadow-lv3, 0 12px 32px rgba(0,0,0,.16)), inset 0 1px 0 rgba(255,255,255,.20);',
-    'animation:ah-menu-in 120ms var(--ah-ease) both;',
+    'animation:ah-menu-in 120ms var(--ah-ease-out, cubic-bezier(.2,.8,.2,1)) both;',
     '}',
     '@keyframes ah-menu-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}',
     '.ah-menu-item{display:flex;align-items:center;gap:8px;width:100%;min-height:30px;padding:5px 9px;',
-    'border:0;border-radius:7px;background:transparent;color:var(--dsw-alias-label-primary);',
+    'border:0;border-radius:8px;background:transparent;color:var(--dsw-alias-label-primary);',
     'font:inherit;text-align:left;cursor:pointer;',
     'transition:background-color 120ms var(--ah-ease),color 120ms var(--ah-ease);}',
     '.ah-menu-item[data-active="true"]{background-color:color-mix(in srgb, var(--color-blue-500, #3b82f6) 10%, transparent);}',
@@ -1051,12 +1155,12 @@ function build(require) {
     '.ah-dialog{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:2200;',
     'width:min(320px, calc(100vw - 32px));padding:14px 16px;',
     'border:.5px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 80%, transparent);',
-    'border-radius:14px;',
+    'border-radius:16px;',
     'background-color:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.12)) 92%, var(--dsw-alias-bg-base, #fff));',
     'backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
     '-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
     'box-shadow:var(--dsw-shadow-lv3, 0 16px 40px rgba(0,0,0,.22)), inset 0 1px 0 rgba(255,255,255,.20);',
-    'animation:ah-menu-in 140ms var(--ah-ease) both;}',
+    'animation:ah-menu-in 140ms var(--ah-ease-out, cubic-bezier(.2,.8,.2,1)) both;}',
     '.ah-dialog-title{font-size:.9em;font-weight:650;color:var(--dsw-alias-label-primary);}',
     '.ah-dialog-text{margin-top:6px;font-size:.78em;line-height:19px;color:var(--dsw-alias-label-secondary);}',
     '.ah-dialog-input{margin-top:10px;width:100%;box-sizing:border-box;padding:6px 8px;border-radius:8px;',
@@ -1073,14 +1177,14 @@ function build(require) {
     '.ah-dialog-button[data-primary="true"][data-danger="true"]{background-color:color-mix(in srgb, var(--color-red-500, #ef4444) 88%, #000);}',
     '.ah-dialog-button:disabled{opacity:.5;cursor:default;}',
     '.ah-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:2200;',
-    'display:flex;align-items:center;gap:10px;max-width:min(420px, calc(100vw - 32px));padding:7px 12px;border-radius:10px;',
+    'display:flex;align-items:center;gap:10px;max-width:min(420px, calc(100vw - 32px));padding:7px 12px;border-radius:12px;',
     'border:.5px solid color-mix(in srgb, var(--dsw-alias-border-l1, rgba(127,127,127,.22)) 80%, transparent);',
     'background-color:color-mix(in srgb, var(--dsw-specific-menu, rgba(127,127,127,.12)) 92%, var(--dsw-alias-bg-base, #fff));',
     'backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
     '-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter, blur(18px) saturate(140%));',
     'box-shadow:var(--dsw-shadow-lv3, 0 12px 32px rgba(0,0,0,.18)), inset 0 1px 0 rgba(255,255,255,.20);',
     'color:var(--dsw-alias-label-primary);font-size:.78em;',
-    'animation:ah-toast-in 160ms var(--ah-ease) both;}',
+    'animation:ah-toast-in 160ms var(--ah-ease-out, cubic-bezier(.2,.8,.2,1)) both;}',
     '@keyframes ah-toast-in{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}',
     '.ah-toast[data-tone="error"]{color:color-mix(in srgb, var(--color-red-500, #ef4444) 78%, var(--dsw-alias-label-primary));}',
     '.ah-toast-action{border:0;background:transparent;color:var(--color-blue-500, #3b82f6);font:inherit;font-size:.95em;font-weight:600;cursor:pointer;padding:0;}',
@@ -1153,7 +1257,7 @@ function build(require) {
     '@keyframes ah-done-breathe{0%,100%{opacity:1;transform:none}50%{opacity:1;transform:none}}',
     '.ah-shell,.ah-card,.ah-card::before,.ah-list-inner,.ah-empty,',
     '.ah-tab::after,.ah-seg,.ah-count::before,.ah-popover-inner,.ah-ring,.ah-strip-seg,.ah-heat-ring,.ah-meter-fill,.ah-meter-fill::before,.ah-meter-fill::after,.ah-water-head,.ah-water-head::after,.ah-water-v::before,.ah-water-v::after,.ah-vpipe-fill,.ah-vpipe-fill::before,.ah-vpipe-head,.ah-vpipe-bulb,.ah-whale,',
-    '.ah-menu,.ah-dialog,.ah-toast{',
+    '.ah-menu,.ah-dialog,.ah-toast,.ah-current-badge{',
     'animation:none!important;transition:none!important;}',
     '.ah-card:hover{transform:none;box-shadow:none;}',
     '.ah-whale{display:none!important;}',
@@ -1169,6 +1273,310 @@ function build(require) {
     { id: 'recent', labelKey: 'level.recent', level: 2 },
     { id: 'stale', labelKey: 'level.stale', level: 1 },
   ];
+
+  /* =========================================================================
+   * ===== 液态玻璃材质引擎（浏览器侧增强） =====
+   *
+   * 纯 CSS 已经给了基础玻璃（体积投影 / 模糊提亮 / 着色 / 三重边缘光）。
+   * 这里在浏览器里追加两件 CSS 做不到的事：
+   *   1) 用 canvas 生成「边缘往内压」的位移贴图，注入 SVG feDisplacementMap：
+   *        - 三通道各跑一次位移（R 比 B 多弯一点 = 色散），再 feBlend screen 合成；
+   *        - 通过 backdrop-filter: url(#id) 折射真实背景（仅 Chrome/Edge 支持，探到才用）。
+   *   2) 读取卡片背后多个采样点的平均亮度与复杂度：
+   *        - 平均亮度决定浅色 / 深色玻璃；复杂度决定着色遮罩的透明度（6%~22% / 16%~38%）。
+   *
+   * 全部包在 try/catch 里：能力缺失（旧浏览器 / 测试沙箱无 DOM）时静默退回纯 CSS，
+   * 绝不向 factory 抛错（否则整个插件不显示）。
+   * ========================================================================= */
+  var GLASS = {
+    band: 44,            // 边宽 px
+    edgeFactor: 1.1,     // 边缘偏移 = 1.1 × 边宽
+    disp: 0.15,          // 色散 ±15%
+    tintLight: [0.06, 0.22],
+    tintDark: [0.16, 0.38],
+    filterLight: 'blur(2px) saturate(180%) brightness(1.06)',
+    filterDark: 'blur(2px) saturate(160%) brightness(.8)',
+    support: null, defs: null, filters: {}, cards: [], ro: null, mo: null,
+  };
+
+  function glassSupportsUrl() {
+    if (GLASS.support !== null) return GLASS.support;
+    try {
+      GLASS.support = !!(typeof CSS !== 'undefined' && CSS.supports
+        && CSS.supports('backdrop-filter', 'url(#a)'));
+    } catch (ignored) { GLASS.support = false; }
+    return GLASS.support;
+  }
+
+  /** 生成位移贴图：中心中性(128)，四周一圈往里压，越靠边压得越狠、内侧平滑归零。
+      R→X 位移，G→Y 位移。边宽 = max(4, min(44, 短边/3.5))；强度按【1 - d/rim】^2.6 非线性衰减。 */
+  function glassBuildMap(w, h) {
+    try {
+      var cw = Math.max(2, Math.round(w)), ch = Math.max(2, Math.round(h));
+      var canvas = document.createElement('canvas');
+      canvas.width = cw; canvas.height = ch;
+      var ctx = canvas.getContext && canvas.getContext('2d');
+      if (!ctx) return null;
+      var img = ctx.createImageData(cw, ch);
+      var d = img.data;
+      var rim = Math.max(4, Math.min(GLASS.band, Math.min(cw, ch) / 3.5));
+      var fall = function (dist) {
+        var t = 1 - dist / rim;
+        return t > 0 ? Math.pow(t, 2.6) : 0;
+      };
+      for (var y = 0; y < ch; y += 1) {
+        for (var x = 0; x < cw; x += 1) {
+          var dl = x, dr = cw - 1 - x, dt = y, db = ch - 1 - y, ux = 0, uy = 0;
+          if (dl < rim) ux += fall(dl);   // 左缘向右（朝内）
+          if (dr < rim) ux -= fall(dr);   // 右缘向左
+          if (dt < rim) uy += fall(dt);   // 上缘向下
+          if (db < rim) uy -= fall(db);   // 下缘向上
+          if (ux > 1) ux = 1; else if (ux < -1) ux = -1;
+          if (uy > 1) uy = 1; else if (uy < -1) uy = -1;
+          var i = (y * cw + x) * 4;
+          d[i] = Math.round(128 + ux * 127);
+          d[i + 1] = Math.round(128 + uy * 127);
+          d[i + 2] = 128; d[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      return canvas.toDataURL('image/png');
+    } catch (ignored) { return null; }
+  }
+
+  function glassEnsureDefs() {
+    try {
+      if (GLASS.defs && GLASS.defs.ownerDocument && GLASS.defs.ownerDocument.documentElement
+        && GLASS.defs.ownerDocument.documentElement.contains(GLASS.defs)) {
+        return GLASS.defs;
+      }
+    } catch (ignored) { /* 掉出 DOM，重建 */ }
+    try {
+      if (!document.body) return null;
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('id', 'ah-liquid-glass-defs');
+      svg.setAttribute('width', '0'); svg.setAttribute('height', '0');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.style.cssText = 'position:absolute;left:-9999px;top:-9999px;pointer-events:none;';
+      document.body.appendChild(svg);
+      GLASS.defs = svg;
+      return svg;
+    } catch (ignored) { return null; }
+  }
+
+  /** 按卡片尺寸取/建一个 SVG filter（同尺寸共用），返回 filter id。 */
+  function glassEnsureFilter(w, h) {
+    if (!glassSupportsUrl()) return null;
+    var key = Math.round(w) + 'x' + Math.round(h);
+    if (GLASS.filters[key]) return GLASS.filters[key];
+    var defs = glassEnsureDefs();
+    if (!defs) return null;
+    var map = glassBuildMap(w, h);
+    if (!map) return null;
+    try {
+      var ns = 'http://www.w3.org/2000/svg';
+      var id = 'ah-lg-' + key;
+      // 位移强度按手册边宽走（min(44, 短边/3.5)，floor 4），避免小卡片整张扭曲
+      var rim = Math.max(4, Math.min(GLASS.band, Math.min(w, h) / 3.5));
+      var S = 2 * rim * GLASS.edgeFactor; // 实际位移 = scale·(v/255-0.5)，满幅 ≈ scale/2
+      var filter = document.createElementNS(ns, 'filter');
+      filter.setAttribute('id', id);
+      filter.setAttribute('x', '-8%'); filter.setAttribute('y', '-8%');
+      filter.setAttribute('width', '116%'); filter.setAttribute('height', '116%');
+      filter.setAttribute('color-interpolation-filters', 'sRGB');
+      var mk = function (tag, attrs) {
+        var e = document.createElementNS(ns, tag);
+        for (var k in attrs) { if (Object.prototype.hasOwnProperty.call(attrs, k)) e.setAttribute(k, attrs[k]); }
+        // feImage 的 href 在部分实现里认 xlink:href，两个都设最稳
+        if (tag === 'feImage' && attrs.href) {
+          try { e.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', attrs.href); } catch (ignored) {}
+        }
+        filter.appendChild(e);
+      };
+      mk('feImage', { href: map, result: 'map', preserveAspectRatio: 'none', x: '0', y: '0', width: String(Math.round(w)), height: String(Math.round(h)) });
+      mk('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', scale: (S * (1 + GLASS.disp)).toFixed(2), xChannelSelector: 'R', yChannelSelector: 'G', result: 'dR' });
+      mk('feColorMatrix', { in: 'dR', type: 'matrix', values: '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0', result: 'r' });
+      mk('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', scale: S.toFixed(2), xChannelSelector: 'R', yChannelSelector: 'G', result: 'dG' });
+      mk('feColorMatrix', { in: 'dG', type: 'matrix', values: '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0', result: 'g' });
+      mk('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', scale: (S * (1 - GLASS.disp)).toFixed(2), xChannelSelector: 'R', yChannelSelector: 'G', result: 'dB' });
+      mk('feColorMatrix', { in: 'dB', type: 'matrix', values: '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0', result: 'b' });
+      mk('feBlend', { in: 'r', in2: 'g', mode: 'screen', result: 'rg' });
+      mk('feBlend', { in: 'rg', in2: 'b', mode: 'screen' });
+      defs.appendChild(filter);
+      GLASS.filters[key] = id;
+      return id;
+    } catch (ignored) { return null; }
+  }
+
+  function glassParseColor(str) {
+    try {
+      var m = String(str || '').match(/rgba?\(([^)]+)\)/i);
+      if (!m) return null;
+      var parts = m[1].split(/[,\s\/]+/).filter(function (s) { return s.length; }).map(Number);
+      if (parts.length < 3 || isNaN(parts[0])) return null;
+      return { r: parts[0] || 0, g: parts[1] || 0, b: parts[2] || 0, a: parts.length > 3 ? parts[3] : 1 };
+    } catch (ignored) { return null; }
+  }
+
+  function glassRelLuma(c) {
+    var f = function (v) {
+      v /= 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+  }
+
+  /** 沿祖先链找第一个有非透明背景的元素，得到一个有效底色。 */
+  function glassEffectiveBg(el) {
+    try {
+      var node = el;
+      while (node && node.nodeType === 1) {
+        var cs = window.getComputedStyle(node);
+        var c = glassParseColor(cs && cs.backgroundColor);
+        if (c && c.a > 0.02) return c;
+        node = node.parentElement;
+      }
+    } catch (ignored) { /* 拿不到就返回 null */ }
+    return null;
+  }
+
+  /** 读取卡片背后多个采样点的平均亮度(0..1)与复杂度(0..1)。 */
+  function glassSampleBackdrop(cardEl) {
+    var fallback = function () {
+      var dark = false;
+      try { dark = document.body && document.body.hasAttribute('data-ds-dark-theme'); } catch (ignored) {}
+      return { luma: dark ? 0.12 : 0.9, complexity: 0.5 };
+    };
+    try {
+      var rect = cardEl.getBoundingClientRect();
+      if (!rect || rect.width < 4 || rect.height < 4) return fallback();
+      var pts = [[0.12, 0.22], [0.5, 0.5], [0.88, 0.22], [0.12, 0.78], [0.88, 0.78]];
+      var lumas = [];
+      for (var i = 0; i < pts.length; i += 1) {
+        var x = rect.left + rect.width * pts[i][0];
+        var y = rect.top + rect.height * pts[i][1];
+        var stack = [];
+        try { stack = document.elementsFromPoint(x, y) || []; } catch (ignored) { stack = []; }
+        var bg = null;
+        for (var j = 0; j < stack.length; j += 1) {
+          var node = stack[j];
+          if (node === cardEl || (cardEl.contains && cardEl.contains(node))) continue;
+          bg = glassEffectiveBg(node);
+          if (bg) break;
+        }
+        if (!bg) bg = glassEffectiveBg(document.body);
+        if (bg) lumas.push(glassRelLuma(bg));
+      }
+      if (!lumas.length) return fallback();
+      var mean = 0, i2;
+      for (i2 = 0; i2 < lumas.length; i2 += 1) mean += lumas[i2];
+      mean /= lumas.length;
+      var variance = 0;
+      for (i2 = 0; i2 < lumas.length; i2 += 1) variance += (lumas[i2] - mean) * (lumas[i2] - mean);
+      variance /= lumas.length;
+      var sd = Math.sqrt(variance);
+      return { luma: mean, complexity: Math.min(1, sd * 3.2) };
+    } catch (ignored) { return fallback(); }
+  }
+
+  /** 给一张卡片套上液态玻璃：采样→切明暗→算着色透明度→装折射 filter。幂等。 */
+  function glassDecorate(cardEl, force) {
+    try {
+      if (!cardEl || !cardEl.classList) return;
+      var w = cardEl.clientWidth || 0, h = cardEl.clientHeight || 0;
+      var sizeKey = Math.round(w) + 'x' + Math.round(h);
+      if (!force && cardEl.dataset.ahGlass === '1' && cardEl.dataset.ahGlassSize === sizeKey) return;
+
+      var sample = glassSampleBackdrop(cardEl);
+      // 保对比映射：背景亮(≥0.5)→浅色玻璃(深墨 multiply)；背景暗(<0.5)→深色玻璃(浅墨 plus-lighter)。
+      // 注：手册第 7 条写「<0.5 切浅色」，但纯白/纯黑主题下会生成「反相卡」（白底深卡、黑底亮卡），
+      //     违反 DESIGN §1「安静中性底 + 克制玻璃」，故按场景明暗同向选取（见 VETO-LIST）。
+      var light = sample.luma >= 0.5;
+      cardEl.classList.toggle('ah-card--glass-light', light);
+      cardEl.classList.toggle('ah-card--glass-dark', !light);
+      cardEl.classList.add('ah-card--glass');
+
+      // 着色密度：先按背景复杂度落在推荐区间，再做「对比度守卫」——不足时加密度、不降墨色
+      var range = light ? GLASS.tintLight : GLASS.tintDark;
+      var alpha = range[0] + (range[1] - range[0]) * sample.complexity;
+      var bright = light ? 1.06 : 0.8;            // 对应 backdrop-filter 的 brightness
+      var bgL = Math.min(1, Math.max(0, sample.luma * bright));
+      var tintLuma = light ? 1 : 0.0065;          // 白着色 / 近墨着色
+      var inkLuma = light ? 0.0065 : 0.93;        // 浅玻璃→深墨；深玻璃→浅墨
+      var effL = bgL * (1 - alpha) + tintLuma * alpha;
+      var contrast = (Math.max(effL, inkLuma) + 0.05) / (Math.min(effL, inkLuma) + 0.05);
+      while (contrast < 4.5 && alpha < 0.92) {
+        alpha = Math.min(0.92, alpha + 0.02);
+        effL = bgL * (1 - alpha) + tintLuma * alpha;
+        contrast = (Math.max(effL, inkLuma) + 0.05) / (Math.min(effL, inkLuma) + 0.05);
+      }
+      var hoverA = Math.min(0.96, alpha + 0.14);  // hover 提亮约 14%
+      var tintRgb = light ? '255,255,255' : '20,20,24';
+      try {
+        cardEl.style.setProperty('--ah-tint', 'rgba(' + tintRgb + ',' + alpha.toFixed(3) + ')');
+        cardEl.style.setProperty('--ah-tint-hover', 'rgba(' + tintRgb + ',' + hoverA.toFixed(3) + ')');
+      } catch (ignored) {}
+
+      var id = glassEnsureFilter(w, h);
+      if (id) {
+        // 只登记折射 URL；实际 backdrop 只在悬停单卡时由 CSS 启用（静态零开销）
+        try { cardEl.style.setProperty('--ah-lg-url', 'url(#' + id + ')'); } catch (ignored) {}
+        cardEl.classList.add('ah-card--refract');
+      }
+
+      cardEl.dataset.ahGlass = '1';
+      cardEl.dataset.ahGlassSize = sizeKey;
+
+      // 尺寸变化（半屏/全屏、字体回流）时重建贴图，让边缘折射对齐几何
+      if (!cardEl.__ahRO) {
+        try {
+          if (typeof ResizeObserver === 'function') {
+            var ro = new ResizeObserver(function () { glassDecorate(cardEl, true); });
+            ro.observe(cardEl);
+            cardEl.__ahRO = ro;
+          }
+        } catch (ignored) { /* 无 RO 就只在下次渲染时更新 */ }
+      }
+      if (GLASS.cards.indexOf(cardEl) === -1) GLASS.cards.push(cardEl);
+    } catch (ignored) { /* 单卡失败不影响其它卡 */ }
+  }
+
+  /** 遍历一个子树里的所有卡片并套玻璃；首次调用时启动主题监听。 */
+  function enhanceGlassCards(root) {
+    try {
+      if (!root || !root.querySelectorAll) return;
+      glassStartThemeWatch();
+      // 清理已卸载的卡片，断开它们的尺寸观察，避免长会话里观察器累积
+      for (var p = GLASS.cards.length - 1; p >= 0; p -= 1) {
+        var old = GLASS.cards[p];
+        if (!old || !old.isConnected) {
+          try { if (old && old.__ahRO) old.__ahRO.disconnect(); } catch (ignored) {}
+          GLASS.cards.splice(p, 1);
+        }
+      }
+      var cards = root.querySelectorAll('.ah-card');
+      for (var i = 0; i < cards.length; i += 1) glassDecorate(cards[i], false);
+    } catch (ignored) { /* 整体失败静默降级 */ }
+  }
+
+  function glassRefreshAll() {
+    var list = GLASS.cards.slice();
+    for (var i = 0; i < list.length; i += 1) glassDecorate(list[i], true);
+  }
+
+  function glassStartThemeWatch() {
+    if (GLASS.mo || typeof MutationObserver !== 'function' || !document.body) return;
+    try {
+      GLASS.mo = new MutationObserver(function () {
+        if (GLASS.queued) return;
+        GLASS.queued = true;
+        var run = function () { GLASS.queued = false; glassRefreshAll(); };
+        // 主题/class 变化可能连带其它属性抖动，合并到下一帧再统一重算
+        if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run); else run();
+      });
+      GLASS.mo.observe(document.body, { attributes: true, attributeFilter: ['data-ds-dark-theme', 'class'] });
+    } catch (ignored) { GLASS.mo = null; }
+  }
 
   /* ---------------- 查看水位（已完成 · 未查看） ---------------- */
 
@@ -1213,9 +1621,15 @@ function build(require) {
    *
    * @returns 选中 id 集合；无 DOM 或不支持查询时返回 null（调用方退回旧信号）。
    */
+  var selectedCacheAt = 0;
+  var selectedCacheVal = null;
   function selectedSessionIds() {
     try {
       if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return null;
+      // 同一帧内面板 / 右栏 / 悬停卡都会调它；做 100ms 微缓存，避免重复的 DOM 查询。
+      // 选中高亮由宿主绘制，插件只用来判断「当前会话」，100ms 延迟无感。
+      var nowMs = Date.now();
+      if (selectedCacheVal !== null && nowMs - selectedCacheAt < 100) return selectedCacheVal;
       var rows = document.querySelectorAll('[data-row-key^="session:"]');
       var out = {};
       for (var i = 0; i < rows.length; i += 1) {
@@ -1224,6 +1638,8 @@ function build(require) {
         var key = String(row.getAttribute('data-row-key') || '').slice('session:'.length);
         if (key) out[key] = true;
       }
+      selectedCacheAt = nowMs;
+      selectedCacheVal = out;
       return out;
     } catch (ignored) {
       return null;
@@ -2093,12 +2509,36 @@ function build(require) {
     }
   }
 
+  /**
+   * 合并同一帧内的多次样式重写：侧栏 N 行在挂载/更新时会各调一次
+   * setTitleFlowLevel，若每次都全量重拼 style 文本就是 O(n²)。有 rAF 时
+   * 只在下一帧写一次；无 rAF（测试环境）时同步写，保证断言可见。
+   */
+  var titleFlowFlushQueued = false;
+  function scheduleTitleFlowSync() {
+    if (typeof requestAnimationFrame !== 'function') {
+      syncTitleFlowStyles();
+      return;
+    }
+    if (titleFlowFlushQueued) return;
+    titleFlowFlushQueued = true;
+    try {
+      requestAnimationFrame(function () {
+        titleFlowFlushQueued = false;
+        syncTitleFlowStyles();
+      });
+    } catch (ignored) {
+      titleFlowFlushQueued = false;
+      syncTitleFlowStyles();
+    }
+  }
+
   /** 登记/清除某个会话的热度级别，并刷新下划线样式。 */
   function setTitleFlowLevel(sessionId, level) {
     var key = String(sessionId);
     if (level > 0) titleFlowLevels[key] = level;
     else delete titleFlowLevels[key];
-    syncTitleFlowStyles();
+    scheduleTitleFlowSync();
   }
 
   /* ---------------- 组件 ---------------- */
@@ -2272,7 +2712,65 @@ function build(require) {
     var size = props && typeof props.size === 'number' && props.size > 0 ? props.size : 18;
     var level = Math.max(1, Math.min(5, (props && props.level) || 1));
     var active = props && props.active === true;
-    return React.createElement(
+    // F4：侧栏入口的「已完成未查看」计数角标（0 时隐藏）。数据拿不到时静默为 0。
+    useMinuteTick();
+    var unreadCount = 0;
+    try {
+      var useSessions = props && props.useSessions;
+      var useWorkspaces = props && props.useWorkspaces;
+      var useSessionStatus = props && props.useSessionStatus;
+      if (typeof useSessions === 'function') {
+        var sessionState = useSessions(function (s) { return s; });
+        var wsState = typeof useWorkspaces === 'function' ? useWorkspaces(function (s) { return s; }) : null;
+        var statusMap = null;
+        try { statusMap = typeof useSessionStatus === 'function' ? useSessionStatus(function (s) { return s; }) : null; } catch (ignored) { statusMap = null; }
+        var statusOf = statusMap && typeof statusMap.get === 'function' ? function (sid) { return statusMap.get(sid); } : undefined;
+        var archivedSet = {};
+        if (wsState && Array.isArray(wsState.archivedSessionIds)) {
+          for (var ai = 0; ai < wsState.archivedSessionIds.length; ai += 1) archivedSet[String(wsState.archivedSessionIds[ai])] = true;
+        }
+        var ids = sessionState && Array.isArray(sessionState.ids) ? sessionState.ids : [];
+        var byId = (sessionState && sessionState.byId) || {};
+        var openSet = selectedSessionIds();
+        for (var hi = 0; hi < ids.length; hi += 1) {
+          var hid = ids[hi];
+          var hsummary = byId[hid];
+          if (!hsummary || hsummary.blank === true || hsummary.origin === 'subagent') continue;
+          if (archivedSet[String(hid)]) continue;
+          var hnative = nativeStatusOf(statusOf, hid);
+          if (hnative.completionUnread !== true) continue;
+          if (openSet && openSet[String(hid)] === true) continue;
+          unreadCount += 1;
+        }
+      }
+    } catch (ignored) { unreadCount = 0; }
+    var badge = unreadCount > 0
+      ? React.createElement('span', {
+          key: 'unread',
+          title: tt('badge.title', { count: unreadCount }),
+          style: {
+            position: 'absolute',
+            top: -2,
+            right: -2,
+            minWidth: 14,
+            height: 14,
+            padding: '0 3px',
+            borderRadius: 999,
+            boxSizing: 'border-box',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 9,
+            lineHeight: '14px',
+            fontWeight: 600,
+            color: '#fff',
+            background: 'var(--color-blue-500, #3b82f6)',
+            boxShadow: '0 0 0 1px color-mix(in srgb, var(--dsw-alias-bg-base, #fff) 80%, transparent)',
+            pointerEvents: 'none',
+          },
+        }, unreadCount > 99 ? '99+' : String(unreadCount))
+      : null;
+    var ring = React.createElement(
       'span',
       {
         className: AH.heatRing,
@@ -2309,7 +2807,9 @@ function build(require) {
           opacity: active ? 1 : 0.9,
         },
       }),
+      badge,
     );
+    return React.createElement(React.Fragment, null, ring, React.createElement(OpenWithLayerHost));
   }
 
   /**
@@ -3084,7 +3584,9 @@ function build(require) {
       ? function (statusId) { return statuses.get(statusId); }
       : undefined;
     var now = Date.now();
-    var model = buildModel(state || { ids: [], byId: {}, projectionsBySession: {} }, ws, now, 12, 5, { statusOf: statusOf });
+    var model = React.useMemo(function () {
+      return buildModel(state || { ids: [], byId: {}, projectionsBySession: {} }, ws, now, 12, 5, { statusOf: statusOf });
+    }, [state, ws, statuses]);
     var rows = model.allSessions.slice(0, 12);
     var uiWorkspace = ctx && typeof ctx.get === 'function' ? ctx.get('uiWorkspace') : undefined;
 
@@ -3217,7 +3719,7 @@ function build(require) {
   }
 
   /**
-   * 运行中卡片的通用外框：2px 缝里露出环绕跑马灯，外层同时呼吸发光。
+   * 运行中卡片的通用外框：环形 mask 让跑马灯只描 1.5px 边框，卡内是玻璃；外层同时发光。
    * 会话卡片与工作区卡片共用这一份，保证两处的动效完全一致。
    */
   function RunningFrame(props) {
@@ -3270,43 +3772,53 @@ function build(require) {
         ref: frameRef,
         style: {
           position: 'relative',
-          margin: '0 0 8px',
+          margin: '0 0 var(--ah-card-gap, 12px)',
           padding: 1.5,
-          borderRadius: UI.radius,
+          borderRadius: 'var(--ah-card-radius, 12px)',
           overflow: 'hidden',
           // 常亮高亮蓝边框（一直高亮，配合下方闪烁辉光）
           border: '1.5px solid color-mix(in srgb, var(--color-blue-500, #3b82f6) 62%, transparent)',
           boxSizing: 'border-box',
-          background: 'var(--dsw-alias-bg-base, #ffffff)',
+          background: 'transparent',
           boxShadow: '0 0 10px 1px color-mix(in srgb, var(--color-blue-500, #3b82f6) 42%, transparent), inset 0 1px 0 rgba(255,255,255,0.12)',
           isolation: 'isolate',
         },
       },
-      // 跑马灯光带：尺寸取 200%，绕中心旋转，只有边缘 2px 会露出来。
-      // 蓝→青→紫的渐变让光带在旋转时有色温变化，边缘轻微模糊，避免硬边。
+      // 跑马灯光带：用 mask 镂空成「只描边框的环」，绕中心旋转只在 1.5px 边框露出，
+      // 这样卡片内部可以是玻璃、不会被光带透进来。
       React.createElement('span', {
+        key: 'ring',
         'aria-hidden': 'true',
         style: {
-          position: 'absolute',
-          left: '50%',
-          top: '50%',
-          width: '220%',
-          height: '220%',
-          marginLeft: '-110%',
-          marginTop: '-110%',
-          background:
-            'conic-gradient(from 0deg,' +
-            ' transparent 0deg, transparent 238deg,' +
-            ' color-mix(in srgb, var(--color-cyan-400, #22d3ee) 48%, transparent) 282deg,' +
-            ' color-mix(in srgb, var(--color-blue-500, #3b82f6) 86%, transparent) 312deg,' +
-            ' color-mix(in srgb, var(--color-violet-500, #8b5cf6) 24%, transparent) 340deg,' +
-            ' transparent 360deg)',
-          filter: 'blur(2px)',
-          animation: 'ah-orbit 2.2s linear infinite',
-          pointerEvents: 'none',
-          zIndex: 0,
+          position: 'absolute', inset: 0, borderRadius: 'inherit', padding: 1.5, boxSizing: 'border-box',
+          WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+          WebkitMaskComposite: 'xor',
+          mask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+          maskComposite: 'exclude',
+          overflow: 'hidden', pointerEvents: 'none', zIndex: 3,
         },
-      }),
+      },
+        React.createElement('span', {
+          style: {
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            width: '220%',
+            height: '220%',
+            marginLeft: '-110%',
+            marginTop: '-110%',
+            background:
+              'conic-gradient(from 0deg,' +
+              ' transparent 0deg, transparent 238deg,' +
+              ' color-mix(in srgb, var(--color-cyan-400, #22d3ee) 48%, transparent) 282deg,' +
+              ' color-mix(in srgb, var(--color-blue-500, #3b82f6) 86%, transparent) 312deg,' +
+              ' color-mix(in srgb, var(--color-violet-500, #8b5cf6) 24%, transparent) 340deg,' +
+              ' transparent 360deg)',
+            filter: 'blur(2px)',
+            animation: 'ah-orbit 2.2s linear infinite',
+          },
+        }),
+      ),
       props.children,
       // 底部游动的 DeepSeek 鲸鱼群（仅运行中卡片；每分钟多一只，最多 5 只）
       whaleNodes,
@@ -3519,7 +4031,7 @@ function build(require) {
   var SESSION_ACTION_DEFS = [
     { id: 'open', labelKey: 'menu.openSession', order: 10 },
     { id: 'terminal', labelKey: 'menu.openTerminal', order: 20, needsCwd: true, sidebarMenu: true, sidebarRow: true, groupStart: true },
-    { id: 'open-with', labelKey: 'menu.openWith', order: 30, needsCwd: true },
+    { id: 'open-with', labelKey: 'menu.openWith', order: 30, needsCwd: true, sidebarMenu: true },
     { id: 'copy-id', labelKey: 'menu.copyId', order: 40, separatorBefore: true },
     { id: 'copy-title', labelKey: 'menu.copyTitle', order: 50, sidebarMenu: true },
     { id: 'copy-prompt', labelKey: 'menu.copyPrompt', order: 60 },
@@ -3578,7 +4090,7 @@ function build(require) {
   /** 侧栏会话行菜单里的一行：点击后关闭宿主菜单并执行对应动作。 */
   /**
    * 侧栏行菜单动作图标：与宿主原生菜单同规格（16px、1.4 描边、currentColor），
-   * 不用 emoji、不写死颜色（design.md §2 / 牢记事项「图标不要用 emoji」）。
+   * 不用 emoji、不写死颜色（DESIGN.md §2 / PITFALLS.md「图标不要用 emoji」）。
    */
   function SidebarActionIcon(actionId, size) {
     var s = typeof size === 'number' && size > 0 ? size : 16;
@@ -3603,6 +4115,14 @@ function build(require) {
         React.createElement('path', { d: 'M8 2.5v7.2M5.4 7.2 8 9.8l2.6-2.6M3 12.7h10' }),
       );
     }
+    if (actionId === 'open-with') {
+      // 「在其他应用中打开」：方框 + 右上外部箭头
+      return React.createElement('svg', shared,
+        React.createElement('path', { d: 'M9.5 2.5h4v4' }),
+        React.createElement('path', { d: 'M13.5 2.5 7.8 8.2' }),
+        React.createElement('path', { d: 'M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3' }),
+      );
+    }
     // terminal（默认）
     return React.createElement('svg', shared,
       React.createElement('path', { d: 'M2.5 3.5h11v9h-11z' }),
@@ -3625,9 +4145,19 @@ function build(require) {
           }
         } catch (ignored) { /* 宿主菜单不可控时忽略 */ }
       };
-      var activate = function () {
+      var activate = function (event) {
         if (disabled) return;
+        var rect = null;
+        try {
+          if (event && event.currentTarget && typeof event.currentTarget.getBoundingClientRect === 'function') {
+            rect = event.currentTarget.getBoundingClientRect();
+          }
+        } catch (ignored) { rect = null; }
         closeMenu();
+        if (actionId === 'open-with') {
+          openSidebarOpenWith(path, rect);
+          return;
+        }
         runSidebarSessionAction(actionId, props && props.ctx, props.sessionId, props && props.displayTitle, summary);
       };
       return React.createElement('button', {
@@ -3722,9 +4252,10 @@ function build(require) {
     goland: true, rider: true, rustrover: true,
   };
   var OPEN_WITH_TERMINALS = {
-    // 只收终端模拟器；gitbash 是 shell，不算「终端」，由 buildOpenWithItems 过滤掉
+    // 终端模拟器 + 能在指定目录开 shell 的环境（Git Bash / WSL 打开的是终端，不是编辑器）
     terminal: true, windowsterminal: true, iterm: true,
     warp: true, ghostty: true, kitty: true, gnometerminal: true, konsole: true,
+    gitbash: true, wsl: true,
   };
 
   function openWithGroupRank(id) {
@@ -3750,6 +4281,436 @@ function build(require) {
     return false;
   }
 
+  /* ---------------- 在其他应用中打开：共享数据与浮层 ---------------- */
+
+  var OPEN_WITH_APPS_ROUTE = 'activity-heat/open-with/apps';
+  var OPEN_WITH_OPEN_ROUTE = 'activity-heat/open-with/open';
+  var OPEN_WITH_FALLBACK_APPS_ROUTE = 'open-in-app/apps';
+
+  var openWithAppsCache = null;
+  var openWithAppsLoading = null;
+
+  function normalizeAppList(value) {
+    if (!Array.isArray(value)) return null;
+    var out = [];
+    for (var i = 0; i < value.length; i += 1) {
+      if (typeof value[i] === 'string' && value[i] !== '') out.push(value[i]);
+    }
+    return out;
+  }
+
+  function fetchAppList(url) {
+    return new Promise(function (resolve) {
+      try {
+        if (typeof fetch !== 'function') { resolve(null); return; }
+        fetch(url).then(function (response) {
+          return response && response.ok && typeof response.json === 'function'
+            ? response.json()
+            : null;
+        }).then(function (body) {
+          resolve(body && Array.isArray(body.apps) ? normalizeAppList(body.apps) : null);
+        }, function () { resolve(null); });
+      } catch (ignored) { resolve(null); }
+    });
+  }
+
+  /** 探测应用列表：优先本插件 Host 路由，失败回退旧宿主 open-in-app（避免退化）。 */
+  function loadOpenWithApps() {
+    if (openWithAppsCache) return Promise.resolve(openWithAppsCache);
+    if (openWithAppsLoading) return openWithAppsLoading;
+    openWithAppsLoading = fetchAppList(OPEN_WITH_APPS_ROUTE).then(function (primary) {
+      if (primary && primary.length > 0) return primary;
+      return fetchAppList(OPEN_WITH_FALLBACK_APPS_ROUTE).then(function (fallback) {
+        return fallback || [];
+      });
+    }).then(function (list) {
+      openWithAppsCache = list || [];
+      openWithAppsLoading = null;
+      return openWithAppsCache;
+    }, function () {
+      openWithAppsCache = [];
+      openWithAppsLoading = null;
+      return openWithAppsCache;
+    });
+    return openWithAppsLoading;
+  }
+
+  /** 请求在一个应用中打开目录（Host 回报真实成败），返回 Promise<boolean>。 */
+  function openInAppRequest(appId, path) {
+    try {
+      if (typeof fetch !== 'function' || !isAbsolutePath(path)) return Promise.resolve(false);
+      return fetch(OPEN_WITH_OPEN_ROUTE, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ app: appId, path: path }),
+      }).then(function (response) {
+        return Boolean(response && response.ok);
+      }, function () { return false; });
+    } catch (ignored) { return Promise.resolve(false); }
+  }
+
+  /** 请求在系统终端打开目录（Host 路由），返回 Promise<boolean>。 */
+  function openTerminalRequest(path) {
+    try {
+      if (typeof fetch !== 'function' || !isAbsolutePath(path)) return Promise.resolve(false);
+      return fetch('activity-heat/open-terminal', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ path: path }),
+      }).then(function (response) {
+        return Boolean(response && response.ok);
+      }, function () { return false; });
+    } catch (ignored) { return Promise.resolve(false); }
+  }
+
+  /**
+   * 统一的「打开方式」菜单项构建器：终端固定第一项，其余按
+   * 文件管理器 → 编辑器 → 终端 → 其他 分组。面板子菜单与侧栏浮层共用，避免两套漂移。
+   * opts: { onNotify(text, tone), onClose() }。
+   */
+  function buildOpenWithMenuItems(path, apps, opts) {
+    opts = opts || {};
+    var canOpen = isAbsolutePath(path);
+    var notifier = typeof opts.onNotify === 'function' ? opts.onNotify : function () {};
+    var closer = typeof opts.onClose === 'function' ? opts.onClose : function () {};
+    var items = [{
+      id: 'terminal',
+      label: tt('menu.openTerminal'),
+      disabled: !canOpen,
+      hint: !canOpen ? tt('menu.openWithNoPath') : undefined,
+      onSelect: function () {
+        closer();
+        openTerminalRequest(path).then(function (ok) {
+          if (ok) notifier(tt('toast.terminalOpened'));
+          else notifier(tt('error.openTerminal'), 'error');
+        });
+      },
+    }];
+    var ordered = (apps || []).filter(function (id) {
+      return typeof id === 'string' && id !== '';
+    }).slice().sort(function (a, b) {
+      return openWithGroupRank(a) - openWithGroupRank(b);
+    });
+    var lastGroup = -1;
+    ordered.forEach(function (id) {
+      var group = openWithGroupRank(id);
+      items.push({
+        id: 'app-' + id,
+        label: tt('openWith.item', { app: appLabelOf(id) }),
+        separatorBefore: lastGroup !== -1 && group !== lastGroup,
+        disabled: !canOpen,
+        onSelect: function () {
+          closer();
+          openInAppRequest(id, path).then(function (ok) {
+            if (ok) notifier(tt('toast.openedWith', { app: appLabelOf(id) }));
+            else notifier(tt('error.openWith'), 'error');
+          });
+        },
+      });
+      lastGroup = group;
+    });
+    return items;
+  }
+
+  /* 侧栏二级浮层：模块级 store（宿主菜单关闭后浮层仍存活）+ 常驻宿主组件渲染。 */
+  var openWithLayerState = null;
+  var openWithLayerSubs = [];
+  function notifyOpenWithLayer() {
+    for (var i = 0; i < openWithLayerSubs.length; i += 1) {
+      try { openWithLayerSubs[i](); } catch (ignored) { /* ignore */ }
+    }
+  }
+  function openOpenWithLayer(state) { openWithLayerState = state; notifyOpenWithLayer(); }
+  function closeOpenWithLayer() { openWithLayerState = null; notifyOpenWithLayer(); }
+  function useOpenWithLayer() {
+    var tick = React.useState(0);
+    React.useEffect(function () {
+      var bump = function () { tick[1](function (n) { return n + 1; }); };
+      openWithLayerSubs.push(bump);
+      return function () {
+        var at = openWithLayerSubs.indexOf(bump);
+        if (at >= 0) openWithLayerSubs.splice(at, 1);
+      };
+    }, []);
+    return openWithLayerState;
+  }
+
+  /* 侧栏没有 PanelToast，给浮层动作补一条跟随的轻提示。 */
+  var openWithToastState = null;
+  var openWithToastSubs = [];
+  var openWithToastTimer = null;
+  function notifyOpenWithToast() {
+    for (var i = 0; i < openWithToastSubs.length; i += 1) {
+      try { openWithToastSubs[i](); } catch (ignored) { /* ignore */ }
+    }
+  }
+  function showOpenWithToast(text, tone) {
+    openWithToastState = { text: text, tone: tone === 'error' ? 'error' : 'info' };
+    notifyOpenWithToast();
+    if (openWithToastTimer) { try { clearTimeout(openWithToastTimer); } catch (ignored) { /* ignore */ } }
+    openWithToastTimer = setTimeout(function () {
+      openWithToastState = null;
+      openWithToastTimer = null;
+      notifyOpenWithToast();
+    }, tone === 'error' ? 5000 : 3000);
+  }
+  function useOpenWithToast() {
+    var tick = React.useState(0);
+    React.useEffect(function () {
+      var bump = function () { tick[1](function (n) { return n + 1; }); };
+      openWithToastSubs.push(bump);
+      return function () {
+        var at = openWithToastSubs.indexOf(bump);
+        if (at >= 0) openWithToastSubs.splice(at, 1);
+      };
+    }, []);
+    return openWithToastState;
+  }
+
+  /** 侧栏点击「在其他应用中打开…」：先关闭宿主菜单，再在点击位置弹出浮层。 */
+  function openSidebarOpenWith(path, anchorRect) {
+    if (!isAbsolutePath(path)) return;
+    loadOpenWithApps().then(function (apps) {
+      var items = buildOpenWithMenuItems(path, apps, { onNotify: showOpenWithToast, onClose: closeOpenWithLayer });
+      var width = MENU_WIDTH;
+      var height = menuHeightOf(items);
+      var x = anchorRect && typeof anchorRect.right === 'number' ? anchorRect.right + 4 : 12;
+      var y = anchorRect && typeof anchorRect.top === 'number' ? anchorRect.top : 12;
+      var pos = menuPosition(x, y, width, height);
+      openOpenWithLayer({ items: items, x: pos.left, y: pos.top });
+    });
+  }
+
+  /** 常驻宿主：渲染侧栏浮层 + 轻提示（挂在 HeatRing 上，侧栏可见时常驻）。 */
+  function OpenWithLayerHost() {
+    var layer = useOpenWithLayer();
+    var toast = useOpenWithToast();
+    var nodes = [];
+    if (layer) {
+      nodes.push(React.createElement(ContextMenu, {
+        key: 'layer',
+        open: true,
+        items: layer.items,
+        x: layer.x,
+        y: layer.y,
+        label: tt('openWith.title'),
+        onClose: closeOpenWithLayer,
+      }));
+    }
+    if (toast) {
+      nodes.push(React.createElement(PanelToast, { key: 'toast', open: true, toast: toast }));
+    }
+    if (nodes.length === 0) return null;
+    return React.createElement(React.Fragment, null, nodes);
+  }
+
+  /* ---------------- 侧栏原生会话菜单：contextMenus 数据动作 ----------------
+
+   * 迁移原因（用户 2026-11-06 提出）：
+   *   1) 旧 `sidebar.workspaces.session.menu.item` 是自绘组件行（ah-side-action），
+   *      图标 / 字号 / 高度 / 间距 / hover 与宿主原生菜单项对不上；
+   *   2) 侧栏「在其他应用中打开…」只能点击后关菜单再弹自绘浮层（二次点击）。
+   * 改用宿主 `contextMenus` 菜单服务后：动作由宿主同一套 Menu 渲染（与原生项完全同源），
+   * `children` 由宿主转换成原生二级级联子菜单（hover 展开，无需二次点击）。
+   * 注意红线：不 require 任何 Harness Client 包（DESIGN §2 / PITFALLS 一.6），只通过
+   * `ctx.get('contextMenus')` 使用服务；服务缺失时回退旧的自绘组件项。
+   */
+
+  /** 已解析到的 contextMenus 服务（供动作回调里的 notify 使用）。 */
+  var sessionMenuService = null;
+  /** resolve 时读取会话 cwd/标题需要 ctx。 */
+  var sessionMenuCtx = null;
+  /** 图标 key → SidebarActionIcon 的动作 id。 */
+  var SESSION_MENU_ICONS = {
+    'activity-heat.terminal': 'terminal',
+    'activity-heat.open-with': 'open-with',
+    'activity-heat.copy-title': 'copy-title',
+    'activity-heat.copy-cwd': 'copy-cwd',
+    'activity-heat.download': 'download',
+    'activity-heat.app': 'open-with',
+  };
+
+  function safeCtxGet(ctx, name) {
+    try { return ctx && typeof ctx.get === 'function' ? ctx.get(name) : undefined; } catch (ignored) { return undefined; }
+  }
+
+  /** 从宿主 sessions 服务快照读会话摘要（cwd 等）；拿不到返回 undefined。 */
+  function sessionSummaryOfService(sessionId) {
+    var sessions = safeCtxGet(sessionMenuCtx, 'sessions');
+    var list = sessions && sessions.list;
+    if (!list) return undefined;
+    try {
+      var snap = typeof list.getSnapshot === 'function' ? list.getSnapshot() : undefined;
+      return snap && snap.byId ? snap.byId[sessionId] : undefined;
+    } catch (ignored) { return undefined; }
+  }
+
+  function notifySessionMenu(text, ok) {
+    try {
+      if (sessionMenuService && typeof sessionMenuService.notify === 'function') {
+        sessionMenuService.notify(text, ok === true);
+      }
+    } catch (ignored) { /* 提示失败不影响动作 */ }
+  }
+
+  function runTerminalMenuAction(path) {
+    openTerminalRequest(path).then(function (ok) {
+      notifySessionMenu(ok ? tt('toast.terminalOpened') : tt('error.openTerminal'), ok);
+    });
+  }
+
+  function runOpenInAppMenuAction(appId, path) {
+    openInAppRequest(appId, path).then(function (ok) {
+      notifySessionMenu(ok ? tt('toast.openedWith', { app: appLabelOf(appId) }) : tt('error.openWith'), ok);
+    });
+  }
+
+  /**
+   * 「在其他应用中打开」的二级动作：终端固定第一项，其余按
+   * 文件管理器 → 编辑器 → 终端 → 其他 分组，组间加分隔线。
+   */
+  function buildOpenWithContextActions(path) {
+    var canOpen = isAbsolutePath(path);
+    var out = [{
+      id: 'terminal',
+      label: tt('menu.openTerminal'),
+      icon: { key: 'activity-heat.terminal' },
+      disabled: !canOpen,
+      run: function () { runTerminalMenuAction(path); },
+    }];
+    var ordered = (openWithAppsCache || []).filter(function (id) {
+      return typeof id === 'string' && id !== '';
+    }).slice().sort(function (a, b) {
+      return openWithGroupRank(a) - openWithGroupRank(b);
+    });
+    var lastGroup = -1;
+    ordered.forEach(function (id) {
+      var group = openWithGroupRank(id);
+      out.push({
+        id: 'app-' + id,
+        label: tt('openWith.item', { app: appLabelOf(id) }),
+        icon: { key: 'activity-heat.app' },
+        separatorBefore: lastGroup !== -1 && group !== lastGroup,
+        disabled: !canOpen,
+        run: function () { runOpenInAppMenuAction(id, path); },
+      });
+      lastGroup = group;
+    });
+    return out;
+  }
+
+  /** 会话 target → 5 个插件动作（宿主每次打开菜单时调用 resolve）。 */
+  function resolveSessionMenuActions(target) {
+    var sessionId = target && target.sessionId;
+    var summary = sessionSummaryOfService(sessionId);
+    var path = summary && typeof summary.cwd === 'string' ? summary.cwd : '';
+    var canCwd = isAbsolutePath(path);
+    var title = target && target.displayTitle ? String(target.displayTitle) : '';
+    return [
+      {
+        id: 'terminal',
+        label: tt('menu.openTerminal'),
+        icon: { key: 'activity-heat.terminal' },
+        disabled: !canCwd,
+        run: function () { runTerminalMenuAction(path); },
+      },
+      {
+        id: 'open-with',
+        label: tt('menu.openWith'),
+        icon: { key: 'activity-heat.open-with' },
+        disabled: !canCwd,
+        children: buildOpenWithContextActions(path),
+      },
+      {
+        id: 'copy-title',
+        label: tt('menu.copyTitle'),
+        icon: { key: 'activity-heat.copy-title' },
+        disabled: !title,
+        run: function () {
+          copyText(title).then(function (ok) {
+            notifySessionMenu(ok ? tt('toast.copied') : tt('menu.unavailable'), ok);
+          });
+        },
+      },
+      {
+        id: 'copy-cwd',
+        label: tt('menu.copyCwd'),
+        icon: { key: 'activity-heat.copy-cwd' },
+        disabled: !path,
+        run: function () {
+          copyText(path).then(function (ok) {
+            notifySessionMenu(ok ? tt('toast.copied') : tt('menu.unavailable'), ok);
+          });
+        },
+      },
+      {
+        id: 'download',
+        label: tt('menu.downloadLog'),
+        icon: { key: 'activity-heat.download' },
+        run: function () {
+          downloadSessionLog(sessionId).then(function (ok) {
+            if (!ok) notifySessionMenu(tt('menu.unavailable'), false);
+          });
+        },
+      },
+    ];
+  }
+
+  /** 把图标 key 注册到宿主 contextMenu.icon（复用现有内联 SVG，不引宿主包）。 */
+  function registerSessionMenuIcons(slots) {
+    Object.keys(SESSION_MENU_ICONS).forEach(function (key) {
+      var actionId = SESSION_MENU_ICONS[key];
+      try {
+        slots.inject('contextMenu.icon', function () {
+          try {
+            return slots.register({ name: 'contextMenu.icon', key: key }, function SessionMenuIcon() {
+              return SidebarActionIcon(actionId, 16);
+            });
+          } catch (ignored) { return undefined; }
+        });
+      } catch (ignored) { /* 老宿主没有该席位时跳过 */ }
+    });
+  }
+
+  /**
+   * 服务优先安装会话菜单：拿到 contextMenus 就注册数据动作；等不到（老宿主）才
+   * 调用 onFallback 注册旧的自绘组件项。任何异常都吞掉，绝不影响其它席位。
+   */
+  function installSessionMenu(ctx, slots, onFallback) {
+    sessionMenuCtx = ctx;
+    var tries = 0;
+    function attempt() {
+      var cm = safeCtxGet(ctx, 'contextMenus');
+      if (cm && typeof cm.register === 'function') {
+        sessionMenuService = cm;
+        try {
+          var run = function () {
+            return cm.register({
+              id: 'activity-heat.session',
+              target: 'session',
+              order: 510,
+              resolve: resolveSessionMenuActions,
+            });
+          };
+          if (typeof ctx.effect === 'function') ctx.effect(run, 'activity-heat: session menu');
+          else run();
+          if (slots) registerSessionMenuIcons(slots);
+          try { loadOpenWithApps(); } catch (ignored) { /* 预取失败不影响菜单 */ }
+          return;
+        } catch (error) {
+          ahWarn('[activity-heat] contextMenus.register failed:', error && error.message);
+        }
+      }
+      tries += 1;
+      if (tries > 90) { if (onFallback) onFallback(); return; }
+      var raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : null;
+      if (raf) { raf(attempt); return; }
+      if (typeof setTimeout === 'function') { setTimeout(attempt, 16); return; }
+      if (onFallback) onFallback();
+    }
+    attempt();
+  }
+
   /* ---------------- 右键菜单：组件 ---------------- */
 
   function ContextMenu(props) {
@@ -3764,8 +4725,100 @@ function build(require) {
     var submenu = submenuState[0];
     var setSubmenu = submenuState[1];
 
+    /* 级联菜单「安全三角 + 三层延时」（手册 002）：
+       - 打开延时 220ms；安全窗口每 80ms 复查、满 1200ms 也切换；离开菜单 360ms 后关闭。
+       - 三角区：以「上一刻」指针为顶点，连到子菜单近边的上下两角；区内移动不误切。 */
+    var cascadeRef = React.useRef ? React.useRef(null) : { current: null };
+    if (!cascadeRef.current) {
+      cascadeRef.current = { openTimer: 0, safeTimer: 0, safeTick: 0, closeTimer: 0, pending: null, history: [] };
+    }
+    var CASC = cascadeRef.current;
+    function clearOne(name) {
+      if (CASC[name]) { try { clearTimeout(CASC[name]); } catch (ignored) {} CASC[name] = 0; }
+    }
+    function clearAllTimers() {
+      clearOne('openTimer'); clearOne('safeTimer'); clearOne('closeTimer');
+      if (CASC.safeTick) { try { clearInterval(CASC.safeTick); } catch (ignored) {} CASC.safeTick = 0; }
+      CASC.pending = null;
+    }
+    function recordPointer(x, y) {
+      CASC.history.push({ x: x, y: y });
+      if (CASC.history.length > 2) CASC.history.shift();
+    }
+    function pointInTriangle(px, py, a, b, c) {
+      var d1 = (px - b[0]) * (a[1] - b[1]) - (a[0] - b[0]) * (py - b[1]);
+      var d2 = (px - c[0]) * (b[1] - c[1]) - (b[0] - c[0]) * (py - c[1]);
+      var d3 = (px - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (py - a[1]);
+      var neg = d1 < 0 || d2 < 0 || d3 < 0;
+      var pos = d1 > 0 || d2 > 0 || d3 > 0;
+      return !(neg && pos);
+    }
+    function inSafeZone(px, py) {
+      if (!submenu) return false;
+      var h = CASC.history;
+      if (h.length < 2) return false;
+      var apex = h[h.length - 2];                       // 用「上一刻」位置，避免三角塌陷
+      var r = { x: submenu.x, y: submenu.y, w: MENU_WIDTH, h: menuHeightOf(submenu.items) };
+      var nearX = (apex.x < r.x + r.w / 2) ? r.x : r.x + r.w; // 子菜单在右→近边左沿；在左→近边右沿
+      return pointInTriangle(px, py,
+        [apex.x, apex.y], [nearX, r.y], [nearX, r.y + r.h]);
+    }
+    function cancelSafe() {
+      clearOne('safeTimer');
+      if (CASC.safeTick) { try { clearInterval(CASC.safeTick); } catch (ignored) {} CASC.safeTick = 0; }
+      CASC.pending = null;
+    }
+    function scheduleOpen(index, element, subItems, delay) {
+      clearOne('openTimer');
+      var d = delay === undefined ? 220 : delay;
+      CASC.openTimer = setTimeout(function () { CASC.openTimer = 0; openSubmenu(index, element, subItems); }, d);
+    }
+    function onItemHover(index, item, event) {
+      var el = event && event.currentTarget;
+      var hasPt = event && typeof event.clientX === 'number';
+      if (hasPt) recordPointer(event.clientX, event.clientY);
+      setActive(index);
+      var hasSub = Boolean(item && item.submenu && item.submenu.length);
+      var touch = event && event.pointerType === 'touch';
+      if (hasSub) {
+        // 子菜单已开、且指针在安全三角内：先不切，等离开三角或满 1200ms 再切
+        if (submenu && hasPt && inSafeZone(event.clientX, event.clientY)) {
+          CASC.pending = { index: index, element: el, items: item.submenu };
+          if (!CASC.safeTick && typeof setInterval === 'function') {
+            CASC.safeTick = setInterval(function () {
+              var last = CASC.history[CASC.history.length - 1];
+              var p = CASC.pending;
+              if (!p) { try { clearInterval(CASC.safeTick); } catch (ignored) {} CASC.safeTick = 0; return; }
+              if (last && !inSafeZone(last.x, last.y)) {
+                try { clearInterval(CASC.safeTick); } catch (ignored) {} CASC.safeTick = 0;
+                CASC.pending = null; clearOne('safeTimer'); openSubmenu(p.index, p.element, p.items);
+              }
+            }, 80);
+          }
+          clearOne('safeTimer');
+          CASC.safeTimer = setTimeout(function () {
+            CASC.safeTimer = 0;
+            var p = CASC.pending; CASC.pending = null;
+            if (CASC.safeTick) { try { clearInterval(CASC.safeTick); } catch (ignored) {} CASC.safeTick = 0; }
+            if (p) openSubmenu(p.index, p.element, p.items);
+          }, 1200);
+          return;
+        }
+        cancelSafe();
+        if (touch) { openSubmenu(index, el, item.submenu); return; }
+        scheduleOpen(index, el, item.submenu, 220);
+      } else {
+        cancelSafe();
+        clearOne('openTimer');
+        if (submenu) {
+          CASC.openTimer = setTimeout(function () { CASC.openTimer = 0; setSubmenu(null); }, touch ? 0 : 220);
+        }
+      }
+    }
+
     function openSubmenu(index, element, subItems) {
       if (!subItems || subItems.length === 0) return;
+      cancelSafe(); clearOne('openTimer');
       var rect = element && typeof element.getBoundingClientRect === 'function'
         ? element.getBoundingClientRect()
         : { left: 0, right: 0, top: 0, bottom: 0 };
@@ -3809,6 +4862,7 @@ function build(require) {
       } catch (ignored) { /* 沙箱没有事件系统 */ }
       return function () {
         for (var i = 0; i < cleanups.length; i += 1) cleanups[i]();
+        clearAllTimers();
       };
     }, [open]);
 
@@ -3924,12 +4978,7 @@ function build(require) {
         }(item, index),
         onMouseEnter: function (hovered, selected, position) {
           return function (event) {
-            setActive(hovered);
-            if (selected.submenu && selected.submenu.length) {
-              openSubmenu(position, event && event.currentTarget, selected.submenu);
-            } else {
-              setSubmenu(null);
-            }
+            onItemHover(hovered, selected, event);
           };
         }(index, item, index),
       }, [
@@ -3962,6 +5011,19 @@ function build(require) {
       },
       onKeyDown: onKeyDown,
       onContextMenu: function (event) { event.preventDefault(); },
+      onPointerMove: function (event) {
+        if (event && typeof event.clientX === 'number') recordPointer(event.clientX, event.clientY);
+      },
+      onMouseEnter: function () { clearOne('closeTimer'); },
+      onMouseLeave: function (event) {
+        var rt = event && event.relatedTarget;
+        if (rt && typeof rt.closest === 'function' && rt.closest('[data-ah-menu]')) return;
+        clearOne('closeTimer');
+        CASC.closeTimer = setTimeout(function () {
+          CASC.closeTimer = 0;
+          if (props.onClose) props.onClose();
+        }, 360);
+      },
     }, nodes);
 
     var layer = portalLayer(surface);
@@ -4087,6 +5149,125 @@ function build(require) {
     ]));
   }
 
+  /* 背景与外观配置中心：背景 embed 代码 + 中间层颜色/不透明度/模糊度。 */
+  function SettingsDialog(props) {
+    var jsonState = React.useState('');
+    var jsonText = jsonState[0];
+    var setJson = jsonState[1];
+    if (!props || !props.open) return null;
+    var v = props.value || {};
+    var alpha = v.scrimOpacity == null ? 0.45 : Number(v.scrimOpacity);
+    var blur = v.scrimBlur == null ? 10 : Number(v.scrimBlur);
+    var gap = v.cardGap == null ? 12 : Number(v.cardGap);
+    var radius = v.cardRadius == null ? 12 : Number(v.cardRadius);
+    var bgOpacity = v.bgOpacity == null ? 1 : Number(v.bgOpacity);
+    var set = function (patch) { if (props.onChange) props.onChange(Object.assign({}, v, patch)); };
+    var rowStyle = { display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, fontSize: '0.78em', color: 'var(--dsw-alias-label-secondary)' };
+    var valStyle = { width: 46, textAlign: 'right' };
+    var doExport = function () {
+      try {
+        var out = {
+          bgEnabled: v.bgEnabled !== false,
+          bgEmbed: v.bgEmbed || '',
+          scrimColor: v.scrimColor || '#ffffff',
+          scrimOpacity: v.scrimOpacity == null ? 0.45 : Number(v.scrimOpacity),
+          scrimBlur: v.scrimBlur == null ? 10 : Number(v.scrimBlur),
+          cardGap: v.cardGap == null ? 12 : Number(v.cardGap),
+          cardRadius: v.cardRadius == null ? 12 : Number(v.cardRadius),
+          bgOpacity: v.bgOpacity == null ? 1 : Number(v.bgOpacity),
+        };
+        var text = JSON.stringify(out, null, 2);
+        setJson(text);
+        try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text); } catch (ignored) {}
+      } catch (ignored) { /* ignore */ }
+    };
+    var doImport = function () {
+      try {
+        var obj = JSON.parse(jsonText);
+        if (obj && typeof obj === 'object' && props.onImport) props.onImport(obj);
+      } catch (ignored) { /* 非法 JSON 忽略 */ }
+    };
+    return portalLayer(React.createElement('div', {
+      role: 'dialog',
+      'aria-modal': 'true',
+      'aria-label': '背景与外观设置',
+      className: AH.dialog,
+      style: { width: 'min(480px, calc(100vw - 32px))', maxHeight: 'min(84vh, 720px)', overflowY: 'auto' },
+    }, [
+      React.createElement('div', { key: 'title', className: AH.dialogTitle }, '背景与外观设置'),
+      React.createElement('label', { key: 'enable-row', style: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: '0.8em', cursor: 'pointer', color: 'var(--dsw-alias-label-secondary)' } }, [
+        React.createElement('input', { key: 'cb', type: 'checkbox', checked: v.bgEnabled !== false, onChange: function (e) { set({ bgEnabled: !!(e && e.target && e.target.checked) }); } }),
+        React.createElement('span', { key: 't' }, '启用外部背景（关闭则使用纯色底、不加载背景脚本）'),
+      ]),
+      React.createElement('div', { key: 'bg-label', className: AH.dialogText, style: { marginTop: 10 } }, '背景嵌入代码（script + 自定义标签，留空则无背景）'),
+      React.createElement('textarea', {
+        key: 'bg',
+        className: AH.dialogInput,
+        value: v.bgEmbed || '',
+        spellCheck: false,
+        disabled: v.bgEnabled === false,
+        placeholder: '粘贴形如 <script type="module" src="https://.../embed.js"></script> 与 <pro-threads ...></pro-threads>',
+        style: { minHeight: 96, fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: '0.72em', lineHeight: '1.5', whiteSpace: 'pre', resize: 'vertical', opacity: v.bgEnabled === false ? 0.5 : 1 },
+        onChange: function (e) { set({ bgEmbed: e && e.target ? e.target.value : '' }); },
+      }),
+      React.createElement('div', { key: 'origin', className: AH.dialogText, style: { marginTop: 6, fontSize: '0.74em' } }, [
+        '背景原地址：',
+        React.createElement('a', {
+          key: 'a', href: 'https://www.kubai.design/pro-threads/', target: '_blank', rel: 'noreferrer',
+          style: { color: 'var(--color-blue-500, #3b82f6)', textDecoration: 'underline' },
+        }, 'https://www.kubai.design/pro-threads/'),
+      ]),
+      React.createElement('div', { key: 'mid-label', className: AH.dialogText, style: { marginTop: 12 } }, '中间层（位于背景与列表之间）'),
+      React.createElement('div', { key: 'color-row', style: rowStyle }, [
+        React.createElement('span', { key: 'lab' }, '颜色'),
+        React.createElement('input', { key: 'color', type: 'color', value: v.scrimColor || '#ffffff', onChange: function (e) { set({ scrimColor: e && e.target ? e.target.value : '#ffffff' }); }, style: { width: 40, height: 26, border: 'none', background: 'transparent', cursor: 'pointer' } }),
+        React.createElement('span', { key: 'alpha-lab', style: { marginLeft: 8 } }, '不透明度'),
+        React.createElement('input', { key: 'alpha', type: 'range', min: 0, max: 100, value: Math.round(alpha * 100), onChange: function (e) { set({ scrimOpacity: (Number(e && e.target ? e.target.value : 45)) / 100 }); }, style: { flex: '1 1 auto' } }),
+        React.createElement('span', { key: 'alpha-val', style: valStyle }, Math.round(alpha * 100) + '%'),
+      ]),
+      React.createElement('div', { key: 'blur-row', style: rowStyle }, [
+        React.createElement('span', { key: 'lab' }, '模糊度'),
+        React.createElement('input', { key: 'blur', type: 'range', min: 0, max: 40, value: blur, onChange: function (e) { set({ scrimBlur: Number(e && e.target ? e.target.value : 10) }); }, style: { flex: '1 1 auto' } }),
+        React.createElement('span', { key: 'blur-val', style: valStyle }, blur + 'px'),
+      ]),
+      React.createElement('div', { key: 'ui-label', className: AH.dialogText, style: { marginTop: 12 } }, '卡片与列表'),
+      React.createElement('div', { key: 'gap-row', style: rowStyle }, [
+        React.createElement('span', { key: 'lab' }, '卡片间距'),
+        React.createElement('input', { key: 'gap', type: 'range', min: 0, max: 32, value: gap, onChange: function (e) { set({ cardGap: Number(e && e.target ? e.target.value : 12) }); }, style: { flex: '1 1 auto' } }),
+        React.createElement('span', { key: 'gap-val', style: valStyle }, gap + 'px'),
+      ]),
+      React.createElement('div', { key: 'radius-row', style: rowStyle }, [
+        React.createElement('span', { key: 'lab' }, '卡片圆角'),
+        React.createElement('input', { key: 'radius', type: 'range', min: 0, max: 24, value: radius, onChange: function (e) { set({ cardRadius: Number(e && e.target ? e.target.value : 12) }); }, style: { flex: '1 1 auto' } }),
+        React.createElement('span', { key: 'radius-val', style: valStyle }, radius + 'px'),
+      ]),
+      React.createElement('div', { key: 'bgop-row', style: rowStyle }, [
+        React.createElement('span', { key: 'lab' }, '背景不透明度'),
+        React.createElement('input', { key: 'bgop', type: 'range', min: 0, max: 100, value: Math.round(bgOpacity * 100), onChange: function (e) { set({ bgOpacity: (Number(e && e.target ? e.target.value : 100)) / 100 }); }, style: { flex: '1 1 auto' } }),
+        React.createElement('span', { key: 'bgop-val', style: valStyle }, Math.round(bgOpacity * 100) + '%'),
+      ]),
+      React.createElement('div', { key: 'json-label', className: AH.dialogText, style: { marginTop: 12 } }, '导入 / 导出（JSON）'),
+      React.createElement('textarea', {
+        key: 'json',
+        className: AH.dialogInput,
+        value: jsonText,
+        spellCheck: false,
+        placeholder: '「导出 JSON」生成当前配置；粘贴 JSON 后点「导入」应用（再点保存持久化）',
+        style: { minHeight: 72, fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: '0.7em', lineHeight: '1.45', whiteSpace: 'pre', resize: 'vertical' },
+        onChange: function (e) { setJson(e && e.target ? e.target.value : ''); },
+      }),
+      React.createElement('div', { key: 'json-actions', style: { display: 'flex', gap: 8, marginTop: 8 } }, [
+        React.createElement('button', { key: 'exp', type: 'button', className: AH.dialogButton, onClick: doExport }, '导出 JSON'),
+        React.createElement('button', { key: 'imp', type: 'button', className: AH.dialogButton, onClick: doImport }, '导入 JSON'),
+      ]),
+      React.createElement('div', { key: 'actions', className: AH.dialogActions, style: { marginTop: 16 } }, [
+        React.createElement('button', { key: 'reset', type: 'button', className: AH.dialogButton, onClick: function () { if (props.onReset) props.onReset(); } }, '恢复默认'),
+        React.createElement('button', { key: 'cancel', type: 'button', className: AH.dialogButton, onClick: props.onCancel }, '取消'),
+        React.createElement('button', { key: 'save', type: 'button', className: AH.dialogButton, 'data-primary': 'true', onClick: function () { if (props.onSave) props.onSave(); } }, '保存'),
+      ]),
+    ]));
+  }
+
   function PanelToast(props) {
     if (!props || !props.open || !props.toast) return null;
     var toast = props.toast;
@@ -4108,6 +5289,47 @@ function build(require) {
     ]));
   }
 
+  /* 面板背景：按配置渲染外部自定义元素（如 pro-threads），脚本只加载一次（浏览器/内存双缓存）。 */
+  function ThreadsBackground(props) {
+    var cfg = props && props.config;
+    React.useEffect(function () {
+      try { if (cfg && cfg.src) ensureEmbedScript(cfg.src); } catch (ignored) { /* ignore */ }
+    }, [cfg && cfg.src]);
+    if (!cfg || !cfg.tag) return null;
+    var elProps = {};
+    for (var k in cfg.attrs) {
+      if (Object.prototype.hasOwnProperty.call(cfg.attrs, k)) elProps[k] = cfg.attrs[k];
+    }
+    elProps.key = 'thread';
+    elProps.style = { width: '100%', height: '100%', display: 'block' };
+    return React.createElement(cfg.tag, elProps);
+  }
+
+  /* 共享 ResizeObserver：整页只创建一个实例观察所有卡片，避免「每卡一个 observer」。
+     无 ResizeObserver（测试 / 老环境）时返回 noop，调用方逻辑不变。 */
+  var sharedCardRO = null;
+  var sharedCardCallbacks = null;
+  function observeCardWidth(el, cb) {
+    if (typeof ResizeObserver === 'undefined' || !el) return function () {};
+    if (!sharedCardRO) {
+      sharedCardRO = new ResizeObserver(function (entries) {
+        for (var i = 0; i < entries.length; i += 1) {
+          var fn = sharedCardCallbacks.get(entries[i].target);
+          if (fn) {
+            var w = entries[i].contentRect && entries[i].contentRect.width;
+            if (w) { try { fn(w); } catch (ignored) { /* ignore */ } }
+          }
+        }
+      });
+      sharedCardCallbacks = new Map();
+    }
+    sharedCardCallbacks.set(el, cb);
+    try { sharedCardRO.observe(el); } catch (ignored) { /* ignore */ }
+    return function () {
+      try { sharedCardCallbacks.delete(el); sharedCardRO.unobserve(el); } catch (ignored) { /* ignore */ }
+    };
+  }
+
   function SessionCard(props) {
     var session = props.session;
     var now = props.now;
@@ -4120,17 +5342,9 @@ function build(require) {
     var cardW = cardWidthState[0];
     var setCardW = cardWidthState[1];
     React.useEffect(function () {
-      if (typeof ResizeObserver === 'undefined' || !cardRef.current) return undefined;
-      try {
-        var ro = new ResizeObserver(function (entries) {
-          for (var i = 0; i < entries.length; i += 1) {
-            var w = entries[i].contentRect && entries[i].contentRect.width;
-            if (w) setCardW(w);
-          }
-        });
-        ro.observe(cardRef.current);
-        return function () { try { ro.disconnect(); } catch (e) { /* ignore */ } };
-      } catch (e) { return undefined; }
+      if (!cardRef.current) return undefined;
+      // 共享一个全页 ResizeObserver，而非每张卡各建一个。
+      return observeCardWidth(cardRef.current, function (w) { setCardW(w); });
     }, []);
     var showStatusRight = cardW >= 960;
 
@@ -4245,8 +5459,9 @@ function build(require) {
           { style: { display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 } },
           session.open ? React.createElement(CurrentBadge) : null,
           React.createElement('span', {
+            className: 'ah-card-title',
             style: {
-              color: UI.textPrimary,
+              color: 'var(--ah-ink, ' + UI.textPrimary + ')',
               fontWeight: 500,
               fontSize: '0.94em',
               lineHeight: '20px',
@@ -4260,8 +5475,9 @@ function build(require) {
         ),
         session.prompt
           ? React.createElement('span', {
+              className: 'ah-card-sub',
               style: {
-                color: UI.textSecondary,
+                color: 'var(--ah-ink-soft, ' + UI.textSecondary + ')',
                 fontSize: '0.78em',
                 lineHeight: '16px',
                 opacity: 0.75,
@@ -4272,11 +5488,12 @@ function build(require) {
             }, session.prompt)
           : null,
         React.createElement('span', {
+          className: 'ah-card-meta',
           style: {
             display: 'flex',
             alignItems: 'center',
             gap: 5,
-            color: UI.textSecondary,
+            color: 'var(--ah-ink-soft, ' + UI.textSecondary + ')',
             // 整行统一一个字号，chip 全部继承，不再各自覆盖；小一号避免半屏换行
             fontSize: '0.8em',
             lineHeight: '22px',
@@ -4310,12 +5527,13 @@ function build(require) {
         // 两行：热度计（上）→ 相对时间（下）；工作区名已移到卡片最左侧
         React.createElement(HeatMeter, { level: session.level, ratio: session.ratio, showLabel: true, width: 96, height: 12 }),
         React.createElement('span', {
+          className: 'ah-card-time',
           style: {
             width: '100%',
             textAlign: 'right',
             fontSize: '0.8em',
             lineHeight: '18px',
-            color: UI.textTertiary,
+            color: 'var(--ah-ink-faint, ' + UI.textTertiary + ')',
             fontVariantNumeric: 'tabular-nums',
             whiteSpace: 'nowrap',
           },
@@ -4334,8 +5552,8 @@ function build(require) {
       width: '100%',
       padding: activeRunning ? '13px 14px 18px 0' : '10px 14px 10px 0',
       // 运行中时由外层容器控制间距和边框，按钮自身不再留 margin
-      margin: activeRunning ? 0 : '0 0 8px',
-      borderRadius: activeRunning ? Math.max(2, UI.radius - 2) : UI.radius,
+      margin: activeRunning ? 0 : '0 0 var(--ah-card-gap, 12px)',
+      borderRadius: 'var(--ah-card-radius, 12px)',
       cursor: 'pointer',
       textAlign: 'left',
       font: 'inherit',
@@ -4491,8 +5709,8 @@ function build(require) {
           width: '100%',
           padding: running ? '14px 16px 20px' : '12px 16px',
           // 运行中时由外层容器控制间距和边框，按钮自身不再留 margin
-          margin: running ? 0 : '0 0 10px',
-          borderRadius: running ? Math.max(2, UI.radius - 2) : UI.radius,
+          margin: running ? 0 : '0 0 var(--ah-card-gap, 12px)',
+          borderRadius: 'var(--ah-card-radius, 12px)',
           // 关键：按钮必须在跑马灯之上（定位 + z-index），否则旋转的色带会盖在卡片上。
           position: running ? 'relative' : undefined,
           zIndex: running ? 1 : undefined,
@@ -4515,8 +5733,9 @@ function build(require) {
             items: [{ state: 'ongoing', key: 'status.running', ariaKey: 'status.runningTitle' }],
           }) : null,
           React.createElement('span', {
+            className: 'ah-card-title',
             style: {
-              color: UI.textPrimary,
+              color: 'var(--ah-ink, ' + UI.textPrimary + ')',
               fontWeight: 500,
               fontSize: '0.98em',
               lineHeight: '22px',
@@ -4528,15 +5747,17 @@ function build(require) {
               WebkitLineClamp: 2,
               whiteSpace: 'normal',
               overflowWrap: 'anywhere',
+              textWrap: 'balance',
             },
           }, group.label),
         ),
         React.createElement('span', {
+          className: 'ah-card-meta',
           style: {
             display: 'flex',
             alignItems: 'center',
             gap: 5,
-            color: UI.textSecondary,
+            color: 'var(--ah-ink-soft, ' + UI.textSecondary + ')',
             fontSize: '0.8em',
             lineHeight: '22px',
             flexWrap: 'wrap',
@@ -4584,13 +5805,131 @@ function build(require) {
     return React.createElement(React.Fragment, null, frame, menuNode);
   }
 
+  /* 全局分钟节拍：面板、侧栏每一行、悬停卡共享同一个 60s 定时器，
+     避免「每行一个 setInterval」。订阅者数组惰性创建，组件卸载时退订。 */
+  var minuteListeners = null;
+  var minuteTimer = null;
+  var minuteValue = 0;
+  function subscribeMinute(listener) {
+    if (!minuteListeners) minuteListeners = [];
+    minuteListeners.push(listener);
+    if (minuteTimer === null && typeof setInterval === 'function') {
+      try {
+        minuteTimer = setInterval(function () {
+          minuteValue += 1;
+          var snapshot = minuteListeners.slice();
+          for (var i = 0; i < snapshot.length; i += 1) {
+            try { snapshot[i](minuteValue); } catch (ignored) { /* 单个订阅异常不影响其它 */ }
+          }
+        }, 60000);
+      } catch (ignored) { minuteTimer = null; }
+    }
+    return function () {
+      if (!minuteListeners) return;
+      var idx = minuteListeners.indexOf(listener);
+      if (idx >= 0) minuteListeners.splice(idx, 1);
+    };
+  }
+
   function useMinuteTick() {
-    var state = React.useState(0);
+    var state = React.useState(minuteValue);
     React.useEffect(function () {
-      var timer = setInterval(function () { state[1](function (v) { return v + 1; }); }, 60000);
-      return function () { clearInterval(timer); };
+      return subscribeMinute(function (value) { state[1](value); });
     }, []);
     return state[0];
+  }
+
+  /* 用户偏好（视图 / 数量 / 筛选 / 范围）：localStorage 持久化，重开面板保留；
+     拿不到 storage（隐私模式 / 测试沙箱）时静默退回默认值。 */
+  var PREFS_KEY = 'activity-heat:prefs';
+  var prefsCache = null;
+  function prefsStorage() {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) return window.localStorage;
+    } catch (ignored) { /* 隐私模式访问即抛 */ }
+    return null;
+  }
+  function loadPrefs() {
+    if (prefsCache) return prefsCache;
+    var out = {};
+    var store = prefsStorage();
+    try {
+      var raw = store ? store.getItem(PREFS_KEY) : null;
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') out = parsed;
+      }
+    } catch (ignored) { /* 坏数据直接忽略 */ }
+    prefsCache = out;
+    return out;
+  }
+  function savePrefs(patch) {
+    var store = prefsStorage();
+    // 没有持久化能力（隐私模式 / 测试沙箱）时不写内存缓存：避免偏好跨场景泄漏，
+    // 每次重开都回到默认值，符合「无 storage」的预期。
+    if (!store) return;
+    var p = loadPrefs();
+    var changed = false;
+    for (var k in patch) {
+      if (!Object.prototype.hasOwnProperty.call(patch, k)) continue;
+      if (p[k] !== patch[k]) { p[k] = patch[k]; changed = true; }
+    }
+    if (!changed) return;
+    try { store.setItem(PREFS_KEY, JSON.stringify(p)); } catch (ignored) { /* 配额满：忽略 */ }
+  }
+  function prefOf(key, fallback, validate) {
+    var v = loadPrefs()[key];
+    if (v === undefined) return fallback;
+    return validate ? (validate(v) ? v : fallback) : v;
+  }
+
+  /* ===== 背景嵌入配置（pro-threads 可切换）+ 中间层（颜色/模糊）+ 脚本缓存 ===== */
+  var DEFAULT_BG_EMBED = '<script type="module" src="https://cdn.jsdelivr.net/gh/kubai087/pro-threads@main/embed.js"><' + '/script>\n<pro-threads scene="mobius" settings="palette=paper" style="height: 100vh"></pro-threads>';
+  var __embedLoaded = {};
+  function ensureEmbedScript(src) {
+    try {
+      if (!src || typeof document === 'undefined' || !document.createElement) return;
+      if (__embedLoaded[src]) return;
+      var scripts = document.querySelectorAll ? document.querySelectorAll('script[data-ah-embed]') : [];
+      for (var i = 0; i < scripts.length; i += 1) {
+        if (scripts[i].src === src || scripts[i].getAttribute('src') === src) { __embedLoaded[src] = 1; return; }
+      }
+      var s = document.createElement('script');
+      s.type = 'module'; s.async = true; s.src = src;
+      try { s.setAttribute('data-ah-embed', '1'); } catch (ignored) {}
+      (document.head || document.documentElement).appendChild(s);
+      __embedLoaded[src] = 1;
+    } catch (ignored) { /* 离线 / CSP：无背景 */ }
+  }
+  function parseEmbedConfig(html) {
+    try {
+      if (typeof DOMParser === 'undefined' || typeof html !== 'string' || html.trim() === '') return null;
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var script = doc.querySelector ? doc.querySelector('script[src]') : null;
+      var nodes = doc.body ? doc.body.children : [];
+      var el = null;
+      for (var i = 0; i < nodes.length; i += 1) {
+        var tag = String(nodes[i].tagName || '').toLowerCase();
+        if (tag.indexOf('-') !== -1) { el = nodes[i]; break; }
+      }
+      if (!el) return null;
+      var attrs = {};
+      for (var j = 0; j < el.attributes.length; j += 1) {
+        var a = el.attributes[j];
+        if (a.name !== 'style') attrs[a.name] = a.value;
+      }
+      return { src: script ? (script.getAttribute('src') || '') : '', tag: String(el.tagName).toLowerCase(), attrs: attrs };
+    } catch (ignored) { return null; }
+  }
+  function hexToRgba(hex, alpha) {
+    try {
+      var h = String(hex || '').replace('#', '');
+      if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+      var a = alpha == null ? 0.45 : Math.max(0, Math.min(1, Number(alpha)));
+      if (h.length !== 6) return 'rgba(255,255,255,' + a + ')';
+      var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+    } catch (ignored) { return 'rgba(255,255,255,0.45)'; }
   }
 
   /** 分段切换控件：一组胶囊，选中项实底（表面与过渡见 AH_CSS）。 */
@@ -4644,32 +5983,34 @@ function build(require) {
   function ActivityPanel(props) {
     var useSessions = props && props.useSessions;
     var useWorkspaces = props && props.useWorkspaces;
-    // 首次渲染的视图；宿主不传时默认会话视图（测试可直接从工作区视图进入）
-    var initialView = props && props.initialView === 'workspaces' ? 'workspaces' : 'sessions';
-    // 首次渲染的范围；测试可直接进入已归档 / 子代理视图
+    // 首次渲染的视图：测试/宿主显式传入优先，其次读上次偏好，最后默认会话视图
+    var initialView = props && props.initialView === 'workspaces'
+      ? 'workspaces'
+      : (props && props.initialView === 'sessions' ? 'sessions' : prefOf('view', 'sessions', function (v) { return v === 'sessions' || v === 'workspaces'; }));
+    // 首次渲染的范围；测试可直接进入已归档 / 子代理视图；否则读偏好
     var initialRange = props && (props.initialRange === 'archived' || props.initialRange === 'subagent')
       ? props.initialRange
-      : 'active';
+      : (props && props.initialRange === 'active' ? 'active' : prefOf('range', 'active', function (v) { return v === 'active' || v === 'archived' || v === 'subagent'; }));
     // 面板挂载期间才显示在 main slot；快捷键靠这个标记做「进入 / 返回」二次切换。
     React.useEffect(function () {
       panelVisible = true;
       return function () { panelVisible = false; };
     }, []);
-    useMinuteTick();
+    var minuteTick = useMinuteTick();
 
     // 顶层：会话 / 工作区 两种对象切换
     var viewState = React.useState(initialView);
     var view = viewState[0];
     var setView = viewState[1];
     // 数量：会话 10/20/30/50，工作区 5/10/20
-    var topState = React.useState(10);
+    var topState = React.useState(function () { return prefOf('topCount', 10, function (v) { return v === 10 || v === 20 || v === 30 || v === 50; }); });
     var topCount = topState[0];
     var setTopCount = topState[1];
-    var groupState = React.useState(5);
+    var groupState = React.useState(function () { return prefOf('groupCount', 5, function (v) { return v === 5 || v === 10 || v === 20; }); });
     var groupCount = groupState[0];
     var setGroupCount = groupState[1];
     // 热度筛选（两种视图共用）
-    var filterState = React.useState('all');
+    var filterState = React.useState(function () { return prefOf('filter', 'all', function (v) { return typeof v === 'string' && v !== ''; }); });
     var filter = filterState[0];
     var setFilter = filterState[1];
     // 范围：常规 / 已归档 / 子代理（仅会话视图生效）
@@ -4702,6 +6043,61 @@ function build(require) {
     var toastState = React.useState(null);
     var toast = toastState[0];
     var setToast = toastState[1];
+    // 背景 / 中间层 / UI 配置（持久化到 localStorage）；open 控制配置中心弹窗
+    var cfgState = React.useState(function () {
+      return {
+        open: false,
+        bgEnabled: prefOf('bgEnabled', true),
+        bgEmbed: prefOf('bgEmbed', DEFAULT_BG_EMBED),
+        scrimColor: prefOf('scrimColor', '#ffffff'),
+        scrimOpacity: prefOf('scrimOpacity', 0.45),
+        scrimBlur: prefOf('scrimBlur', 10),
+        cardGap: prefOf('cardGap', 12),
+        cardRadius: prefOf('cardRadius', 12),
+        bgOpacity: prefOf('bgOpacity', 1),
+      };
+    });
+    var cfg = cfgState[0];
+    var setCfg = cfgState[1];
+    var readCfgPrefs = function () {
+      return {
+        bgEnabled: prefOf('bgEnabled', true),
+        bgEmbed: prefOf('bgEmbed', DEFAULT_BG_EMBED),
+        scrimColor: prefOf('scrimColor', '#ffffff'),
+        scrimOpacity: prefOf('scrimOpacity', 0.45),
+        scrimBlur: prefOf('scrimBlur', 10),
+        cardGap: prefOf('cardGap', 12),
+        cardRadius: prefOf('cardRadius', 12),
+        bgOpacity: prefOf('bgOpacity', 1),
+      };
+    };
+    var openSettings = function () { setCfg(Object.assign({}, cfg, { open: true })); };
+    var closeSettings = function () { var base = readCfgPrefs(); base.open = false; setCfg(base); };
+    var saveSettings = function () {
+      savePrefs({
+        bgEnabled: cfg.bgEnabled, bgEmbed: cfg.bgEmbed, scrimColor: cfg.scrimColor, scrimOpacity: cfg.scrimOpacity, scrimBlur: cfg.scrimBlur,
+        cardGap: cfg.cardGap, cardRadius: cfg.cardRadius, bgOpacity: cfg.bgOpacity,
+      });
+      setCfg(Object.assign({}, cfg, { open: false }));
+    };
+    var resetSettings = function () {
+      setCfg({ open: true, bgEnabled: true, bgEmbed: DEFAULT_BG_EMBED, scrimColor: '#ffffff', scrimOpacity: 0.45, scrimBlur: 10, cardGap: 12, cardRadius: 12, bgOpacity: 1 });
+    };
+    var importSettings = function (obj) {
+      if (!obj || typeof obj !== 'object') return;
+      var next = Object.assign({}, cfg, { open: true });
+      var num = function (v) { return v != null && !isNaN(Number(v)) ? Number(v) : null; };
+      var clampN = function (v, lo, hi) { return Math.max(lo, Math.min(hi, v)); };
+      if (typeof obj.bgEmbed === 'string') next.bgEmbed = obj.bgEmbed;
+      if (typeof obj.bgEnabled === 'boolean') next.bgEnabled = obj.bgEnabled;
+      if (typeof obj.scrimColor === 'string') next.scrimColor = obj.scrimColor;
+      var so = num(obj.scrimOpacity); if (so !== null) next.scrimOpacity = clampN(so, 0, 1);
+      var sb = num(obj.scrimBlur); if (sb !== null) next.scrimBlur = clampN(sb, 0, 40);
+      var cg = num(obj.cardGap); if (cg !== null) next.cardGap = clampN(cg, 0, 32);
+      var cr = num(obj.cardRadius); if (cr !== null) next.cardRadius = clampN(cr, 0, 24);
+      var bo = num(obj.bgOpacity); if (bo !== null) next.bgOpacity = clampN(bo, 0, 1);
+      setCfg(next);
+    };
     // 宿主 open-in-app 目录（本机实际安装的应用）与「打开方式」浮层。
     // initialApps 只给测试注入用（与 initialView 同策略），生产始终从探测开始。
     var initialApps = props && Array.isArray(props.initialApps) ? props.initialApps : null;
@@ -4736,6 +6132,19 @@ function build(require) {
       };
     }, [view, filter, topCount, groupCount]);
 
+    // 液态玻璃：列表/视图/数量/分钟刷新后，把材质套到新的卡片上。
+    // 尺寸与主题变化由材质引擎内部的 ResizeObserver / MutationObserver 处理。
+    React.useEffect(function () {
+      try { enhanceGlassCards(listRef.current); } catch (ignored) { /* 降级为纯 CSS 玻璃 */ }
+    }, [view, filter, topCount, groupCount, range, minuteTick]);
+
+    // 选择变化写入偏好（重开面板时恢复）；测试环境无 storage 时 savePrefs 静默跳过。
+    React.useEffect(function () { savePrefs({ view: view }); }, [view]);
+    React.useEffect(function () { savePrefs({ topCount: topCount }); }, [topCount]);
+    React.useEffect(function () { savePrefs({ groupCount: groupCount }); }, [groupCount]);
+    React.useEffect(function () { savePrefs({ filter: filter }); }, [filter]);
+    React.useEffect(function () { savePrefs({ range: range }); }, [range]);
+
     var now = Date.now();
 
     if (!useSessions || !useWorkspaces) {
@@ -4753,11 +6162,14 @@ function build(require) {
       ? function (statusId) { return statusMap.get(statusId); }
       : undefined;
     var effectiveRange = view === 'sessions' ? range : 'active';
-    // 一次性构建全量，两个视图按需切片，避免切换时重算两遍
-    var model = buildModel(sessionState, workspaceState, now, topCount, groupCount, {
-      range: effectiveRange,
-      statusOf: statusOf,
-    });
+    // 一次性构建全量，两个视图按需切片；useMemo 缓存，deps 不变不重算。
+    // now/statusOf 不入 deps：由 minuteTick（每分钟）与 statusMap 驱动刷新。
+    var model = React.useMemo(function () {
+      return buildModel(sessionState, workspaceState, now, topCount, groupCount, {
+        range: effectiveRange,
+        statusOf: statusOf,
+      });
+    }, [sessionState, workspaceState, effectiveRange, topCount, groupCount, statusMap, minuteTick]);
     var uiWorkspace = props && props.ctx ? props.ctx.get('uiWorkspace') : undefined;
 
     function openSession(sessionId) {
@@ -4806,49 +6218,21 @@ function build(require) {
       return function () { clearTimeout(timer); };
     }, [toast]);
 
-    // 宿主挂载 open-in-app 时才有应用目录；失败或空列表时「打开方式」禁用而不是消失。
-    // 页面可能早于 Host 路由就绪，做 3 次退避重试，避免一次 404 就永久空白。
+    // 应用目录由本插件 Host 路由探测（activity-heat/open-with/apps）；失败时
+    // loadOpenWithApps 内部回退旧宿主 open-in-app，避免退化。initialApps 仅测试注入。
     React.useEffect(function () {
+      if (initialApps && initialApps.length > 0) {
+        openWithAppsCache = initialApps.slice();
+        setApps(initialApps.slice());
+        return undefined;
+      }
       var cancelled = false;
-      var attempts = 0;
-      var timer = null;
-
-      function retry() {
-        if (cancelled || attempts >= 3) return;
-        timer = setTimeout(load, 800 * attempts);
-      }
-
-      function load() {
+      loadOpenWithApps().then(function (ids) {
         if (cancelled) return;
-        attempts += 1;
-        try {
-          if (typeof fetch !== 'function') return;
-          fetch('open-in-app/apps').then(function (response) {
-            return response && response.ok && typeof response.json === 'function'
-              ? response.json()
-              : null;
-          }).then(function (body) {
-            if (cancelled) return;
-            if (!body || !Array.isArray(body.apps)) {
-              retry();
-              return;
-            }
-            ahLog('[activity-heat] open-in-app apps:', body.apps);
-            setApps(body.apps.filter(function (id) {
-              return typeof id === 'string' && id !== '';
-            }));
-          }, function () {
-            ahWarn('[activity-heat] open-in-app apps request failed (attempt ' + attempts + ')');
-            retry();
-          });
-        } catch (ignored) { /* fetch 不可用 */ }
-      }
-
-      load();
-      return function () {
-        cancelled = true;
-        if (timer) clearTimeout(timer);
-      };
+        ahLog('[activity-heat] open-with apps:', ids);
+        setApps(ids || []);
+      });
+      return function () { cancelled = true; };
     }, []);
 
     function closeMenu() {
@@ -5166,36 +6550,12 @@ function build(require) {
       copyWithToast(list.map(function (s) { return s.id; }).join('\n'));
     }
 
-    /** 「打开方式」子菜单：终端固定第一项；其余按文件管理器 → 编辑器 → 终端 → 其他排序，组间加分隔。 */
+    /** 「打开方式」子菜单：与侧栏浮层共用同一构建器，保证分组 / 文案一致。 */
     function buildOpenWithItems(target) {
-      var path = target && target.path;
-      // 宿主 catalog 可能解析不到 windowsterminal，不能因此让列表里没有终端
-      var items = [{
-        id: 'terminal',
-        label: tt('menu.openTerminal'),
-        disabled: !isAbsolutePath(path),
-        hint: !isAbsolutePath(path) ? tt('menu.openWithNoPath') : undefined,
-        onSelect: function () { closeMenu(); openTerminal(path); },
-      }];
-      var ordered = apps.filter(function (id) {
-        // Git Bash 是 shell，不是终端模拟器；「终端」只列 Windows Terminal / Terminal 这一类
-        return id !== 'gitbash';
-      }).slice().sort(function (a, b) {
-        return openWithGroupRank(a) - openWithGroupRank(b);
+      return buildOpenWithMenuItems(target && target.path, apps, {
+        onNotify: notify,
+        onClose: closeMenu,
       });
-      var lastGroup = -1;
-      ordered.forEach(function (id) {
-        var group = openWithGroupRank(id);
-        items.push({
-          id: 'app-' + id,
-          label: tt('openWith.item', { app: appLabelOf(id) }),
-          separatorBefore: lastGroup !== -1 && group !== lastGroup,
-          disabled: !isAbsolutePath(path),
-          onSelect: function () { openInApp(id, path); },
-        });
-        lastGroup = group;
-      });
-      return items;
     }
 
     function openTerminal(path) {
@@ -5220,31 +6580,6 @@ function build(require) {
       } catch (error) {
         ahWarn('[activity-heat] open terminal failed:', error && error.message);
         notify(tt('error.openTerminal'), 'error');
-      }
-    }
-
-    function openInApp(appId, path) {
-      closeMenu();
-      try {
-        if (typeof fetch !== 'function' || !isAbsolutePath(path)) {
-          notify(tt('error.openWith'), 'error');
-          return;
-        }
-        fetch('open-in-app/open', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ app: appId, path: path }),
-        }).then(function (response) {
-          return Boolean(response && response.ok);
-        }, function () {
-          return false;
-        }).then(function (ok) {
-          if (ok) notify(tt('toast.openedWith', { app: appLabelOf(appId) }));
-          else notify(tt('error.openWith'), 'error');
-        });
-      } catch (error) {
-        ahWarn('[activity-heat] open in app failed:', error && error.message);
-        notify(tt('error.openWith'), 'error');
       }
     }
 
@@ -5458,10 +6793,18 @@ function build(require) {
       : allRows.filter(function (row) { return row.level === wanted; });
 
     var counts = { all: allRows.length };
-    for (var f = 0; f < FILTERS.length; f += 1) {
-      if (FILTERS[f].level === null) continue;
-      var lv = FILTERS[f].level;
-      counts[FILTERS[f].id] = allRows.filter(function (row) { return row.level === lv; }).length;
+    // 单次遍历分桶：避免每个热度档位各扫一遍 allRows（原 O(F×N)）。
+    var levelBuckets = {};
+    for (var cf = 0; cf < FILTERS.length; cf += 1) {
+      if (FILTERS[cf].level !== null) levelBuckets[FILTERS[cf].level] = 0;
+    }
+    for (var cr = 0; cr < allRows.length; cr += 1) {
+      var rowLevel = allRows[cr].level;
+      if (Object.prototype.hasOwnProperty.call(levelBuckets, rowLevel)) levelBuckets[rowLevel] += 1;
+    }
+    for (var cf2 = 0; cf2 < FILTERS.length; cf2 += 1) {
+      if (FILTERS[cf2].level === null) continue;
+      counts[FILTERS[cf2].id] = levelBuckets[FILTERS[cf2].level] || 0;
     }
 
     ahLog('[activity-heat] panel view=' + view + ' rows=' + rows.length + '/' + allRows.length +
@@ -5524,6 +6867,13 @@ function build(require) {
             },
           }, tt(selectMode ? 'batch.exit' : 'batch.select'))
         : null,
+      React.createElement('button', {
+        key: 'settings',
+        type: 'button',
+        className: 'ah-settings-btn',
+        'aria-label': '背景与外观设置',
+        onClick: openSettings,
+      }, '⚙'),
     );
 
     /* ---------- 热度筛选 ---------- */
@@ -5715,10 +7065,41 @@ function build(require) {
     });
     var toastNode = React.createElement(PanelToast, { open: Boolean(toast), toast: toast });
 
+    var bgConfig = cfg.bgEnabled === false ? null : parseEmbedConfig(cfg.bgEmbed);
+    var bgNode = cfg.bgEnabled === false ? null : React.createElement('div', {
+      key: 'threads',
+      className: 'ah-threads-bg',
+      'aria-hidden': 'true',
+      style: { opacity: cfg.bgOpacity == null ? 1 : cfg.bgOpacity },
+    }, bgConfig ? React.createElement(ThreadsBackground, { config: bgConfig }) : null);
+    var scrimNode = React.createElement('div', {
+      key: 'scrim',
+      className: 'ah-scrim',
+      'aria-hidden': 'true',
+      style: {
+        backgroundColor: hexToRgba(cfg.scrimColor, cfg.scrimOpacity),
+        WebkitBackdropFilter: 'blur(' + Number(cfg.scrimBlur || 0) + 'px)',
+        backdropFilter: 'blur(' + Number(cfg.scrimBlur || 0) + 'px)',
+      },
+    });
+    var settingsNode = React.createElement(SettingsDialog, {
+      open: Boolean(cfg.open),
+      value: cfg,
+      onChange: function (next) { setCfg(next); },
+      onCancel: closeSettings,
+      onSave: saveSettings,
+      onReset: resetSettings,
+      onImport: importSettings,
+    });
+
     return React.createElement('div', {
       className: AH.shell,
-      style: { display: 'flex', flexDirection: 'column', paddingBottom: 16 },
-    }, [toolbar, batchBar, list, footer, archiveNode, renameNode, toastNode]);
+      style: {
+        display: 'flex', flexDirection: 'column', paddingBottom: 16,
+        '--ah-card-gap': (Number(cfg.cardGap == null ? 12 : cfg.cardGap)) + 'px',
+        '--ah-card-radius': (Number(cfg.cardRadius == null ? 12 : cfg.cardRadius)) + 'px',
+      },
+    }, [bgNode, scrimNode, toolbar, batchBar, list, footer, archiveNode, renameNode, settingsNode, toastNode]);
   }
 
   function SessionRowHeat(props) {
@@ -5810,9 +7191,11 @@ function build(require) {
       : {};
     // 与面板卡片同一口径：运行中按最高热度显示
     var level = running ? 5 : heatLevelOf(now - at);
-    var model = sessionState && workspaceState
-      ? buildModel(sessionState, workspaceState, now, 12, 5, { statusOf: statusOf })
-      : null;
+    var model = React.useMemo(function () {
+      return sessionState && workspaceState
+        ? buildModel(sessionState, workspaceState, now, 12, 5, { statusOf: statusOf })
+        : null;
+    }, [sessionState, workspaceState, statusMap]);
 
     var group = null;
     if (model) {
@@ -5828,7 +7211,7 @@ function build(require) {
     var rank = group ? model.rankOf[group.key] : undefined;
 
     // 状态行由宿主 SessionHoverContent 原生渲染（StateDot + 原生标签）；
-    // 插件这里只放热度，绝不重复状态文字（design.md §8）。
+    // 插件这里只放热度，绝不重复状态文字（DESIGN.md §8）。
     var header = React.createElement('div', {
       key: 'head',
       style: { display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 },
@@ -6364,21 +7747,25 @@ function build(require) {
               );
             });
 
-            // 侧栏原生会话行菜单：只挂宿主内置菜单没有的插件动作
+            // 侧栏原生会话行菜单：优先用宿主 contextMenus 数据动作（UI 与原生同源 +
+            // children 自动成为原生二级级联子菜单）；只有老宿主没有该服务时才回退
+            // 到旧的自绘组件项（ah-side-action）。
             var sidebarMenuDefs = [];
             for (var _sm = 0; _sm < SESSION_ACTION_DEFS.length; _sm += 1) {
               if (SESSION_ACTION_DEFS[_sm].sidebarMenu === true) sidebarMenuDefs.push(SESSION_ACTION_DEFS[_sm]);
             }
-            sidebarMenuDefs.forEach(function (def) {
-              safeRegister('sidebar.workspaces.session.menu.item', function () {
-                return slots.register({
-                  name: 'sidebar.workspaces.session.menu.item',
-                  id: 'ah-' + def.id,
-                  order: 500 + def.order,
-                  locale: NS,
-                  label: function () { return tt(def.labelKey); },
-                  inject: injectProps,
-                }, makeSidebarMenuRow(def));
+            installSessionMenu(ctx, slots, function registerLegacySessionMenu() {
+              sidebarMenuDefs.forEach(function (def) {
+                safeRegister('sidebar.workspaces.session.menu.item', function () {
+                  return slots.register({
+                    name: 'sidebar.workspaces.session.menu.item',
+                    id: 'ah-' + def.id,
+                    order: 500 + def.order,
+                    locale: NS,
+                    label: function () { return tt(def.labelKey); },
+                    inject: injectProps,
+                  }, makeSidebarMenuRow(def));
+                });
               });
             });
 

@@ -42,6 +42,9 @@ function load(debug) {
     },
     useState: (v) => [typeof v === 'function' ? v() : v, () => {}],
     useEffect: (fn) => { try { fn(); } catch (e) { /* 测试替身忽略 */ } },
+    useMemo: (fn) => fn(),
+    useCallback: (fn) => fn,
+    useRef: (init) => ({ current: init === undefined ? null : init }),
     Fragment: 'Fragment',
   };
 
@@ -172,6 +175,7 @@ function boot(debug, opts) {
   const rightbarDefs = [];
   const shortcutDefs = [];
   const layoutCalls = [];
+  const cmRegs = [];
 
   const services = {
     slots: {
@@ -180,6 +184,13 @@ function boot(debug, opts) {
         regs.push({ o, C });
         return () => {};
       },
+    },
+    contextMenus: {
+      register: (o) => {
+        cmRegs.push(o);
+        return () => {};
+      },
+      notify: () => {},
     },
     uiWorkspace: {
       openSession: (id) => opened.push('session:' + id),
@@ -229,7 +240,7 @@ function boot(debug, opts) {
     },
   });
 
-  return { env, regs, opened, wsCalls, commandDefs, rightbarDefs, shortcutDefs, layoutCalls, services };
+  return { env, regs, opened, wsCalls, commandDefs, rightbarDefs, shortcutDefs, layoutCalls, services, cmRegs };
 }
 
 /** 递归展开函数组件，收集按钮、文本与指定组件 props。 */
@@ -270,8 +281,9 @@ function collect(tree) {
     'sidebar.right.pane.tab'].forEach((name) => {
     check(seatNames.indexOf(name) !== -1, '注册 seat ' + name, seatNames.join(','));
   });
-  check(seatNames.filter((n) => n === 'sidebar.workspaces.session.menu.item').length === 4,
-    '侧栏行菜单注册 4 个插件动作', seatNames.filter((n) => n === 'sidebar.workspaces.session.menu.item').length);
+  check(seatNames.filter((n) => n === 'sidebar.workspaces.session.menu.item').length === 0,
+    '有 contextMenus 时不再注册旧自绘菜单项', seatNames.filter((n) => n === 'sidebar.workspaces.session.menu.item').length);
+  check(b.cmRegs.some((o) => o.id === 'activity-heat.session'), '侧栏会话菜单注册到 contextMenus 服务');
   check(seatNames.filter((n) => n === 'sidebar.workspaces.session.row.action').length === 1,
     '侧栏行按钮注册终端动作', seatNames.filter((n) => n === 'sidebar.workspaces.session.row.action').length);
   check(b.regs.find((r) => r.o.name === 'main').o.key === 'activity-heat', 'main 面板 key 与入口 id 一致');
@@ -302,6 +314,7 @@ function collect(tree) {
   check(chips.length === 6, '热度筛选 6 档', chips.length);
 
   const segLabels = c.buttons.map((x) => String((x.children && x.children[0]) || ''));
+  check(c.buttons.some((b) => b.props && b.props['aria-label'] === '背景与外观设置'), '顶部有背景与外观配置入口');
   check(['10', '20', '30', '50'].every((v) => segLabels.indexOf(v) !== -1), '会话数量选项 10/20/30/50');
 
   /* 顶部三级排布：数量为淡文字、筛选为下划线 tab */
@@ -484,6 +497,11 @@ function collect(tree) {
   const b = boot(false);
   const css = b.env.styles[0] ? b.env.styles[0].textContent : '';
   check(b.env.styles.length === 1, '注入了一个 style 标签', b.env.styles.length);
+  {
+    const ob = (css.match(/\{/g) || []).length;
+    const cb = (css.match(/\}/g) || []).length;
+    check(ob === cb, '注入 CSS 花括号平衡（防止整段样式被吞）', ob + '/' + cb);
+  }
   check(css.indexOf('ah-orbit') !== -1, '含跑马灯 keyframes');
   check(css.indexOf('ah-frame-flash') === -1, '无边框闪烁 keyframes（常亮高亮）');
   check(css.indexOf('ah-pulse') !== -1, '含脉冲 keyframes');
@@ -492,7 +510,23 @@ function collect(tree) {
 
   /* 视觉层：半透明 + 磨砂 + 渐变 */
   check(css.indexOf('.ah-shell') !== -1, '含面板外壳');
-  check(css.indexOf('.ah-shell::before') === -1, '面板不再铺背景渐变层');
+  check(css.indexOf('.ah-shell::before') === -1, '面板无自绘背景（纯色底，已按要求移除渐变）');
+  check(css.indexOf('ah-bg-drift') === -1, '无背景流动 keyframes（已移除）');
+  check(css.indexOf('.ah-seg:active') !== -1 && /translateY\(1px\)/.test(css), '按钮按下整体下沉 1px（手册 001 子集）');
+  check(raw.indexOf('function inSafeZone') !== -1, '级联菜单含安全三角区');
+  check(raw.indexOf('function pointInTriangle') !== -1, '级联菜单三角命中测试');
+  check(raw.indexOf('safeTick') !== -1, '级联菜单 80ms 安全窗口复查');
+  check(raw.indexOf('pro-threads') !== -1, '面板背景嵌入 pro-threads 场景');
+  check(raw.indexOf('cdn.jsdelivr.net/gh/kubai087/pro-threads') !== -1, '背景脚本走 kubai pro-threads CDN');
+  check(css.indexOf('.ah-scrim') !== -1, '背景与列表之间有中间层 .ah-scrim');
+  check(raw.indexOf('parseEmbedConfig') !== -1, '背景嵌入代码可解析/切换');
+  check(raw.indexOf('ensureEmbedScript') !== -1, '背景脚本走缓存加载（只注入一次）');
+  check(raw.indexOf('DEFAULT_BG_EMBED') !== -1, '内置默认背景配置');
+  check(raw.indexOf('kubai.design/pro-threads') !== -1, '设置页含背景原地址');
+  check(raw.indexOf('导入 / 导出（JSON）') !== -1, '配置支持 JSON 导入导出');
+  check(raw.indexOf('cardGap') !== -1 && raw.indexOf('cardRadius') !== -1 && raw.indexOf('bgOpacity') !== -1, '配置含卡片间距/圆角/背景不透明度');
+  check(raw.indexOf('bgEnabled') !== -1 && raw.indexOf('启用外部背景') !== -1, '外部背景可开关（关闭用纯色底）');
+  check(css.indexOf('.ah-threads-bg') !== -1, '背景层 .ah-threads-bg 样式存在');
   check(css.indexOf('--color-violet') === -1 && css.indexOf('--color-teal') === -1, 'CSS 里没有紫 / 青杂色');
   check(css.indexOf('backdrop-filter') !== -1, '含背景磨砂');
   check(css.indexOf('--dsw-menu-backdrop-filter') !== -1, '磨砂优先用宿主令牌');
@@ -507,8 +541,31 @@ function collect(tree) {
   check(css.indexOf('.ah-popover') !== -1, '浮层有玻璃表面');
   check(css.indexOf('.ah-tab::after') !== -1, '筛选下划线由 ::after 绘制');
 
+  /* 液态玻璃材质层（本次改造） */
+  check(css.indexOf('.ah-card--glass-light') !== -1, '有浅色玻璃变体（暗背景→浅色）');
+  check(css.indexOf('.ah-card--glass-dark') !== -1, '有深色玻璃变体（亮背景→深色）');
+  check(css.indexOf('mix-blend-mode:multiply') !== -1, '浅色玻璃文字用正片叠底');
+  check(css.indexOf('mix-blend-mode:plus-lighter') !== -1, '深色玻璃文字用叠加提亮（plus-lighter）');
+  check(/blur\(2px\) saturate\(180%\) brightness\(1\.06\)/.test(css), '浅色玻璃：模糊2px / 饱和180% / 亮度1.06');
+  check(/blur\(2px\) saturate\(160%\) brightness\(\.8\)/.test(css), '深色玻璃：模糊2px / 饱和160% / 亮度0.8');
+  check(css.indexOf('inset 1px 1px 0') !== -1 && css.indexOf('inset -1px -1px 0') !== -1, '边缘光：左上 + 右下两道');
+  check(css.indexOf('inset 0 0 0 1px') !== -1, '边缘光：内侧再缩进一道');
+  check(/\.ah-card--running\{[^}]*background-color:var\(--ah-tint/.test(css), '运行中卡片也走玻璃着色');
+  check(raw.indexOf('maskComposite') !== -1 || raw.indexOf('WebkitMaskComposite') !== -1, '跑马灯光带用环形遮罩限制在边框');
+  check(css.indexOf('@property --ah-tint') !== -1, '用 @property 注册着色令牌（状态平滑过渡）');
+  check(css.indexOf('prefers-reduced-transparency') !== -1, '尊重「减少透明」（退化为实底）');
+  check(css.indexOf('forced-colors: active') !== -1, '尊重强制颜色模式（退化为实底）');
+  check(css.indexOf('corner-shape:superellipse(1.25)') !== -1, '连续圆角（超椭圆）渐进增强');
+  check(raw.indexOf('feDisplacementMap') !== -1, '含 SVG 位移折射滤镜（feDisplacementMap）');
+  check(raw.indexOf('glassBuildMap') !== -1, '含位移贴图生成（边缘往内压）');
+  check(raw.indexOf('glassSampleBackdrop') !== -1, '含背景亮度多点采样（自动切换明暗）');
+  check(raw.indexOf('Math.min(w, h) / 3.5') !== -1, '边宽按短边/3.5 收敛');
+  check(raw.indexOf('Math.pow(t, 2.6)') !== -1, 'rim 非线性衰减 ^2.6');
+  check(/sample\.luma >= 0\.5/.test(raw), '背景亮(≥0.5)切浅色玻璃（保对比，见 VETO 偏差）');
+
   const reduced = css.slice(css.indexOf('prefers-reduced-motion'));
   check(reduced.indexOf('ah-pop-in') === -1, '减少动态时关掉浮层进场');
+  check(reduced.indexOf('.ah-shell::before') === -1, '减少动态选择器不再包含背景层（已移除）');
   check(reduced.indexOf('.ah-tab::after') !== -1, '减少动态时关掉下划线过渡');
   check(reduced.indexOf('.ah-card') !== -1, '减少动态时关掉卡片过渡');
 }
@@ -714,6 +771,10 @@ function collect(tree) {
   );
   check(sessionCards.length === 6, '六张会话卡片都带 ah-card 类', sessionCards.length);
   check(
+    sessionsView.nodes.some((n) => String(n.props.className || '') === 'ah-card-title'),
+    '卡片标题带 ah-card-title（文字着色锚点）',
+  );
+  check(
     sessionCards.every((x) => typeof x.props.style.animationDelay === 'string'),
     '卡片带错峰入场延迟',
   );
@@ -724,7 +785,7 @@ function collect(tree) {
   const runningCard = sessionCards.find(
     (x) => String(x.props.className).indexOf('ah-card--running') !== -1,
   );
-  check(Boolean(runningCard), '运行中卡片带 ah-card--running（保持实底遮住光带）');
+  check(Boolean(runningCard), '运行中卡片带 ah-card--running（也走玻璃，光带环形遮罩）');
   check(
     runningCard && String(runningCard.props.style.background || '') === '',
     '运行中卡片的底色不再写死在行内（交给主题令牌）',
@@ -1130,6 +1191,41 @@ function collect(tree) {
   );
   check(subView.components.some((x) => x.name === 'SubagentTag'), '子智能体运行中作为叠加状态渲染');
   check(subView.texts.join(' ').indexOf('进行中') !== -1 && subView.texts.join(' ').indexOf('子智能体') !== -1, '主状态与子智能体状态并列');
+}
+
+/* ---------------- F4：侧栏入口「已完成未查看」计数角标 ---------------- */
+{
+  const b = boot(false);
+  const plReg = b.regs.find((r) => r.o.name === 'sidebar.panellist');
+  const unreadState = {
+    ids: ['u1', 'u2'],
+    byId: {
+      u1: { id: 'u1', title: '完成1', updatedAt: NOW - 1000 },
+      u2: { id: 'u2', title: '完成2', updatedAt: NOW - 2000 },
+    },
+    projectionsBySession: {},
+  };
+  const unreadWs = { archivedSessionIds: [], items: [] };
+  const unreadStatus = new Map([
+    ['u1', { running: false, completionUnread: true }],
+    ['u2', { running: false, completionUnread: true }],
+  ]);
+  const tree = plReg.C({
+    useSessions: (sel) => sel(unreadState),
+    useWorkspaces: (sel) => sel(unreadWs),
+    useSessionStatus: (sel) => sel(unreadStatus),
+  });
+  check(collect(tree).texts.join('').indexOf('2') !== -1, 'F4 侧栏入口显示未读计数 2');
+
+  const cleanTree = plReg.C({
+    useSessions: (sel) => sel(unreadState),
+    useWorkspaces: (sel) => sel(unreadWs),
+    useSessionStatus: (sel) => sel(new Map([
+      ['u1', { running: false, completionUnread: false }],
+      ['u2', { running: false, completionUnread: false }],
+    ])),
+  });
+  check(collect(cleanTree).texts.join('').indexOf('2') === -1, 'F4 无未读时不显示角标');
 }
 
 console.log(failed === 0 ? '\nHARNESS PASSED' : '\nHARNESS FAILED (' + failed + ')');
